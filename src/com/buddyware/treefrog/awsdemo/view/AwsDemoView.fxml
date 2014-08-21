@@ -5,9 +5,8 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-
-<AnchorPane prefHeight="300.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8">
+<AnchorPane prefHeight="300.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buddyware.treefrog.awsdemo.view.AwsDemoController">
    <children>
-      <Button layoutX="300.0" layoutY="150.0" mnemonicParsing="false" text="Button" />
+      <Button layoutX="300.0" layoutY="150.0" mnemonicParsing="false" onAction="#runAwsDemo" text="Button" />
    </children>
 </AnchorPane>
