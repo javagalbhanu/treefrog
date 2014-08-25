@@ -7,6 +7,7 @@
 
 <AnchorPane prefHeight="300.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buddyware.treefrog.awsdemo.view.AwsDemoController">
    <children>
-      <Button layoutX="300.0" layoutY="150.0" mnemonicParsing="false" onAction="#runAwsDemo" text="Button" />
+      <Button layoutX="511.0" layoutY="261.0" mnemonicParsing="false" onAction="#uploadFile" text="Button" />
+      <ProgressBar fx:id="progressBar" layoutX="24.0" layoutY="175.0" prefHeight="20.0" prefWidth="549.0" progress="0.0" />
    </children>
 </AnchorPane>

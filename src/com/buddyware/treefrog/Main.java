@@ -2,6 +2,8 @@ package com.buddyware.treefrog;
 	
 import java.io.IOException;
 
+import com.buddyware.treefrog.awsdemo.view.AwsDemoController;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Stage;
@@ -70,6 +72,10 @@ public class Main extends Application {
 			FXMLLoader loader = new FXMLLoader();
 			loader.setLocation (Main.class.getResource("awsdemo/view/AwsDemoView.fxml"));
 			AnchorPane awsDemoView = (AnchorPane) loader.load();
+			
+			AwsDemoController ctl = loader.getController();
+			
+			ctl.setParentStage (primaryStage);
 			
 			//set the view in the center of the root layout
 			rootLayout.setCenter (awsDemoView);
