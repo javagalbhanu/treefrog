@@ -1,5 +1,6 @@
 package com.buddyware.treefrog.watchservice.view;
 
+import com.buddyware.treefrog.IController;
 import java.nio.file.*;
 
 import static java.nio.file.StandardWatchEventKinds.*;
@@ -11,7 +12,7 @@ import java.util.*;
 
 import com.buddyware.treefrog.watchservice.model.WatchServiceModel;
 
-public class WatchServiceController {
+public class WatchServiceController implements IController{
  
 /**
  * Example to watch a directory (or tree) for changes to files.

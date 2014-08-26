@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.buddyware.treefrog.awsdemo.view.AwsDemoController;
 
 import javafx.application.Application;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
@@ -34,7 +35,7 @@ public class Main extends Application {
 		}*/
 		
 		initRootLayout();
-		showJavaFxDemoView();
+
 	}
 	
 	/**
@@ -64,6 +65,12 @@ public class Main extends Application {
 	
 	}
 	
+	@FXML
+	public void showDirectoryWatchServiceView() {
+		
+	}
+	
+	@FXML
 	public void showJavaFxDemoView() {
 	
 		try {

@@ -16,6 +16,8 @@ import com.amazonaws.services.s3.transfer.Upload;
 import com.buddyware.treefrog.Main;
 import com.buddyware.treefrog.awsdemo.model.S3TransferSampleModel;
 import com.buddyware.treefrog.util.FileChooserController;
+import com.buddyware.treefrog.BaseController;
+
 
 /**
  * This sample demonstrates how to make basic requests to Amazon S3 using
@@ -31,7 +33,7 @@ import com.buddyware.treefrog.util.FileChooserController;
  * http://aws.amazon.com/security-credentials
  */
 
-public class AwsDemoController {
+public class AwsDemoController extends BaseController {
 
 	@FXML
 	private ProgressBar progressBar;
