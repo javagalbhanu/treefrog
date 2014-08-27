@@ -1,5 +1,16 @@
 package com.buddyware.treefrog.localconfig;
 
-public class LocalConfigController {
+import com.buddyware.treefrog.BaseController;
 
+import javafx.fxml.FXML;
+
+public class LocalConfigController extends BaseController {
+
+    /**
+     * FXML initialization requirement
+     */
+    @FXML
+    private void initialize() {
+
+    }
 }

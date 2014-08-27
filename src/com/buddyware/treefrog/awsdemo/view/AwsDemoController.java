@@ -54,8 +54,7 @@ public class AwsDemoController extends BaseController {
 	}
 	
     /**
-     * Initializes the controller class. This method is automatically called
-     * after the fxml file has been loaded.
+     * FXML initialization requirement
      */
     @FXML
     private void initialize() {
