@@ -5,27 +5,36 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.BorderPane?>
 
-<BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buddyware.treefrog.Main">
+<BorderPane fx:id="main_borderpane" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buddyware.treefrog.Main">
    <top>
-      <MenuBar BorderPane.alignment="CENTER">
-        <menus>
-          <Menu mnemonicParsing="false" text="File">
-            <items>
-              <MenuItem mnemonicParsing="false" text="Exit" />
-            </items>
-          </Menu>
-          <Menu mnemonicParsing="false" text="S3">
-            <items>
-                  <MenuItem mnemonicParsing="false" onAction="#showDirectoryWatchServiceView" text="Watch Directory" />
-              <MenuItem mnemonicParsing="false" onAction="#showJavaFxDemoView" text="Upload File" />
-            </items>
-          </Menu>
-          <Menu mnemonicParsing="false" text="Help">
-            <items>
-              <MenuItem mnemonicParsing="false" text="About" />
-            </items>
-          </Menu>
-        </menus>
-      </MenuBar>
+      <TabPane fx:id="main_tab_pane" prefHeight="400.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+        <tabs>
+          <Tab fx:id="stats_tab" text="Stats">
+            <content>
+              <fx:include fx:id="stats_tab_page" source="/stats/StatsView.fxml"/>
+            </content>
+          </Tab>
+          <Tab fx:id="remote_tab" text="Remote">
+            <content>
+			  <fx:include fx:id="remote_tab_page" source="/remoteconfig/RemoteConfigview.fxml"/>            
+            </content>
+          </Tab>
+            <Tab fx:id="local_tab" text="Local">
+              <content>
+                <fx:include fx:id="local_tab_page" source="/localconfig/LocalConfigView.fxml"/>
+              </content>
+            </Tab>
+            <Tab fx:id="help_tab" text="Help">
+              <content>
+                <fx:include fx:id="help_tab" source="/help/HelpView.fxml"/>
+              </content>
+            </Tab>
+            <Tab fx:id="about_tab" text="About">
+              <content>
+                <AnchorPane fx:id="about_anchorpane" minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              </content>
+            </Tab>
+        </tabs>
+      </TabPane>
    </top>
 </BorderPane>
