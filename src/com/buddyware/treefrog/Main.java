@@ -1,6 +1,7 @@
 package com.buddyware.treefrog;
 	
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 
 import javafx.application.Application;
 import javafx.fxml.FXML;
@@ -17,8 +18,10 @@ public class Main extends Application {
 	private Stage primaryStage;
 	private BorderPane rootLayout;
 	
-	//@FXML
-	private StatsController stats_tab_view;
+	@FXML private StatsController stats_view;
+	//private StatsController stats_tab_view;
+//	private StatsController stats_tab_view;
+	//private StatsController stats_tab_view;
 	
 	@Override
 	public void start(Stage primaryStage) {
@@ -31,6 +34,14 @@ public class Main extends Application {
 
 		utils. <BorderPane, BaseController> loadFxml ("RootLayout.fxml", this.primaryStage);
 	}
+	/*
+	public void testStatsControllerComm() {
+		try {
+		stats_view.testStatsControllerComm();
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		}
+	}*/
 	
 	@FXML
 	public void showStatsTabView() {
