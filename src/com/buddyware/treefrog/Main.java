@@ -74,7 +74,7 @@ public class Main extends Application {
 	public void showJavaFxDemoView() {
 	
 		try {
-			
+			//this is a comment
 			//load the aws demo code view
 			FXMLLoader loader = new FXMLLoader();
 			loader.setLocation (Main.class.getResource("awsdemo/view/AwsDemoView.fxml"));
