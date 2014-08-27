@@ -1,97 +1,71 @@
 package com.buddyware.treefrog;
 	
 import java.io.IOException;
-
-import com.buddyware.treefrog.awsdemo.view.AwsDemoController;
+import java.lang.reflect.InvocationTargetException;
 
 import javafx.application.Application;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Stage;
-import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 
+import com.buddyware.treefrog.stats.StatsController;
+import com.buddyware.treefrog.util.utils;
 
 public class Main extends Application {
 	
 	private Stage primaryStage;
 	private BorderPane rootLayout;
 	
+	@FXML private StatsController stats_view;
+	//private StatsController stats_tab_view;
+//	private StatsController stats_tab_view;
+	//private StatsController stats_tab_view;
 	
 	@Override
 	public void start(Stage primaryStage) {
 		
 		this.primaryStage = primaryStage;
-		this.primaryStage.setTitle ("Treefrog");
-		/*
-		try {
-			BorderPane root = new BorderPane();
-			Scene scene = new Scene(root,600,400);
-			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
-
-		} catch(Exception e) {
-			e.printStackTrace();
-		}*/
+		this.primaryStage.setTitle ("BucketSync");
 		
-		initRootLayout();
+		//static reference for all controllers to provide access back to main, if needed.
+		BaseController.mMain = this;
 
+		utils. <BorderPane, BaseController> loadFxml ("RootLayout.fxml", this.primaryStage);
 	}
-	
-	/**
-	 * 
-	 * Initialize the root layout
-	 */
-	
-	public void initRootLayout() {
-		
+	/*
+	public void testStatsControllerComm() {
 		try {
-			
-			//load root from fxml
-			FXMLLoader loader = new FXMLLoader();
-			loader.setLocation(Main.class.getResource("RootLayout.fxml"));;
-			rootLayout = (BorderPane) loader.load();
-			
-			//scene containing root layout
-			Scene scene = new Scene (rootLayout);
-			primaryStage.setScene (scene);
-			primaryStage.show();
-			
-		} catch (IOException e) {
-			
+		stats_view.testStatsControllerComm();
+		} catch (InvocationTargetException e) {
 			e.printStackTrace();
-			
 		}
+	}*/
+	
+	@FXML
+	public void showStatsTabView() {
 	
 	}
 	
 	@FXML
-	public void showDirectoryWatchServiceView() {
+	public void showRemoteConfigTabView() {
+	
+	}
+	
+	@FXML
+	public void showLocalConfigTabView() {
 		
 	}
 	
 	@FXML
-	public void showJavaFxDemoView() {
+	public void showHelpTabView() {
+		
+	}
 	
-		try {
-			//this is a comment
-			//load the aws demo code view
-			FXMLLoader loader = new FXMLLoader();
-			loader.setLocation (Main.class.getResource("awsdemo/view/AwsDemoView.fxml"));
-			AnchorPane awsDemoView = (AnchorPane) loader.load();
-			
-			AwsDemoController ctl = loader.getController();
-			
-			ctl.setParentStage (primaryStage);
-			
-			//set the view in the center of the root layout
-			rootLayout.setCenter (awsDemoView);
-			
-		} catch (IOException e) {
-			
-			e.printStackTrace();
-			
-		}
+	@FXML
+	public void showAboutTabView() {
+		
 	}
 	
 	public Stage getPrimaryStage() {

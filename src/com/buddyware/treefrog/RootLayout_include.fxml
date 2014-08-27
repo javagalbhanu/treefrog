@@ -11,25 +11,25 @@
         <tabs>
           <Tab fx:id="stats_tab" text="Stats">
             <content>
-              <fx:include fx:id="stats_tab_view" source="stats/StatsView.fxml"/>
+              <fx:include fx:id="stats_tab_page" source="stats/StatsView.fxml"/>
             </content>
           </Tab>
           <Tab fx:id="remote_tab" text="Remote">
             <content>
-			  <fx:include fx:id="remote_tab_view" source="remoteconfig/RemoteConfigView.fxml"/>            
+			  <fx:include fx:id="remote_tab_page" source="remoteconfig/RemoteConfigView.fxml"/>            
             </content>
           </Tab>
             <Tab fx:id="local_tab" text="Local">
               <content>
-                <fx:include fx:id="local_tab_view" source="localconfig/LocalConfigView.fxml"/>
+                <fx:include fx:id="local_tab_page" source="localconfig/LocalConfigView.fxml"/>
               </content>
             </Tab>
             <Tab fx:id="help_tab" text="Help">
               <content>
-                <fx:include fx:id="help_view" source="help/HelpView.fxml"/>
+                <fx:include fx:id="help_tab" source="help/HelpView.fxml"/>
               </content>
             </Tab>
-            <Tab fx:id="about_view" text="About">
+            <Tab fx:id="about_tab" text="About">
               <content>
                 <AnchorPane fx:id="about_anchorpane" minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
               </content>
