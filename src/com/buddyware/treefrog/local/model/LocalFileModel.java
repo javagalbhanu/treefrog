@@ -1,0 +1,42 @@
+package com.buddyware.treefrog.local.model;
+
+import com.buddyware.treefrog.BaseModel;
+
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+
+public class LocalFileModel extends BaseModel {
+	
+	private final LocalWatchService watchService;
+	private StringProperty serviceMessage = new SimpleStringProperty();
+	
+	public LocalFileModel() {
+		
+		watchService = new LocalWatchService();
+		//startWatchService();
+	}
+
+	public void startWatchService() {
+		
+		addListener (watchService.messageProperty(), serviceMessage);
+		watchService.start();
+	}
+	
+	private void addListener(ReadOnlyStringProperty remoteProperty, StringProperty localProperty) {
+
+		remoteProperty.addListener(new ChangeListener<String>(){
+			@Override
+			public void changed(ObservableValue<? extends String> arg0,
+					String arg1, String arg2) {
+	             localProperty.setValue((String) arg0.getValue());
+	             System.out.println("LocalFileModel message: " + (String)arg0.getValue());
+			}
+	      });
+	}
+	
+	public final String getModelMessage() { return serviceMessage.get(); }
+	public StringProperty modelMessage() { return serviceMessage; }
+}

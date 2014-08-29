@@ -1,4 +1,4 @@
-package com.buddyware.treefrog.remoteconfig;
+package com.buddyware.treefrog.remote.config;
 
 import com.buddyware.treefrog.BaseController;
 
@@ -11,6 +11,5 @@ public class RemoteConfigController extends BaseController {
      */
     @FXML
     private void initialize() {
-
     }
 }

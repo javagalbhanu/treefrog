@@ -7,6 +7,6 @@
 
 <AnchorPane fx:id="stats_view" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buddyware.treefrog.stats.StatsController">
    <children>
-      <Label layoutX="216.0" layoutY="143.0" onMouseClicked="#testStatsComm" text="Stats View widgets go here" />
+      <Label layoutX="216.0" layoutY="143.0" text="Stats View widgets go here" />
    </children>
 </AnchorPane>
