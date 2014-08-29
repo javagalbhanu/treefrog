@@ -53,7 +53,7 @@ public class LocalWatchService extends Service<Void> {
 	
     public void register (String dir) {
     	try {
-			register (Paths.get(dir));
+			registerAll (Paths.get(dir));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
