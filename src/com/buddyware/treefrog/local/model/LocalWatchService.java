@@ -11,11 +11,13 @@ import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashMap;
 import java.util.Map;
 
 import javafx.concurrent.Service;
@@ -25,7 +27,7 @@ public class LocalWatchService extends Service<Void> {
 
     private WatchService watcher;
     
-    private Map<WatchKey,Path> keys;
+    private final Map<WatchKey,Path> keys = new HashMap<WatchKey, Path>();
     
     private boolean recursive = true;
     private boolean trace = false;
@@ -44,6 +46,62 @@ public class LocalWatchService extends Service<Void> {
 		return keys;
 	}
 		 
+    @SuppressWarnings("unchecked")
+    <T> WatchEvent<T> cast(WatchEvent<?> event) {
+        return (WatchEvent<T>)event;
+    }
+	
+    public void register (String dir) {
+    	try {
+			register (Paths.get(dir));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+    /**
+     * Register the given directory with the WatchService
+     */
+    private void register(Path dir) throws IOException {
+    	
+    	//register the key with the watch service
+        WatchKey key = dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+        
+        if (trace) {
+        	
+            Path prev = keys.get(key);
+            
+            if (prev == null) {
+                System.out.format("register: %s\n", dir);
+            } 
+            else {
+	            if (!dir.equals(prev))
+	                System.out.format("update: %s -> %s\n", prev, dir);
+            }
+        }
+        else
+        	trace = true;
+        
+        keys.put(key, dir);
+    }
+		 
+    /**
+     * Register the given directory, and all its sub-directories, with the
+     * WatchService.
+     */
+    private void registerAll(final Path start) throws IOException {
+        // register directory and sub-directories
+        Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+                throws IOException
+            {
+                register(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }    
+    
     @Override
     protected Task<Void> createTask() {
     	
@@ -51,8 +109,6 @@ public class LocalWatchService extends Service<Void> {
         	
             @Override
             protected Void call() throws Exception {
-            	System.out.println ("Updating message property from local watch service task...");
-            	updateMessage("Began local watch service task...");
             	
 		        for (;;) {
 		   		 
@@ -92,8 +148,14 @@ public class LocalWatchService extends Service<Void> {
 		                if (recursive && (kind == ENTRY_CREATE)) {
 		                    try {
 		                        if (Files.isDirectory(child, NOFOLLOW_LINKS)) {
+		                        	updateMessage("Directory created: " + name);
+
 		                            registerAll(child);
 		                        }
+		                        else {
+		                        	updateMessage("File created: " + name);
+		                        }
+		                        	
 		                    } catch (IOException x) {
 		                        // ignore to keep sample readable
 		                    }
@@ -113,54 +175,6 @@ public class LocalWatchService extends Service<Void> {
 		        }
                 return null;
             }
-            
-            @SuppressWarnings("unchecked")
-            <T> WatchEvent<T> cast(WatchEvent<?> event) {
-                return (WatchEvent<T>)event;
-            }
-        		 
-            /**
-             * Register the given directory with the WatchService
-             */
-            private void register(Path dir) throws IOException {
-            	
-            	//register the key with the watch service
-                WatchKey key = dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
-                
-                if (trace) {
-                	
-                    Path prev = keys.get(key);
-                    
-                    if (prev == null) {
-                        System.out.format("register: %s\n", dir);
-                    } 
-                    else {
-        	            if (!dir.equals(prev))
-        	                System.out.format("update: %s -> %s\n", prev, dir);
-                    }
-                }
-                else
-                	trace = true;
-                
-                keys.put(key, dir);
-            }
-        		 
-            /**
-             * Register the given directory, and all its sub-directories, with the
-             * WatchService.
-             */
-            private void registerAll(final Path start) throws IOException {
-                // register directory and sub-directories
-                Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-                        throws IOException
-                    {
-                        register(dir);
-                        return FileVisitResult.CONTINUE;
-                    }
-                });
-            }            
         };
     }
 }

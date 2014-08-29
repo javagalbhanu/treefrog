@@ -7,6 +7,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.scene.shape.Path;
 
 public class LocalFileModel extends BaseModel {
 	
@@ -16,7 +17,10 @@ public class LocalFileModel extends BaseModel {
 	public LocalFileModel() {
 		
 		watchService = new LocalWatchService();
-		//startWatchService();
+		
+		String userHome = System.getProperty("user.home");
+		System.out.println("home dir = " + userHome);
+		watchService.register(System.getProperty("user.home"));
 	}
 
 	public void startWatchService() {
