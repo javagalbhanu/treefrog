@@ -11,170 +11,212 @@ import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
 
-import javafx.concurrent.Service;
-import javafx.concurrent.Task;
+import javafx.event.Event;
+import javafx.event.EventHandler;
 
-public class LocalWatchService extends Service<Void> {
+import com.buddyware.treefrog.BaseTask;
+import com.buddyware.treefrog.util.TaskMessage;
+import com.buddyware.treefrog.util.TaskMessage.TaskMessageType;
+
+public final class LocalWatchService extends BaseTask {
 
     private WatchService watcher;
+    private LocalPathFinder finder;
     
     private final Map<WatchKey,Path> keys = new HashMap<WatchKey, Path>();
+    private final ConcurrentLinkedQueue <Path> watchQueue = new ConcurrentLinkedQueue <Path> ();
+    private final ExecutorService pathFinderExecutor = createExecutor ("pathFinder", false);
     
-    private boolean recursive = true;
-    private boolean trace = false;
-    
-    public LocalWatchService() {
+	public LocalWatchService (BlockingQueue <TaskMessage> messageQueue) {
 
+		super (messageQueue);
+		
     	try {
 			this.watcher = FileSystems.getDefault().newWatchService();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}    	
-    }
-    
-	public Map<WatchKey,Path> getKeys() {
-		return keys;
+		}
+    	/*
+		setOnCancelled(new EventHandler() {
+
+			@Override
+			public void handle(Event arg0) {
+				pathFinder.cancel();
+			}
+		}); */   	
+	};
+
+	public void addPaths (ArrayList <Path> paths) {
+		
+		//execute path finder on an array list of paths
+		runPathFinder (paths);
 	}
+	
+	public final ConcurrentLinkedQueue <Path> watchQueue() {
+		return this.watchQueue;
+	}
+	
+	public final void addPath (Path dir) {
+		
+		//execute path finder on a single path
+		ArrayList <Path> finderList = new ArrayList <Path> ();
+		finderList.add (dir);
+
+		runPathFinder (finderList);
+	}
+	
+	private void runPathFinder (ArrayList <Path> paths) {
+		
+		//need to add blocking code / mechanism in case a path finder is currently running (rare case)
+		
+		finder = new LocalPathFinder(messageQueue, this);
+		pathFinderExecutor.execute(finder);
+	}
+	
+    /**
+     * Register the given directory with the WatchService
+     * @throws InterruptedException 
+     */
+    public final void register(Path dir) throws IOException, InterruptedException {
+ 	
+    	//register the key with the watch service
+        WatchKey key = dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+        
+        if (!keys.isEmpty()) {
+        	
+            Path prev = keys.get(key);
+            
+            if (prev == null) {	                		
+				messageQueue.put(new TaskMessage ("Registered: " + dir, TaskMessageType.TASK_ACTIVITY));
+            } 
+            else {
+	            if (!dir.equals(prev));
+					messageQueue.put(new TaskMessage ("Registered: " + dir, TaskMessageType.TASK_ACTIVITY));
+            }
+        }
+
+        keys.put(key, dir);
+    }
 		 
+	private void processWatchEvent (WatchKey key, Path dir) {
+		
+    	for (WatchEvent<?> event: key.pollEvents()) {
+	    	
+	        WatchEvent.Kind kind = event.kind();
+	
+	        // TBD - provide example of how OVERFLOW event is handled
+	        if (kind == OVERFLOW) {
+	    		enqueueMessage ("Overflow encountered", TaskMessageType.TASK_ERROR);
+	            continue;
+	        }
+	
+	        // Context for directory entry event is the file name of entry
+	        WatchEvent<Path> ev = cast(event);
+	        String name = ev.context().toString();
+	        Path child = dir.resolve(name);
+	
+	        if (kind == ENTRY_CREATE) {
+	        	if (Files.isDirectory(child,  NOFOLLOW_LINKS)) {
+	
+						enqueueMessage ("Directory created: " + name, TaskMessageType.TASK_ACTIVITY);
+	            		
+	//        		if (recursive) {
+							addPath (child);
+	//        		}
+	        	}
+	            else {
+	            		enqueueMessage ("File created: " + name, TaskMessageType.TASK_ACTIVITY);
+	            }
+	        }		                
+	
+	        if (kind == ENTRY_MODIFY)
+	        		enqueueMessage ("File modified: " + name, TaskMessageType.TASK_ACTIVITY);
+	        
+	        if (kind == ENTRY_DELETE)
+	        		enqueueMessage ("File deleted: " + name, TaskMessageType.TASK_ACTIVITY);
+	    }
+	}
+    
     @SuppressWarnings("unchecked")
     <T> WatchEvent<T> cast(WatchEvent<?> event) {
         return (WatchEvent<T>)event;
     }
-	
-    public void register (String dir) {
-    	try {
-			registerAll (Paths.get(dir));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    }
-    /**
-     * Register the given directory with the WatchService
-     */
-    private void register(Path dir) throws IOException {
-    	
-    	//register the key with the watch service
-        WatchKey key = dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
-        
-        if (trace) {
-        	
-            Path prev = keys.get(key);
+    
+	@Override
+	protected Void call () {
+
+    boolean interrupted = false;
+System.out.println ("Starting watch service");    
+    try {
+		// enter watch cycle
+        while (!interrupted) {
+			
+			 //watch for a key change.  Thread blocks until a change occurs
+	    	WatchKey key = null;
+	    	interrupted = isCancelled();
+	    	
+	     //    try {
+
+	        	 //thread blocks until a key change occurs 
+	        	 // (whether a new path is processed by finder or a watched item changes otherwise)
+
+        	            try {
+        	                key = watcher.take();
+        	            } catch (InterruptedException e) {
+        	                interrupted = true;
+        	                try {
+								watcher.close();
+							} catch (IOException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+        	                // fall through and retry
+        	            }
+	        /*	 
+	         } catch (InterruptedException x) {
+	         	x.printStackTrace();
+	             return null;
+	         }*/
+			
+            Path dir = keys.get (key);
             
-            if (prev == null) {
-                System.out.format("register: %s\n", dir);
-            } 
-            else {
-	            if (!dir.equals(prev))
-	                System.out.format("update: %s -> %s\n", prev, dir);
+            if (dir == null) {
+               enqueueMessage ("Null directory key encountered.", TaskMessageType.TASK_ERROR);
+                continue;
+            }
+ 
+            //process key change once it occurs
+            processWatchEvent(key, dir);
+           
+            // reset key and remove from set if directory no longer accessible
+            if (!key.reset()) {
+
+            	keys.remove(key);
+ 
+                // all directories are inaccessible
+                if (keys.isEmpty())
+                    break;
             }
         }
-        else
-        	trace = true;
-        
-        keys.put(key, dir);
+	} finally {
+        if (interrupted)
+            Thread.currentThread().interrupt();
     }
-		 
-    /**
-     * Register the given directory, and all its sub-directories, with the
-     * WatchService.
-     */
-    private void registerAll(final Path start) throws IOException {
-        // register directory and sub-directories
-        Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-                throws IOException
-            {
-                register(dir);
-                return FileVisitResult.CONTINUE;
-            }
-        });
-    }    
-    
-    @Override
-    protected Task<Void> createTask() {
-    	
-        return new Task<Void>() {
-        	
-            @Override
-            protected Void call() throws Exception {
-            	
-		        for (;;) {
-		   		 
-		            // wait for key to be signaled
-		            WatchKey key;
-		            
-		            try {
-		                key = watcher.take();
-		            } catch (InterruptedException x) {
-		            	x.printStackTrace();
-		                return null;
-		            }
-		 
-		            Path dir = keys.get(key);
-		            
-		            if (dir == null) {
-		                System.err.println("unrecognized watchkey");
-		                continue;
-		            }
-		 
-		            for (WatchEvent<?> event: key.pollEvents()) {
-		            	
-		                WatchEvent.Kind kind = event.kind();
-		 
-		                // TBD - provide example of how OVERFLOW event is handled
-		                if (kind == OVERFLOW) {
-		                    continue;
-		                }
-		 
-		                // Context for directory entry event is the file name of entry
-		                WatchEvent<Path> ev = cast(event);
-		                Path name = ev.context();
-		                Path child = dir.resolve(name);
-		 
-		                // if directory is created, and watching recursively, then
-		                // register it and its sub-directories
-		                if (recursive && (kind == ENTRY_CREATE)) {
-		                    try {
-		                        if (Files.isDirectory(child, NOFOLLOW_LINKS)) {
-		                        	updateMessage("Directory created: " + name);
-
-		                            registerAll(child);
-		                        }
-		                        else {
-		                        	updateMessage("File created: " + name);
-		                        }
-		                        	
-		                    } catch (IOException x) {
-		                        // ignore to keep sample readable
-		                    }
-		                }
-		            }
-		 
-		            // reset key and remove from set if directory no longer accessible
-		            if (!key.reset()) {
-
-		            	keys.remove(key);
-		 
-		                // all directories are inaccessible
-		                if (keys.isEmpty()) {
-		                    break;
-		                }
-		            }
-		        }
-                return null;
-            }
-        };
-    }
+System.out.println ("exiting watch service...");
+		return null;
+	};
 }
