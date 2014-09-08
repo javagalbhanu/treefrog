@@ -19,11 +19,13 @@ public class BaseTask extends Task<Void> {
 	};
 	
     public void enqueueMessage (String message, TaskMessageType messageType) {
+    	System.out.println (message);
+    	/*
     	try {
     		messageQueue.put(new TaskMessage (message, messageType));
     	} catch (InterruptedException e) {
     		e.printStackTrace();
-    	}    	
+    	} */   	
     };
     	
 	@Override

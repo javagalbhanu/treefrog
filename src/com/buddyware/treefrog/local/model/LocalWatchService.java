@@ -34,7 +34,7 @@ import com.buddyware.treefrog.util.TaskMessage.TaskMessageType;
 public final class LocalWatchService extends BaseTask {
 
     private WatchService watcher;
-    private LocalPathFinder finder;
+    private final LocalPathFinder finder;
     
     private final Map<WatchKey,Path> keys = new HashMap<WatchKey, Path>();
     private final ConcurrentLinkedQueue <Path> watchQueue = new ConcurrentLinkedQueue <Path> ();
@@ -50,14 +50,15 @@ public final class LocalWatchService extends BaseTask {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-    	/*
+    	
+    	finder = new LocalPathFinder(messageQueue, watchQueue);
 		setOnCancelled(new EventHandler() {
 
 			@Override
 			public void handle(Event arg0) {
-				pathFinder.cancel();
+				finder.cancel();
 			}
-		}); */   	
+		});
 	};
 
 	public void addPaths (ArrayList <Path> paths) {
@@ -66,12 +67,8 @@ public final class LocalWatchService extends BaseTask {
 		runPathFinder (paths);
 	}
 	
-	public final ConcurrentLinkedQueue <Path> watchQueue() {
-		return this.watchQueue;
-	}
-	
 	public final void addPath (Path dir) {
-		
+System.out.println ("LocalWatchService.addPath() " + dir.toString());	
 		//execute path finder on a single path
 		ArrayList <Path> finderList = new ArrayList <Path> ();
 		finderList.add (dir);
@@ -82,9 +79,12 @@ public final class LocalWatchService extends BaseTask {
 	private void runPathFinder (ArrayList <Path> paths) {
 		
 		//need to add blocking code / mechanism in case a path finder is currently running (rare case)
-		
-		finder = new LocalPathFinder(messageQueue, this);
+System.out.println ("LocalWatchService.runPathFinder()");	
+
+		//finder = new LocalPathFinder(messageQueue, watchQueue);
+		finder.setPaths(paths);
 		pathFinderExecutor.execute(finder);
+		pathFinderExecutor.shutdown();
 	}
 	
     /**
@@ -93,6 +93,7 @@ public final class LocalWatchService extends BaseTask {
      */
     public final void register(Path dir) throws IOException, InterruptedException {
  	
+//System.out.println ("LocalWatchService.register() " + dir.toString());
     	//register the key with the watch service
         WatchKey key = dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
         
@@ -101,11 +102,11 @@ public final class LocalWatchService extends BaseTask {
             Path prev = keys.get(key);
             
             if (prev == null) {	                		
-				messageQueue.put(new TaskMessage ("Registered: " + dir, TaskMessageType.TASK_ACTIVITY));
+				//enqueueMessage ("Registered: " + dir, TaskMessageType.TASK_ACTIVITY);
             } 
             else {
 	            if (!dir.equals(prev));
-					messageQueue.put(new TaskMessage ("Registered: " + dir, TaskMessageType.TASK_ACTIVITY));
+				//	enqueueMessage ("Registered: " + dir, TaskMessageType.TASK_ACTIVITY);
             }
         }
 

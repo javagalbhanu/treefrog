@@ -22,11 +22,10 @@ public class LocalFileModel extends BaseModel {
 	
 	public LocalFileModel() {
 
-		ArrayList <Path> watchPaths = new ArrayList <Path> ();
-		watchPaths.add ((Path) Paths.get(System.getProperty("user.home")));
+
 		
 		watchService = new LocalWatchService (taskMessages);
-		
+
 		setOnCancelled (new EventHandler() {
 			@Override public void handle(Event arg0) {
 System.out.println ("Cancelling watch service...");				
@@ -39,7 +38,13 @@ System.out.println ("Cancelling watch service...");
 		
 		System.out.println ("Starting watch service..");
 
-		watchServiceExecutor.execute(watchService);		
+		watchServiceExecutor.execute(watchService);	
+		
+		ArrayList <Path> watchPaths = new ArrayList <Path> ();
+		watchPaths.add ((Path) Paths.get("/")); //System.getProperty("user.home")));		
+		watchService.addPaths(watchPaths);
+		
+		watchServiceExecutor.shutdown();
 	}
 
 	public void killWatchService() {
