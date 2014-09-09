@@ -68,7 +68,7 @@ public final class LocalWatchService extends BaseTask {
 	}
 	
 	public final void addPath (Path dir) {
-System.out.println ("LocalWatchService.addPath() " + dir.toString());	
+	
 		//execute path finder on a single path
 		ArrayList <Path> finderList = new ArrayList <Path> ();
 		finderList.add (dir);
@@ -79,7 +79,6 @@ System.out.println ("LocalWatchService.addPath() " + dir.toString());
 	private void runPathFinder (ArrayList <Path> paths) {
 		
 		//need to add blocking code / mechanism in case a path finder is currently running (rare case)
-System.out.println ("LocalWatchService.runPathFinder()");	
 
 		//finder = new LocalPathFinder(messageQueue, watchQueue);
 		finder.setPaths(paths);
@@ -161,7 +160,7 @@ System.out.println ("LocalWatchService.runPathFinder()");
 	protected Void call () {
 
     boolean interrupted = false;
-System.out.println ("Starting watch service");    
+   
     try {
 		// enter watch cycle
         while (!interrupted) {
@@ -217,7 +216,6 @@ System.out.println ("Starting watch service");
         if (interrupted)
             Thread.currentThread().interrupt();
     }
-System.out.println ("exiting watch service...");
 		return null;
 	};
 }

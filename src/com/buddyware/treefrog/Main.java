@@ -26,17 +26,10 @@ public class Main extends Application {
 		BaseController.mMain = this;
 		utils. <BorderPane, BaseController> loadFxml ("RootLayout.fxml", primaryStage, null);
 		primaryStage.setTitle ("BucketSync");
-		
-		primaryStage.setOnCloseRequest(new EventHandler() {
-			
-			 @Override public void handle(Event event) {
-System.out.println ("cancelling localmodel");				 
-			// localModel.cancel();
-			 }
-		});
-		 
+					 
 		final ExecutorService lm = createExecutor ("lm");
 		lm.execute(localModel);
+		lm.shutdown();
 	}
 	
 	public static void main(String[] args) {
