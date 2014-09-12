@@ -21,27 +21,23 @@ public class LocalFileModel extends BaseModel {
 	private final ExecutorService watchServiceExecutor = createExecutor("WatchService");
 	
 	public LocalFileModel() {
-
-
 		
 		watchService = new LocalWatchService (taskMessages);
 
 		setOnCancelled (new EventHandler() {
 			@Override public void handle(Event arg0) {
-System.out.println ("Cancelling watch service...");				
+	
 				watchService.cancel();
 			}
 		});
 	}
 	
 	private void startWatchService() {
-		
-		System.out.println ("Starting watch service..");
 
 		watchServiceExecutor.execute(watchService);	
 		
 		ArrayList <Path> watchPaths = new ArrayList <Path> ();
-		watchPaths.add ((Path) Paths.get("/")); //System.getProperty("user.home")));		
+		watchPaths.add (Paths.get("/")); //System.getProperty("user.home") + "/bucketsync"));		
 		watchService.addPaths(watchPaths);
 		
 		watchServiceExecutor.shutdown();

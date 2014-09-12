@@ -1,6 +1,13 @@
 package com.buddyware.treefrog.util;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.buddyware.treefrog.BaseController;
 import com.buddyware.treefrog.Main;
@@ -13,7 +20,31 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class utils {
+	
+	public final static String userHome = System.getProperty("user.home");
+	public final static Path exlusionsFilepath = Paths.get(userHome + "/exclusions.cfg");
 
+	public static void appendToFile (Path file, String data) {
+		
+		ArrayList <String> dataList = new ArrayList<String>();
+		
+		dataList.add (data);
+		
+		appendToFile (file, dataList);
+	}
+	
+	public static void appendToFile (Path file, List<String> data) {
+	
+		try {
+			Files.write(file, data, StandardCharsets.UTF_8,
+					StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+			
+		} catch (IOException e){
+			e.printStackTrace();
+		}
+		
+	}
+	
 	public static Stage createDialogStage (String title, Modality modality, Stage parent) {
 
 		try {
