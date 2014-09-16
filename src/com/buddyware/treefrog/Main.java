@@ -39,9 +39,11 @@ public class Main extends Application {
 	//private StatsController stats_tab_view;
 //	private StatsController stats_tab_view;
 	//private StatsController stats_tab_view;
+	public void talkToYourDaddy(){};
 	
 	@Override
 	public void start(Stage primaryStage) {
+		localModel.parent = this;
 		
 		this.primaryStage = primaryStage;
 		this.primaryStage.setTitle ("BucketSync");

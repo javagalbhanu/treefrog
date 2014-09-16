@@ -1,6 +1,8 @@
 package com.buddyware.treefrog.local.model;
 
+import com.amazonaws.services.elasticmapreduce.model.Application;
 import com.buddyware.treefrog.BaseModel;
+import com.buddyware.treefrog.Main;
 
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -13,6 +15,8 @@ public class LocalFileModel extends BaseModel {
 	
 	private final LocalWatchService watchService;
 	private StringProperty serviceMessage = new SimpleStringProperty();
+	
+	public Main parent = null;
 	
 	public LocalFileModel() {
 		
