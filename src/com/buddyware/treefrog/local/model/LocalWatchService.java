@@ -8,22 +8,21 @@ import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
 import java.io.IOException;
 import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.concurrent.WorkerStateEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 
@@ -34,16 +33,28 @@ import com.buddyware.treefrog.util.TaskMessage.TaskMessageType;
 public final class LocalWatchService extends BaseTask {
 
     private WatchService watcher;
-    private final LocalPathFinder finder;
+    private LocalPathFinder finder;
     
+    private final ExecutorService pathFinderExecutor = 
+    									createExecutor ("pathFinder", false);
+    
+    private Integer finderDepth = Integer.MAX_VALUE;
     private final Map<WatchKey,Path> keys = new HashMap<WatchKey, Path>();
-    private final ConcurrentLinkedQueue <Path> watchQueue = new ConcurrentLinkedQueue <Path> ();
-    private final ExecutorService pathFinderExecutor = createExecutor ("pathFinder", false);
     
-	public LocalWatchService (BlockingQueue <TaskMessage> messageQueue) {
+    private final ConcurrentLinkedQueue <Path> watchQueue = 
+    										new ConcurrentLinkedQueue <Path> ();
+    
+    private final ObjectProperty <ArrayList <Path> > pathsFound = 
+								new SimpleObjectProperty <ArrayList <Path>> ();
+
+    private Boolean initialFind = true;
+    
+	public LocalWatchService 
+					(BlockingQueue <TaskMessage> messageQueue, Path rootPath) {
 
 		super (messageQueue);
 		
+		//create the watch service
     	try {
 			this.watcher = FileSystems.getDefault().newWatchService();
 		} catch (IOException e) {
@@ -51,16 +62,26 @@ public final class LocalWatchService extends BaseTask {
 			e.printStackTrace();
 		}
     	
-    	finder = new LocalPathFinder(messageQueue, watchQueue);
 		setOnCancelled(new EventHandler() {
 
 			@Override
 			public void handle(Event arg0) {
-				finder.cancel();
+				pathFinderExecutor.shutdown();
 			}
-		});
+		});    	
+    	
+    	//start pathfinder for initial find.
+		finderDepth = 2;
+		ArrayList <Path> paths = new ArrayList <Path> ();
+		paths.add (rootPath);
+    	runPathFinder (paths);
+    	finderDepth = Integer.MAX_VALUE;
 	};
 
+	public ObjectProperty <ArrayList <Path> > pathsFound() {
+		return this.pathsFound;
+	}
+	
 	public void addPaths (ArrayList <Path> paths) {
 		
 		//execute path finder on an array list of paths
@@ -78,23 +99,44 @@ public final class LocalWatchService extends BaseTask {
 	
 	private void runPathFinder (ArrayList <Path> paths) {
 		
-		//need to add blocking code / mechanism in case a path finder is currently running (rare case)
+		//need to add blocking code / mechanism in case a path finder is 
+		//currently running (rare case)
 
-		//finder = new LocalPathFinder(messageQueue, watchQueue);
-		finder.setPaths(paths);
-		pathFinderExecutor.execute(finder);
-		pathFinderExecutor.shutdown();
+		finder = new LocalPathFinder (messageQueue, watchQueue);
+		finder.setPaths (paths);
+		finder.setDepth (finderDepth);
+		
+    	finder.setOnSucceeded(new EventHandler <WorkerStateEvent> () {
+
+    		//whenever path finder is called save the paths to watch so a complete list
+    		//is always available.
+			@Override
+			public void handle(WorkerStateEvent arg0) {
+				pathsFound.set(finder.getPaths());
+				
+				//if this is the initial find, re-run the path finder
+				//to finish recursing the specified paths.
+				if (initialFind) {
+					initialFind = false;
+					runPathFinder (finder.getPaths());
+				}
+			}
+    	});
+    	
+		pathFinderExecutor.execute (finder);    	
 	}
 	
     /**
      * Register the given directory with the WatchService
      * @throws InterruptedException 
      */
-    public final void register(Path dir) throws IOException, InterruptedException {
+    public final void register(Path dir) 
+    								throws IOException, InterruptedException {
  	
 //System.out.println ("LocalWatchService.register() " + dir.toString());
     	//register the key with the watch service
-        WatchKey key = dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+        WatchKey key = 
+    		dir.register (watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
         
         if (!keys.isEmpty()) {
         	
@@ -168,29 +210,22 @@ public final class LocalWatchService extends BaseTask {
 			 //watch for a key change.  Thread blocks until a change occurs
 	    	WatchKey key = null;
 	    	interrupted = isCancelled();
-	    	
-	     //    try {
 
-	        	 //thread blocks until a key change occurs 
-	        	 // (whether a new path is processed by finder or a watched item changes otherwise)
+        	 //thread blocks until a key change occurs 
+        	 // (whether a new path is processed by finder or a watched item changes otherwise)
 
-        	            try {
-        	                key = watcher.take();
-        	            } catch (InterruptedException e) {
-        	                interrupted = true;
-        	                try {
-								watcher.close();
-							} catch (IOException e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
-							}
-        	                // fall through and retry
-        	            }
-	        /*	 
-	         } catch (InterruptedException x) {
-	         	x.printStackTrace();
-	             return null;
-	         }*/
+            try {
+                key = watcher.take();
+            } catch (InterruptedException e) {
+                interrupted = true;
+                try {
+					watcher.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+                // fall through and retry
+            }
 			
             Path dir = keys.get (key);
             

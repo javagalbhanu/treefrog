@@ -20,15 +20,9 @@ import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 
-public class BaseModel<Void> extends Task {
+public class BaseModel<Void> {
 
 	protected final BlockingQueue<TaskMessage> taskMessages = new ArrayBlockingQueue(1);
-	
-	@Override
-	protected Void call() throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
 	
 	public ArrayList <TaskMessage> pollMessages() {
 		
@@ -38,18 +32,18 @@ public class BaseModel<Void> extends Task {
 		return messages;
 	};
 
-	protected ExecutorService createExecutor(final String name) {
+	protected ExecutorService createExecutor(final String name, boolean isDaemon) {
 		 
 		 ThreadFactory factory = new ThreadFactory() {
 			 
 			 @Override public Thread newThread(Runnable r) {
 				 Thread t = new Thread(r);
 				 t.setName(name);
-				 t.setDaemon(true);
+				 t.setDaemon(isDaemon);
 				 return t;
 			 }
 		 };
 		 
 		 return Executors.newSingleThreadExecutor(factory);
-	} 		
+	} 			
 }
