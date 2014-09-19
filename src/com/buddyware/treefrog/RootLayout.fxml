@@ -5,9 +5,9 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.BorderPane?>
 
-<BorderPane fx:id="main_borderpane" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buddyware.treefrog.MainController">
-   <top>
-      <TabPane fx:id="main_tab_pane" prefHeight="400.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+<BorderPane fx:id="main_borderpane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buddyware.treefrog.MainController">
+   <center>
+      <TabPane fx:id="main_tab_pane" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
         <tabs>
           <Tab fx:id="stats_tab" text="Stats">
             <content>
@@ -41,5 +41,5 @@
             </Tab>
         </tabs>
       </TabPane>
-   </top>
+   </center>
 </BorderPane>

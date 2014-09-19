@@ -48,11 +48,13 @@ public final class LocalWatchService extends BaseTask {
 								new SimpleObjectProperty <ArrayList <Path>> ();
 
     private Boolean initialFind = true;
+    private final Path rootPath;
     
 	public LocalWatchService 
 					(BlockingQueue <TaskMessage> messageQueue, Path rootPath) {
 
 		super (messageQueue);
+		this.rootPath = rootPath;
 		
 		//create the watch service
     	try {
@@ -69,15 +71,17 @@ public final class LocalWatchService extends BaseTask {
 				pathFinderExecutor.shutdown();
 			}
 		});    	
-    	
+	};
+
+	public void initializeWatchPaths() {
     	//start pathfinder for initial find.
 		finderDepth = 2;
 		ArrayList <Path> paths = new ArrayList <Path> ();
 		paths.add (rootPath);
     	runPathFinder (paths);
-    	finderDepth = Integer.MAX_VALUE;
-	};
-
+    	finderDepth = Integer.MAX_VALUE;		
+	}
+	
 	public ObjectProperty <ArrayList <Path> > pathsFound() {
 		return this.pathsFound;
 	}
@@ -203,10 +207,12 @@ public final class LocalWatchService extends BaseTask {
 
     boolean interrupted = false;
    
+    initializeWatchPaths();
+    
     try {
 		// enter watch cycle
         while (!interrupted) {
-			
+System.out.println ("starting watch service");
 			 //watch for a key change.  Thread blocks until a change occurs
 	    	WatchKey key = null;
 	    	interrupted = isCancelled();

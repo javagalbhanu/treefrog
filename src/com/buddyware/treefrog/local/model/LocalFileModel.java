@@ -40,7 +40,7 @@ public class LocalFileModel extends BaseModel {
 		watchService = new LocalWatchService (taskMessages, rootPath);
 		pathsFound.bind(watchService.pathsFound());
 		
-		startWatchService();
+		//startWatchService();
 	}
 	
 	public void shutdown() {
@@ -56,6 +56,7 @@ public class LocalFileModel extends BaseModel {
 	}*/
 	
 	public void startWatchService () {
+		System.out.println ("starting watch service");
 		watchServiceExecutor.execute(watchService);	
 		watchServiceExecutor.shutdown();
 	}
