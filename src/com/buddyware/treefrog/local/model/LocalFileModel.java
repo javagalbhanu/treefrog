@@ -2,10 +2,7 @@ package com.buddyware.treefrog.local.model;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Queue;
-
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.ArrayDeque;
 import java.util.concurrent.ExecutorService;
 
 import com.buddyware.treefrog.BaseModel;
@@ -22,16 +19,13 @@ public class LocalFileModel extends BaseModel {
 	
 	private final LocalWatchService watchService;
 
-	private final Queue <Path> pathQueue = new ConcurrentLinkedQueue <Path> ();
-	
 	private final ExecutorService watchServiceExecutor = 
 										createExecutor("WatchService", true);
     
-    private final ObjectProperty <ArrayList <Path>> pathsFound = 
-								new SimpleObjectProperty <ArrayList <Path>> ();
+    private final ObjectProperty <ArrayDeque <Path> > pathsFound = 
+								new SimpleObjectProperty <ArrayDeque <Path>> ();
     
-    private final ArrayList <Path> watchedPaths = new ArrayList <Path>();
-    
+    private final ArrayDeque <Path> watchPaths = new ArrayDeque <Path> ();
     private final Path rootPath = 
     				Paths.get(System.getProperty("user.home") + "/bucketsync");
     
@@ -40,6 +34,19 @@ public class LocalFileModel extends BaseModel {
 		watchService = new LocalWatchService (taskMessages, rootPath);
 		pathsFound.bind(watchService.pathsFound());
 		
+		setOnPathsFound (new ChangeListener <ArrayDeque <Path> >() {
+
+			@Override
+			public void changed( ObservableValue<? extends ArrayDeque<Path> > arg0,
+				ArrayDeque<Path> arg1, ArrayDeque<Path> arg2) {
+			
+				System.out.println ("Adding " + arg2.size() + " paths to model deque");
+				
+				watchPaths.addAll(arg2);
+			}
+		});
+		
+		watchService.initializeWatchPaths();
 		//startWatchService();
 	}
 	
@@ -47,16 +54,19 @@ public class LocalFileModel extends BaseModel {
 		watchService.cancel();
 	}
 		
-	public void setOnPathsFound (ChangeListener <ArrayList <Path>> listener) {
+	public void setOnPathsFound (ChangeListener <ArrayDeque <Path> > listener) {
 		pathsFound.addListener(listener);
 	};
-	/*
-	public ArrayList <Path> getWatchedPaths() {
-		return watchService.getwatchedPaths();
-	}*/
+
+	public ArrayDeque<Path> getWatchedPaths () {
+		return watchPaths;
+	};
 	
 	public void startWatchService () {
-		System.out.println ("starting watch service");
+		
+		if (watchServiceExecutor.isShutdown())
+			return;
+		
 		watchServiceExecutor.execute(watchService);	
 		watchServiceExecutor.shutdown();
 	}

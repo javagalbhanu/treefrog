@@ -1,7 +1,8 @@
 package com.buddyware.treefrog.local.config;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Iterator;
 
 import com.buddyware.treefrog.BaseController;
 
@@ -30,38 +31,44 @@ public class LocalConfigController extends BaseController {
     	
     	fileTree.setRoot(fsRoot);
     	
-    	mMain.getLocalFileModel().setOnPathsFound(new ChangeListener <ArrayList <Path> >() {
+    	mMain.getLocalFileModel().setOnPathsFound(
+    							new ChangeListener <ArrayDeque <Path> >() {
 
 			@Override
-			public void changed(ObservableValue<? extends ArrayList<Path>> arg0,
-					ArrayList<Path> arg1, ArrayList<Path> arg2) {
-				
-						System.out.println ("Found " + arg2.size() + " paths");
-						addTreeItems (arg2);
+			public void changed( ObservableValue<? extends ArrayDeque<Path> > arg0,
+					ArrayDeque<Path> arg1, ArrayDeque<Path> arg2) {
 
+				System.out.println ("Found " + arg2.size() + " paths");
+
+				for (Path item: arg2)
+					addTreeItems (item.iterator(), fsRoot);
 			}
     	});
     	
-    	
+    	for (Path item: mMain.getLocalFileModel().getWatchedPaths())
+    		addTreeItems (item.iterator(), fsRoot);
     }
     
-    private void addTreeItems (ArrayList <Path> items) {
+    private void addTreeItems (Iterator pathIt, TreeItem <String> treeItem) {
 
-    	if (fsRoot.getChildren().isEmpty()) {
+    	if (!pathIt.hasNext())
+    		return;
+    	
+    	String pathValue = pathIt.next().toString();
+  
+    	for (TreeItem <String> treeChild: treeItem.getChildren()) {
     		
-    		for (Path item: items)
-    			addTreeItem (fsRoot, item);
+    		//if the path matches, recurse and return
+    		if (treeChild.getValue().equals(pathValue)) {
+				addTreeItems (pathIt, treeChild);
+    			return;
+    		}
     	}
-    	else {
-    		for (Path item: items)
-    			addTreeItem (fsRoot, item);
-    		
-    	}
-    		
-    }
-    
-    private void addTreeItem (TreeItem <String> node, Path item){
-    	node.getChildren().add(new TreeItem <String> (item.toString()));
+   	
+    	//still here?  then this is a new path, so add it, then recurse
+    	TreeItem <String> treeChild = new TreeItem <String> (pathValue); 
+    	treeItem.getChildren().add (treeChild);
+		addTreeItems (pathIt, treeChild);
     }
     
     @FXML

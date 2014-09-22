@@ -7,13 +7,14 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -37,17 +38,15 @@ public final class LocalWatchService extends BaseTask {
     
     private final ExecutorService pathFinderExecutor = 
     									createExecutor ("pathFinder", false);
-    
-    private Integer finderDepth = Integer.MAX_VALUE;
+
     private final Map<WatchKey,Path> keys = new HashMap<WatchKey, Path>();
     
     private final ConcurrentLinkedQueue <Path> watchQueue = 
     										new ConcurrentLinkedQueue <Path> ();
     
-    private final ObjectProperty <ArrayList <Path> > pathsFound = 
-								new SimpleObjectProperty <ArrayList <Path>> ();
+    private final ObjectProperty <ArrayDeque <Path> > pathsFound = 
+								new SimpleObjectProperty <ArrayDeque <Path> > ();
 
-    private Boolean initialFind = true;
     private final Path rootPath;
     
 	public LocalWatchService 
@@ -60,7 +59,6 @@ public final class LocalWatchService extends BaseTask {
     	try {
 			this.watcher = FileSystems.getDefault().newWatchService();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     	
@@ -70,23 +68,60 @@ public final class LocalWatchService extends BaseTask {
 			public void handle(Event arg0) {
 				pathFinderExecutor.shutdown();
 			}
-		});    	
+		});
+
 	};
 
+
 	public void initializeWatchPaths() {
-    	//start pathfinder for initial find.
-		finderDepth = 2;
-		ArrayList <Path> paths = new ArrayList <Path> ();
-		paths.add (rootPath);
-    	runPathFinder (paths);
-    	finderDepth = Integer.MAX_VALUE;		
+		
+		ArrayDeque <Path> paths = new ArrayDeque <Path> ();
+		
+		//create a DirectoryStream filter that finds only directories
+		//and symlinks
+		
+		DirectoryStream.Filter<Path> filter = 
+			new DirectoryStream.Filter<Path>() {
+			
+				public boolean accept(Path file) throws IOException {
+					
+					return (Files.isDirectory(file) || 
+							Files.isSymbolicLink(file));
+				}
+			};
+		
+		//apply the filter to a directory stream opened on the root path
+		//and save everything returned.
+		try (DirectoryStream <Path> stream = 
+			Files.newDirectoryStream (rootPath, filter)) {
+			
+			for (Path entry: stream) {
+				
+				Path xpath = entry;
+
+				if (Files.isSymbolicLink(entry))
+					xpath = Files.readSymbolicLink(entry);
+				
+				paths.add(xpath);
+			}
+			
+		} catch (IOException x) {
+			x.printStackTrace();
+		}
+		
+		//save the list to the watch service property for UI notification
+System.out.println ("LocalWatchService: retrivied inital list.  Setting property...");		
+		this.pathsFound.setValue(paths);
+
+System.out.println ("LocalWatchService: adding inital list for recursion...");		
+		addPaths (paths);
 	}
 	
-	public ObjectProperty <ArrayList <Path> > pathsFound() {
+	public ObjectProperty <ArrayDeque <Path> > pathsFound() {
 		return this.pathsFound;
 	}
 	
-	public void addPaths (ArrayList <Path> paths) {
+	public void addPaths (ArrayDeque <Path> paths) {
 		
 		//execute path finder on an array list of paths
 		runPathFinder (paths);
@@ -95,35 +130,25 @@ public final class LocalWatchService extends BaseTask {
 	public final void addPath (Path dir) {
 	
 		//execute path finder on a single path
-		ArrayList <Path> finderList = new ArrayList <Path> ();
-		finderList.add (dir);
+		ArrayDeque <Path> finderList = new ArrayDeque <Path> ();
+		finderList.add(dir);
 
 		runPathFinder (finderList);
 	}
 	
-	private void runPathFinder (ArrayList <Path> paths) {
+	private void runPathFinder (ArrayDeque <Path> paths) {
 		
 		//need to add blocking code / mechanism in case a path finder is 
 		//currently running (rare case)
 
 		finder = new LocalPathFinder (messageQueue, watchQueue);
 		finder.setPaths (paths);
-		finder.setDepth (finderDepth);
 		
     	finder.setOnSucceeded(new EventHandler <WorkerStateEvent> () {
 
-    		//whenever path finder is called save the paths to watch so a complete list
-    		//is always available.
 			@Override
 			public void handle(WorkerStateEvent arg0) {
 				pathsFound.set(finder.getPaths());
-				
-				//if this is the initial find, re-run the path finder
-				//to finish recursing the specified paths.
-				if (initialFind) {
-					initialFind = false;
-					runPathFinder (finder.getPaths());
-				}
 			}
     	});
     	
@@ -137,7 +162,7 @@ public final class LocalWatchService extends BaseTask {
     public final void register(Path dir) 
     								throws IOException, InterruptedException {
  	
-//System.out.println ("LocalWatchService.register() " + dir.toString());
+System.out.println ("LocalWatchService.register() " + dir.toString());
     	//register the key with the watch service
         WatchKey key = 
     		dir.register (watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
@@ -203,16 +228,16 @@ public final class LocalWatchService extends BaseTask {
     }
     
 	@Override
-	protected Void call () {
+	protected Void call () throws IOException, InterruptedException {
 
     boolean interrupted = false;
-   
-    initializeWatchPaths();
-    
+
+    register (rootPath);
+
     try {
 		// enter watch cycle
         while (!interrupted) {
-System.out.println ("starting watch service");
+
 			 //watch for a key change.  Thread blocks until a change occurs
 	    	WatchKey key = null;
 	    	interrupted = isCancelled();

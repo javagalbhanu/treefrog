@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Queue;
@@ -21,12 +22,13 @@ public class LocalFileVisitor extends SimpleFileVisitor<Path> {
 	
 	private final BooleanProperty isCancelled = new SimpleBooleanProperty();
 	private final Queue <Path> watchQueue;
-	private final ArrayList <Path> watchPaths = new ArrayList <Path> ();
+	private final ArrayDeque <Path> watchPaths = new ArrayDeque <Path> ();
 	private HashMap<String, String> exclusionsMap = null;
 	
 	private final Path rootPath = 
 					Paths.get(System.getProperty("user.home") + "/bucketsync");
 	
+	//constructor
 	LocalFileVisitor (Queue <Path> queue) {
 		this.watchQueue = queue;
 	}
@@ -35,7 +37,6 @@ public class LocalFileVisitor extends SimpleFileVisitor<Path> {
     public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
         throws IOException
     {
-
 		if (exclusionsMap.containsKey(dir.toString())) {
 			System.err.println ("Skipping " + dir.toString());			
 			return FileVisitResult.SKIP_SUBTREE;
@@ -53,7 +54,7 @@ public class LocalFileVisitor extends SimpleFileVisitor<Path> {
 	@Override
 	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) 
 			throws IOException {
-		
+	
 		if (attrs.isSymbolicLink()) {
 			//unless this is link is in the bucket sync root folder, don't
 			//save the link's target path.
@@ -63,14 +64,15 @@ public class LocalFileVisitor extends SimpleFileVisitor<Path> {
 			String linkPath = "";
 
 			try {
-			linkPath = file.toRealPath().toString();
+				linkPath = file.toRealPath().toString();
 			} catch (IOException e) {
 				return FileVisitResult.CONTINUE;
 			}
-			System.out.println ("found symlink: " + linkPath);
+			
 			//if the link target is valid, save it
 			this.watchPaths.add(Paths.get(linkPath));
 		}	
+		
 		if (exclusionsMap.containsKey(file.toString())) {
 			return FileVisitResult.TERMINATE;			
 		}
@@ -87,6 +89,7 @@ public class LocalFileVisitor extends SimpleFileVisitor<Path> {
     @Override
     public FileVisitResult visitFileFailed(Path file, IOException e)
         throws IOException {
+    	
 		System.err.println ("FileVisit fail" + file.toString());				
 
         if (!exclusionsMap.containsKey(file.toString())) {
@@ -106,7 +109,8 @@ public class LocalFileVisitor extends SimpleFileVisitor<Path> {
         return FileVisitResult.SKIP_SUBTREE;
     }	
     
-    public ArrayList <Path> getPaths() {
+    public ArrayDeque <Path> getPaths() {
+System.out.println("Returning " + watchPaths.size());    	
     	return watchPaths;
     }
     

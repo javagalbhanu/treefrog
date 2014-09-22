@@ -4,10 +4,12 @@ import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.Event;
@@ -21,7 +23,7 @@ import com.buddyware.treefrog.util.utils;
 public final class LocalPathFinder extends BaseTask {
 
 	private final ArrayList <Path> finderPaths = new ArrayList <Path>();
-	private final ArrayList <Path> foundPaths = new ArrayList <Path> ();
+	private final ArrayDeque <Path> foundPaths = new ArrayDeque <Path> ();
 	private final LocalFileVisitor visitor;
 	private final BooleanProperty isCancelled = new SimpleBooleanProperty (false);
 	private Integer visitDepth = Integer.MAX_VALUE;
@@ -88,20 +90,15 @@ public final class LocalPathFinder extends BaseTask {
 		};
 
 		foundPaths.addAll(visitor.getPaths());
-		
-System.out.println ("visit complete");
+
 		return null;
     };
     
-    public final ArrayList <Path> getPaths() {
-System.out.println ("found " + foundPaths.size() + " paths...");
-System.out.println (foundPaths.get(0).toString());
+    public final ArrayDeque <Path> getPaths() {
     	return foundPaths;
     }
     
-    public final void setPaths (ArrayList <Path> paths) {
-System.out.println ("looking for " + paths.size() + " paths...");
-System.out.println (paths.get(0).toString());
+    public final void setPaths (ArrayDeque <Path> paths) {
     	finderPaths.addAll(paths);
     };
 }
