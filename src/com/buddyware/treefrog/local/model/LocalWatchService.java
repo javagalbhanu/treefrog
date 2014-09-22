@@ -209,8 +209,15 @@ System.out.println ("LocalWatchService.register() " + dir.toString());
 							addPath (child);
 	//        		}
 	        	}
-	            else {
-	            		enqueueMessage ("File created: " + name, TaskMessageType.TASK_ACTIVITY);
+	            else if (Files.isSymbolicLink(child)) {
+	            	try {
+						addPath (child.toRealPath());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+	            } else {
+	            	enqueueMessage ("File created: " + name, TaskMessageType.TASK_ACTIVITY);
 	            }
 	        }		                
 	
