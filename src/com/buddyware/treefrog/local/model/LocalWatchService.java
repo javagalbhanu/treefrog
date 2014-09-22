@@ -136,6 +136,10 @@ System.out.println ("LocalWatchService: adding inital list for recursion...");
 		runPathFinder (finderList);
 	}
 	
+	public final void removePath (Path dir) {
+		System.out.println ("removePath stub code goes here!!!");
+	}
+	
 	private void runPathFinder (ArrayDeque <Path> paths) {
 		
 		//need to add blocking code / mechanism in case a path finder is 
@@ -187,48 +191,48 @@ System.out.println ("LocalWatchService.register() " + dir.toString());
 		
     	for (WatchEvent<?> event: key.pollEvents()) {
 	    	
-	        WatchEvent.Kind kind = event.kind();
-	
+            WatchEvent.Kind kind = event.kind();		
+
+            Path target = resolveTarget (event, dir);
+            
 	        // TBD - provide example of how OVERFLOW event is handled
 	        if (kind == OVERFLOW) {
 	    		enqueueMessage ("Overflow encountered", TaskMessageType.TASK_ERROR);
 	            continue;
 	        }
 	
-	        // Context for directory entry event is the file name of entry
-	        WatchEvent<Path> ev = cast(event);
-	        String name = ev.context().toString();
-	        Path child = dir.resolve(name);
-	
-	        if (kind == ENTRY_CREATE) {
-	        	if (Files.isDirectory(child,  NOFOLLOW_LINKS)) {
-	
-						enqueueMessage ("Directory created: " + name, TaskMessageType.TASK_ACTIVITY);
-	            		
-	//        		if (recursive) {
-							addPath (child);
-	//        		}
-	        	}
-	            else if (Files.isSymbolicLink(child)) {
-	            	try {
-						addPath (child.toRealPath());
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-	            } else {
-	            	enqueueMessage ("File created: " + name, TaskMessageType.TASK_ACTIVITY);
-	            }
-	        }		                
+	        if (kind == ENTRY_CREATE)
+	        	addPath (target);
 	
 	        if (kind == ENTRY_MODIFY)
-	        		enqueueMessage ("File modified: " + name, TaskMessageType.TASK_ACTIVITY);
+	        	enqueueMessage ("File modified: " + target.toString(), TaskMessageType.TASK_ACTIVITY);
 	        
-	        if (kind == ENTRY_DELETE)
-	        		enqueueMessage ("File deleted: " + name, TaskMessageType.TASK_ACTIVITY);
+	        if (kind == ENTRY_DELETE) {
+	        	removePath (target);
+	        	enqueueMessage ("File deleted: " + target.toString(), TaskMessageType.TASK_ACTIVITY);
+	        }
 	    }
 	}
     
+	private Path resolveTarget (WatchEvent <?> event, Path dir) {
+		
+        WatchEvent<Path> ev = cast(event);
+        dir.resolve(ev.context().toString());
+        
+    	if (Files.isDirectory(dir,  NOFOLLOW_LINKS))
+			return dir;
+    	
+    	if (Files.isSymbolicLink(dir))
+			try {
+				return dir.toRealPath();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}  
+    	
+    	return dir;        
+	}
+	
     @SuppressWarnings("unchecked")
     <T> WatchEvent<T> cast(WatchEvent<?> event) {
         return (WatchEvent<T>)event;
