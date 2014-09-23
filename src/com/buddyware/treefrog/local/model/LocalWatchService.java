@@ -33,21 +33,33 @@ import com.buddyware.treefrog.util.TaskMessage.TaskMessageType;
 
 public final class LocalWatchService extends BaseTask {
 
+	//watch service task
     private WatchService watcher;
+    
+    //path finding task and associated executor
     private LocalPathFinder finder;
     
     private final ExecutorService pathFinderExecutor = 
     									createExecutor ("pathFinder", false);
 
+    //class hash map which keys watched paths to generated watch keys
     private final Map<WatchKey,Path> keys = new HashMap<WatchKey, Path>();
     
+    //queue shared between watchservice and pathfinder sub tasks
     private final ConcurrentLinkedQueue <Path> watchQueue = 
     										new ConcurrentLinkedQueue <Path> ();
     
-    private final ObjectProperty <ArrayDeque <Path> > pathsFound = 
+    //returns paths added to the watch service
+    private final ObjectProperty <ArrayDeque <Path> > addedPaths = 
 								new SimpleObjectProperty <ArrayDeque <Path> > ();
 
+    //returns paths removed from the watch service
+    private final ObjectProperty <ArrayDeque <Path> > removedPaths = 
+			new SimpleObjectProperty <ArrayDeque <Path> > ();
+    
+    //root Path reference (provided by local file model on construction)
     private final Path rootPath;
+    
     
 	public LocalWatchService 
 					(BlockingQueue <TaskMessage> messageQueue, Path rootPath) {
@@ -111,20 +123,24 @@ public final class LocalWatchService extends BaseTask {
 		
 		//save the list to the watch service property for UI notification
 System.out.println ("LocalWatchService: retrivied inital list.  Setting property...");		
-		this.pathsFound.setValue(paths);
+		this.addedPaths.setValue(paths);
 
 System.out.println ("LocalWatchService: adding inital list for recursion...");		
 		addPaths (paths);
 	}
 	
-	public ObjectProperty <ArrayDeque <Path> > pathsFound() {
-		return this.pathsFound;
+	public ObjectProperty <ArrayDeque <Path> > addedPaths() {
+		return this.addedPaths;
+	}
+
+	public ObjectProperty <ArrayDeque <Path> > removedPaths() {
+		return this.removedPaths;
 	}
 	
 	public void addPaths (ArrayDeque <Path> paths) {
 		
 		//execute path finder on an array list of paths
-		runPathFinder (paths);
+		runPathFinder (paths, false);
 	}
 	
 	public final void addPath (Path dir) {
@@ -133,14 +149,18 @@ System.out.println ("LocalWatchService: adding inital list for recursion...");
 		ArrayDeque <Path> finderList = new ArrayDeque <Path> ();
 		finderList.add(dir);
 
-		runPathFinder (finderList);
+		runPathFinder (finderList, false);
 	}
 	
 	public final void removePath (Path dir) {
-		System.out.println ("removePath stub code goes here!!!");
+		
+		ArrayDeque <Path> finderList = new ArrayDeque <Path> ();
+		finderList.add(dir);
+		
+		runPathFinder (finderList, true);
 	}
 	
-	private void runPathFinder (ArrayDeque <Path> paths) {
+	private void runPathFinder (ArrayDeque <Path> paths, boolean isRemoving) {
 		
 		//need to add blocking code / mechanism in case a path finder is 
 		//currently running (rare case)
@@ -148,13 +168,30 @@ System.out.println ("LocalWatchService: adding inital list for recursion...");
 		finder = new LocalPathFinder (messageQueue, watchQueue);
 		finder.setPaths (paths);
 		
-    	finder.setOnSucceeded(new EventHandler <WorkerStateEvent> () {
+		//callbacks on successful completion of pathfinder
 
-			@Override
-			public void handle(WorkerStateEvent arg0) {
-				pathsFound.set(finder.getPaths());
-			}
-    	});
+		EventHandler eh = null;
+		
+		if (!isRemoving) {
+			eh = new EventHandler <WorkerStateEvent> () {
+	
+				@Override
+				public void handle(WorkerStateEvent arg0) {
+					addedPaths.set(finder.getPaths());
+				}
+			};
+			
+		} else {
+			eh = new EventHandler <WorkerStateEvent> () {
+				
+				@Override
+				public void handle(WorkerStateEvent arg0) {
+					removedPaths.set(finder.getPaths());
+				}
+			};			
+		}
+		
+    	finder.setOnSucceeded(eh);
     	
 		pathFinderExecutor.execute (finder);    	
 	}
@@ -215,16 +252,17 @@ System.out.println ("LocalWatchService.register() " + dir.toString());
 	}
     
 	private Path resolveTarget (WatchEvent <?> event, Path dir) {
-		
+System.out.println ("resolving " + event.context());
+
         WatchEvent<Path> ev = cast(event);
-        dir.resolve(ev.context().toString());
+        Path child = dir.resolve(ev.context().toString());
         
-    	if (Files.isDirectory(dir,  NOFOLLOW_LINKS))
-			return dir;
+    	if (Files.isDirectory(child,  NOFOLLOW_LINKS))
+			return child;
     	
-    	if (Files.isSymbolicLink(dir))
+    	if (Files.isSymbolicLink(child))
 			try {
-				return dir.toRealPath();
+				return child.toRealPath();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

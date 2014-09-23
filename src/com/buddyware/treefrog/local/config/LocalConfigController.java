@@ -31,22 +31,62 @@ public class LocalConfigController extends BaseController {
     	
     	fileTree.setRoot(fsRoot);
     	
-    	mMain.getLocalFileModel().setOnPathsFound(
+    	mMain.getLocalFileModel().setOnPathsAdded(
     							new ChangeListener <ArrayDeque <Path> >() {
 
 			@Override
-			public void changed( ObservableValue<? extends ArrayDeque<Path> > arg0,
-					ArrayDeque<Path> arg1, ArrayDeque<Path> arg2) {
+			public void changed( ObservableValue<? extends ArrayDeque<Path> > changes,
+					ArrayDeque<Path> oldpaths, ArrayDeque<Path> newpaths) {
 
-				System.out.println ("Found " + arg2.size() + " paths");
+				System.out.println ("Found " + newpaths.size() + " paths to add");
 
-				for (Path item: arg2)
-					addTreeItems (item.iterator(), fsRoot);
+				while (!newpaths.isEmpty())
+					addTreeItems (newpaths.remove().iterator(), fsRoot);
 			}
     	});
+
+    	mMain.getLocalFileModel().setOnPathsRemoved(
+				new ChangeListener <ArrayDeque <Path> >() {
+
+		@Override
+		public void changed( ObservableValue<? extends ArrayDeque<Path> > changes,
+			ArrayDeque<Path> oldpaths, ArrayDeque<Path> newpaths) {
+		
+			System.out.println ("Found " + newpaths.size() + " paths to remove");
+		
+			while (!newpaths.isEmpty())
+				removeTreeItems (newpaths.remove().iterator(), fsRoot);
+			}
+		});
     	
     	for (Path item: mMain.getLocalFileModel().getWatchedPaths())
     		addTreeItems (item.iterator(), fsRoot);
+    }
+    
+    private boolean removeTreeItems (Iterator pathIt, TreeItem <String> treeItem) {
+    	
+    	//if we've reached the end of the path, then this tree item and it's
+    	//children need to be removed.
+    	
+    	if (!pathIt.hasNext())
+    		return true;
+    	
+    	String pathValue = pathIt.next().toString();
+    	
+    	for (TreeItem <String> treeChild: treeItem.getChildren()) {
+    		
+    		//if the path matches, recurse
+    		if (treeChild.getValue().equals (pathValue)) {
+    			
+    			//if the recurse returns true, the end of the path has been
+    			//reached, so delete the tree item.
+    			if (removeTreeItems (pathIt, treeChild))
+    				treeChild.getParent().getChildren().remove(treeChild);
+    				
+    			return false;
+    		}
+    	}
+    	return false;
     }
     
     private void addTreeItems (Iterator pathIt, TreeItem <String> treeItem) {
