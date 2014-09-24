@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.BorderPane?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buddyware.treefrog.debug.debug_viewController">
+   <children>
+      <VBox AnchorPane.leftAnchor="15.0" AnchorPane.topAnchor="20.0">
+         <children>
+            <HBox spacing="20.0">
+               <children>
+                  <Label text="Watch Service" />
+                  <Label fx:id="watchServiceStatusLabel" alignment="CENTER_RIGHT" contentDisplay="RIGHT" text="Status" textFill="RED">
+                     <HBox.margin>
+                        <Insets />
+                     </HBox.margin>
+                  </Label>
+               </children>
+               <VBox.margin>
+                  <Insets />
+               </VBox.margin>
+            </HBox>
+            <HBox spacing="5.0">
+               <children>
+                  <Button fx:id="watchServiceStartButton" mnemonicParsing="false" onAction="#startWatchService" text="Start" />
+                  <Button fx:id="watchServiceKillButton" disable="true" mnemonicParsing="false" onAction="#killWatchService" text="Stop" />
+               </children>
+               <VBox.margin>
+                  <Insets top="10.0" />
+               </VBox.margin>
+            </HBox>
+         </children>
+      </VBox>
+      <SplitPane dividerPositions="0.5" layoutX="183.0" orientation="VERTICAL" prefHeight="361.0" prefWidth="400.0">
+        <items>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+               <children>
+                  <TextArea fx:id="debugConsoleOutputArea" layoutX="76.0" layoutY="-24.0" prefHeight="200.0" prefWidth="200.0" scrollLeft="1.0" scrollTop="1.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+               </children>
+            </AnchorPane>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+               <children>
+                  <TextArea fx:id="debugConsoleErrorArea" layoutX="82.0" layoutY="-39.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+               </children>
+            </AnchorPane>
+        </items>
+      </SplitPane>
+   </children>
+</AnchorPane>

@@ -1,6 +1,5 @@
 package com.buddyware.treefrog.util;
 
-import java.io.File;
 import java.io.IOException;
 
 import com.buddyware.treefrog.BaseController;
@@ -8,7 +7,6 @@ import com.buddyware.treefrog.Main;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
@@ -21,7 +19,7 @@ public class utils {
 		try {
 		    // Load the fxml file and create a new stage for the popup dialog.
 		    FXMLLoader loader = new FXMLLoader();
-		    loader.setLocation(Main.class.getResource("util/FileDialog.fxml"));
+		    loader.setLocation(Main.class.getResource("util/Dialog.fxml"));
 		    BorderPane page = (BorderPane) loader.load();
 		    
 			// Create the dialog Stage.
@@ -40,7 +38,8 @@ public class utils {
 		}
 	}
 
-	public static <S extends Pane, T extends BaseController> T loadFxml (String resource, Stage parentStage) {
+	public static <S extends Pane, T extends BaseController> T loadFxml 
+	(String resource, Stage parentStage, BaseController controller) {
 		
 		//creates a new fxml object, returning the controller (if assigned)
 		//parent stage contains the created scene and it's root layout of the generic type
@@ -60,16 +59,17 @@ public class utils {
 			parentStage.setScene (new Scene (layout));
 			parentStage.show();
 		
-			if (fxmlLoader.getController() == null)
-				System.out.println("Contorller is null");
-			else
-				System.out.println("Controller is something");
-			
-			if (fxmlLoader.getController() != null) {
-				if (fxmlLoader.getController() instanceof BaseController)
-					return (T) (fxmlLoader.getController());
+			if (controller != null)
+				fxmlLoader.setController(controller);
+			else {
+				if (fxmlLoader.getController() instanceof BaseController) {
+					controller = fxmlLoader.getController();
+					controller.setParentStage(parentStage);
+				}
+				else
+					controller = null;
 			}
 			
-			return null;
+			return (T) controller;
 	};
 }
