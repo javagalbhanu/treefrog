@@ -114,6 +114,8 @@ public final class LocalWatchService extends BaseTask {
 				if (Files.isSymbolicLink(entry))
 					xpath = Files.readSymbolicLink(entry);
 				
+				//relativize the path against it's parent to capture only
+				//the last element as a path
 				paths.add(xpath);
 			}
 			
@@ -229,7 +231,8 @@ System.out.println ("LocalWatchService.register() " + dir.toString());
     	for (WatchEvent<?> event: key.pollEvents()) {
 	    	
             WatchEvent.Kind kind = event.kind();		
-
+            System.out.println ("dir: " + dir);	
+          //  TARGET RESOLUTION FAILS FOR DELETED FILES!!!
             Path target = resolveTarget (event, dir);
             
 	        // TBD - provide example of how OVERFLOW event is handled
@@ -239,6 +242,7 @@ System.out.println ("LocalWatchService.register() " + dir.toString());
 	        }
 	
 	        if (kind == ENTRY_CREATE)
+	        	enqueueMessage ("File added: " + target.toString(), TaskMessageType.TASK_ACTIVITY);
 	        	addPath (target);
 	
 	        if (kind == ENTRY_MODIFY)
@@ -252,16 +256,22 @@ System.out.println ("LocalWatchService.register() " + dir.toString());
 	}
     
 	private Path resolveTarget (WatchEvent <?> event, Path dir) {
-System.out.println ("resolving " + event.context());
 
+		//resolve target resolves the target of the event against it's parent
+		//directory.  Symbolic links return the link target.
+		//In cases where the event kind is ENTRY_DELETE, resoltion will fail.
+		//
         WatchEvent<Path> ev = cast(event);
-        Path child = dir.resolve(ev.context().toString());
-        
+        Path child = dir.resolve(ev.context());
+
+	System.out.println ("resolving " + event.context() + " as " + child + ": " + Files.isSymbolicLink(child) );
+
     	if (Files.isDirectory(child,  NOFOLLOW_LINKS))
 			return child;
     	
     	if (Files.isSymbolicLink(child))
 			try {
+System.out.println ("Symbolic link resolved.  Target: " + child.toRealPath());				
 				return child.toRealPath();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block

@@ -59,11 +59,12 @@ public class LocalConfigController extends BaseController {
 			}
 		});
     	
+    	//initial population of the tree view 
     	for (Path item: mMain.getLocalFileModel().getWatchedPaths())
     		addTreeItems (item.iterator(), fsRoot);
     }
     
-    private boolean removeTreeItems (Iterator pathIt, TreeItem <String> treeItem) {
+    private boolean removeTreeItems (Iterator <Path> pathIt, TreeItem <String> treeItem) {
     	
     	//if we've reached the end of the path, then this tree item and it's
     	//children need to be removed.
@@ -89,24 +90,33 @@ public class LocalConfigController extends BaseController {
     	return false;
     }
     
-    private void addTreeItems (Iterator pathIt, TreeItem <String> treeItem) {
+    private void addTreeItems (Iterator <Path> pathIt, TreeItem <String> treeItem) {
 
     	if (!pathIt.hasNext())
     		return;
     	
-    	String pathValue = pathIt.next().toString();
-  
+    	Path path = (Path) pathIt;
+    	
     	for (TreeItem <String> treeChild: treeItem.getChildren()) {
     		
     		//if the path matches, recurse and return
-    		if (treeChild.getValue().equals(pathValue)) {
+    		if (treeChild.getValue().equals(path.toString())) {
 				addTreeItems (pathIt, treeChild);
     			return;
     		}
     	}
    	
     	//still here?  then this is a new path, so add it, then recurse
-    	TreeItem <String> treeChild = new TreeItem <String> (pathValue); 
+    	TreeItem <String> treeChild = null;
+    	
+    	//if we're populating the root node, relativize all paths against their parents
+    	if (treeItem.equals (fsRoot)) {
+    		treeChild = new TreeItem <String> 
+    							(path.getParent().relativize(path).toString());
+    	}
+    	else
+    		treeChild = new TreeItem <String> (path.toString());
+    	
     	treeItem.getChildren().add (treeChild);
 		addTreeItems (pathIt, treeChild);
     }
