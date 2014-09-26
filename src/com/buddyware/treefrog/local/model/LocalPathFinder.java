@@ -22,14 +22,19 @@ import com.buddyware.treefrog.util.utils;
 
 public final class LocalPathFinder extends BaseTask {
 
-	private final ArrayList <Path> finderPaths = new ArrayList <Path>();
-	private final ArrayDeque <Path> foundPaths = new ArrayDeque <Path> ();
+	private final ArrayList <LocalWatchPath> finderPaths = 
+											new ArrayList <LocalWatchPath>();
+	
+	private final ArrayDeque <Path> foundPaths = 
+											new ArrayDeque <Path> ();
+	
 	private final LocalFileVisitor visitor;
 	private final BooleanProperty isCancelled = new SimpleBooleanProperty (false);
 	private Integer visitDepth = Integer.MAX_VALUE;
 	private Boolean followSymLinks = false;
 	
-    protected LocalPathFinder ( BlockingQueue<TaskMessage> messageQueue, Queue <Path> watchQueue) {
+    protected LocalPathFinder ( BlockingQueue<TaskMessage> messageQueue, 
+    												Queue <Path> watchQueue) {
 
     	super(messageQueue);
 
@@ -65,7 +70,7 @@ public final class LocalPathFinder extends BaseTask {
 	@Override
     public final Void call() {
 		
-		for (Path dir: finderPaths) {
+		for (LocalWatchPath path: finderPaths) {
 
 			if (isCancelled())
 				break;
@@ -73,12 +78,14 @@ public final class LocalPathFinder extends BaseTask {
 			
 	    	try {
 	    		if (followSymLinks) {
-	    			EnumSet<FileVisitOption> opts = EnumSet.of (FileVisitOption.FOLLOW_LINKS); 
+	    			EnumSet<FileVisitOption> opts = 
+	    							EnumSet.of (FileVisitOption.FOLLOW_LINKS); 
 
-	    			Files.walkFileTree(dir, opts, visitDepth, visitor);
+	    			Files.walkFileTree(path.getFullPath(), 
+	    											opts, visitDepth, visitor);
 	    		}
 	    		else {
-	    			Files.walkFileTree(dir,  visitor);
+	    			Files.walkFileTree(path.getFullPath(),  visitor);
 	    		}
 	    			
 	        } catch (IOException e) {
@@ -94,11 +101,16 @@ public final class LocalPathFinder extends BaseTask {
 		return null;
     };
     
-    public final ArrayDeque <Path> getPaths() {
-    	return foundPaths;
+    public final ArrayDeque <LocalWatchPath> getPaths() {
+    	
+    	ArrayDeque <LocalWatchPath> result = new ArrayDeque <LocalWatchPath> ();
+    	for (Path path: foundPaths)
+    		result.push (new LocalWatchPath (path));
+    	
+    	return result;
     }
     
-    public final void setPaths (ArrayDeque <Path> paths) {
+    public final void setPaths (ArrayDeque <LocalWatchPath> paths) {
     	finderPaths.addAll(paths);
     };
 }

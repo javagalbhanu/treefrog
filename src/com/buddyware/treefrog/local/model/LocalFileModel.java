@@ -25,48 +25,53 @@ public class LocalFileModel extends BaseModel {
     
 	
 	//property which returns the paths last added to the watch service
-    private final ObjectProperty <ArrayDeque <Path> > addedPaths = 
-								new SimpleObjectProperty <ArrayDeque <Path>> ();
+    private final ObjectProperty <ArrayDeque <LocalWatchPath> > addedPaths = 
+					new SimpleObjectProperty <ArrayDeque <LocalWatchPath> > ();
 
     //returns the paths last removed from the watch service
-    private final ObjectProperty <ArrayDeque <Path> > removedPaths = 
-    							new SimpleObjectProperty <ArrayDeque <Path>> ();
+    private final ObjectProperty <ArrayDeque <LocalWatchPath> > removedPaths = 
+					new SimpleObjectProperty <ArrayDeque <LocalWatchPath> > ();
 
     
     //total list of paths currently watched by the watch service
-    private final ArrayDeque <Path> watchPaths = new ArrayDeque <Path> ();
-    
-    //rootpath points to the bucketsync directory in user's home
-    private final Path rootPath = 
-    				Paths.get(System.getProperty("user.home") + "/bucketsync");
-    
+    private final ArrayDeque <LocalWatchPath> watchPaths = 
+    										new ArrayDeque <LocalWatchPath> ();
+       
 	public LocalFileModel() {
-
-		watchService = new LocalWatchService (taskMessages, rootPath);
+		
+	    //rootpath points to the bucketsync directory in user's home
+	    LocalWatchPath.setRoot (
+	    			Paths.get(System.getProperty("user.home") + "/bucketsync")
+	    );
+	    
+		watchService = new LocalWatchService (taskMessages);
 		
 		addedPaths.bind (watchService.addedPaths());
 		removedPaths.bind (watchService.removedPaths());
 		
-		setOnPathsAdded (new ChangeListener <ArrayDeque <Path> >() {
+		setOnPathsAdded (new ChangeListener <ArrayDeque <LocalWatchPath> >() {
 
 			@Override
-			public void changed( ObservableValue<? extends ArrayDeque<Path> > arg0,
-				ArrayDeque<Path> arg1, ArrayDeque<Path> arg2) {
+			public void changed( 
+				ObservableValue<? extends ArrayDeque<LocalWatchPath> > changes,
+				ArrayDeque<LocalWatchPath> oldValues, 
+				ArrayDeque<LocalWatchPath> newValues) {
 			
-				watchPaths.addAll(arg2);
+				watchPaths.addAll(newValues);
 			}
 		});
 		
-		setOnPathsRemoved (new ChangeListener <ArrayDeque <Path> >() {
+		setOnPathsRemoved (new ChangeListener <ArrayDeque <LocalWatchPath> >() {
 
 			@Override
 			public void changed(
-					ObservableValue<? extends ArrayDeque<Path>> arg0,
-					ArrayDeque<Path> arg1, ArrayDeque<Path> arg2) {
+				ObservableValue<? extends ArrayDeque<LocalWatchPath> > changes,
+				ArrayDeque<LocalWatchPath> oldValues, 
+				ArrayDeque<LocalWatchPath> newValues) {
 				
 				//pop paths from deque and remove them from the watch paths
-				while (!arg2.isEmpty())
-					watchPaths.remove (arg2.remove());
+				while (!newValues.isEmpty())
+					watchPaths.remove (newValues.remove());
 			}
 		});
 		
@@ -77,16 +82,22 @@ public class LocalFileModel extends BaseModel {
 	public void shutdown() {
 		watchService.cancel();
 	}
-		
-	public void setOnPathsAdded (ChangeListener <ArrayDeque <Path> > listener) {
+	
+	public Path getRootPath() {
+		return LocalWatchPath.getRoot();
+	};
+	
+	public void setOnPathsAdded 
+					(ChangeListener <ArrayDeque <LocalWatchPath> > listener) {
 		addedPaths.addListener(listener);
 	};
 
-	public void setOnPathsRemoved (ChangeListener <ArrayDeque <Path> > listener) {
+	public void setOnPathsRemoved 
+					(ChangeListener <ArrayDeque <LocalWatchPath> > listener) {
 		removedPaths.addListener(listener);
 	};
 	
-	public ArrayDeque<Path> getWatchedPaths () {
+	public ArrayDeque<LocalWatchPath> getWatchedPaths () {
 		return watchPaths;
 	};
 	

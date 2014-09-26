@@ -5,6 +5,7 @@ import java.util.ArrayDeque;
 import java.util.Iterator;
 
 import com.buddyware.treefrog.BaseController;
+import com.buddyware.treefrog.local.model.LocalWatchPath;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -21,7 +22,8 @@ public class LocalConfigController extends BaseController {
 	@FXML
 	private ListView fileList;
 	
-	private TreeItem <String> fsRoot = new TreeItem <String> ("Local filesystem");
+	private LocalTreeItem fsRoot = 
+					new LocalTreeItem (mMain.getLocalFileModel().getRootPath());
 	
     /**
      * FXML initialization requirement
@@ -32,40 +34,46 @@ public class LocalConfigController extends BaseController {
     	fileTree.setRoot(fsRoot);
     	
     	mMain.getLocalFileModel().setOnPathsAdded(
-    							new ChangeListener <ArrayDeque <Path> >() {
+						new ChangeListener <ArrayDeque <LocalWatchPath> >() {
 
 			@Override
-			public void changed( ObservableValue<? extends ArrayDeque<Path> > changes,
-					ArrayDeque<Path> oldpaths, ArrayDeque<Path> newpaths) {
+			public void changed( 
+				ObservableValue<? extends ArrayDeque <LocalWatchPath> > changes,
+				ArrayDeque <LocalWatchPath> oldvalues, 
+				ArrayDeque <LocalWatchPath> newvalues) {
 
-				System.out.println ("Found " + newpaths.size() + " paths to add");
+				System.out.println ("Found " + newvalues.size() + " paths to add");
 
-				while (!newpaths.isEmpty())
-					addTreeItems (newpaths.remove().iterator(), fsRoot);
+			//	while (!newpaths.isEmpty())
+				//	addTreeItems (newpaths.remove().iterator(), fsRoot);
 			}
+
     	});
 
     	mMain.getLocalFileModel().setOnPathsRemoved(
-				new ChangeListener <ArrayDeque <Path> >() {
+						new ChangeListener <ArrayDeque <LocalWatchPath> >() {
 
-		@Override
-		public void changed( ObservableValue<? extends ArrayDeque<Path> > changes,
-			ArrayDeque<Path> oldpaths, ArrayDeque<Path> newpaths) {
+			@Override
+			public void changed (
+				ObservableValue<? extends ArrayDeque <LocalWatchPath> > changes,
+				ArrayDeque <LocalWatchPath> oldvalues, 
+				ArrayDeque<LocalWatchPath> newvalues) {
 		
-			System.out.println ("Found " + newpaths.size() + " paths to remove");
+			System.out.println ("Found " + newvalues.size() + " paths to remove");
 		
-			while (!newpaths.isEmpty())
-				removeTreeItems (newpaths.remove().iterator(), fsRoot);
+			//while (!newvalues.isEmpty())
+				//removeTreeItems (newvalues.remove().iterator(), fsRoot);
 			}
 		});
     	
-    	//initial population of the tree view 
-    	for (Path item: mMain.getLocalFileModel().getWatchedPaths())
-    		addTreeItems (item.iterator(), fsRoot);
+    	//initial populating of tree view
+    	for (LocalWatchPath item: mMain.getLocalFileModel().getWatchedPaths()) { 
+    		addTreeItem (item, fsRoot);
+    	}
     }
     
     private boolean removeTreeItems (Iterator <Path> pathIt, TreeItem <String> treeItem) {
-    	
+ /*   	
     	//if we've reached the end of the path, then this tree item and it's
     	//children need to be removed.
     	
@@ -74,7 +82,7 @@ public class LocalConfigController extends BaseController {
     	
     	String pathValue = pathIt.next().toString();
     	
-    	for (TreeItem <String> treeChild: treeItem.getChildren()) {
+    	for (LocalTreeItem treeChild: treeItem.getChildren()) {
     		
     		//if the path matches, recurse
     		if (treeChild.getValue().equals (pathValue)) {
@@ -86,39 +94,43 @@ public class LocalConfigController extends BaseController {
     				
     			return false;
     		}
-    	}
+    	}*/
     	return false;
     }
     
-    private void addTreeItems (Iterator <Path> pathIt, TreeItem <String> treeItem) {
-
-    	if (!pathIt.hasNext())
+    private void addTreeItem (LocalWatchPath item, LocalTreeItem treeItem) {
+    	
+    	if (!item.hasNext())
     		return;
     	
-    	Path path = (Path) pathIt;
+    	String nextName = item.next();
     	
-    	for (TreeItem <String> treeChild: treeItem.getChildren()) {
+    	for (int x = 0; x < treeItem.getChildren().size(); x++) {
     		
-    		//if the path matches, recurse and return
-    		if (treeChild.getValue().equals(path.toString())) {
-				addTreeItems (pathIt, treeChild);
+    		LocalTreeItem child = treeItem.getChild(x);
+    		
+    		//if relative paths match, recurse and return 
+    		if (child.getValue().equals(nextName)) {
+    			addTreeItem (item, child);
     			return;
     		}
     	}
-   	
-    	//still here?  then this is a new path, so add it, then recurse
-    	TreeItem <String> treeChild = null;
     	
-    	//if we're populating the root node, relativize all paths against their parents
-    	if (treeItem.equals (fsRoot)) {
-    		treeChild = new TreeItem <String> 
-    							(path.getParent().relativize(path).toString());
-    	}
+    	//still here?  then the item found no matches against the current
+    	//tree item's children.  That means we need to add the item itself
+    	//as a child.  However, if the item's full path is longer, then this
+    	//is not a real watch path, so it's watch path reference should be
+    	//set to null
+    	
+    	LocalTreeItem treeChild = null;
+    	
+    	if (item.hasNext())
+    		treeChild = new LocalTreeItem (nextName);
     	else
-    		treeChild = new TreeItem <String> (path.toString());
+    		treeChild = new LocalTreeItem (item);
     	
-    	treeItem.getChildren().add (treeChild);
-		addTreeItems (pathIt, treeChild);
+    	treeItem.getChildren().add(treeChild);
+    	addTreeItem (item, treeChild);
     }
     
     @FXML

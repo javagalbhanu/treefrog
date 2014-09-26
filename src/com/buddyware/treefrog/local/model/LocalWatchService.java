@@ -43,29 +43,24 @@ public final class LocalWatchService extends BaseTask {
     									createExecutor ("pathFinder", false);
 
     //class hash map which keys watched paths to generated watch keys
-    private final Map<WatchKey,Path> keys = new HashMap<WatchKey, Path>();
+    private final Map<WatchKey, Path> keys = new HashMap<WatchKey, Path>();
     
     //queue shared between watchservice and pathfinder sub tasks
     private final ConcurrentLinkedQueue <Path> watchQueue = 
-    										new ConcurrentLinkedQueue <Path> ();
+								new ConcurrentLinkedQueue <Path> ();
     
     //returns paths added to the watch service
-    private final ObjectProperty <ArrayDeque <Path> > addedPaths = 
-								new SimpleObjectProperty <ArrayDeque <Path> > ();
+    private final ObjectProperty <ArrayDeque <LocalWatchPath> > addedPaths = 
+					new SimpleObjectProperty <ArrayDeque <LocalWatchPath> > ();
 
     //returns paths removed from the watch service
-    private final ObjectProperty <ArrayDeque <Path> > removedPaths = 
-			new SimpleObjectProperty <ArrayDeque <Path> > ();
-    
-    //root Path reference (provided by local file model on construction)
-    private final Path rootPath;
+    private final ObjectProperty <ArrayDeque <LocalWatchPath> > removedPaths = 
+			new SimpleObjectProperty <ArrayDeque <LocalWatchPath> > ();
     
     
-	public LocalWatchService 
-					(BlockingQueue <TaskMessage> messageQueue, Path rootPath) {
+	public LocalWatchService (BlockingQueue <TaskMessage> messageQueue) {
 
 		super (messageQueue);
-		this.rootPath = rootPath;
 		
 		//create the watch service
     	try {
@@ -87,7 +82,7 @@ public final class LocalWatchService extends BaseTask {
 
 	public void initializeWatchPaths() {
 		
-		ArrayDeque <Path> paths = new ArrayDeque <Path> ();
+		ArrayDeque <LocalWatchPath> paths = new ArrayDeque <LocalWatchPath> ();
 		
 		//create a DirectoryStream filter that finds only directories
 		//and symlinks
@@ -105,19 +100,10 @@ public final class LocalWatchService extends BaseTask {
 		//apply the filter to a directory stream opened on the root path
 		//and save everything returned.
 		try (DirectoryStream <Path> stream = 
-			Files.newDirectoryStream (rootPath, filter)) {
+			Files.newDirectoryStream (LocalWatchPath.getRoot(), filter)) {
 			
-			for (Path entry: stream) {
-				
-				Path xpath = entry;
-
-				if (Files.isSymbolicLink(entry))
-					xpath = Files.readSymbolicLink(entry);
-				
-				//relativize the path against it's parent to capture only
-				//the last element as a path
-				paths.add(xpath);
-			}
+			for (Path entry: stream)
+				paths.add(new LocalWatchPath (entry));
 			
 		} catch (IOException x) {
 			x.printStackTrace();
@@ -131,38 +117,40 @@ System.out.println ("LocalWatchService: adding inital list for recursion...");
 		addPaths (paths);
 	}
 	
-	public ObjectProperty <ArrayDeque <Path> > addedPaths() {
+	public ObjectProperty <ArrayDeque <LocalWatchPath> > addedPaths() {
 		return this.addedPaths;
 	}
 
-	public ObjectProperty <ArrayDeque <Path> > removedPaths() {
+	public ObjectProperty <ArrayDeque <LocalWatchPath> > removedPaths() {
 		return this.removedPaths;
 	}
 	
-	public void addPaths (ArrayDeque <Path> paths) {
+	public void addPaths (ArrayDeque <LocalWatchPath> paths) {
 		
 		//execute path finder on an array list of paths
 		runPathFinder (paths, false);
 	}
 	
 	public final void addPath (Path dir) {
-	
-		//execute path finder on a single path
-		ArrayDeque <Path> finderList = new ArrayDeque <Path> ();
-		finderList.add(dir);
+
+		ArrayDeque <LocalWatchPath> finderList = 
+											new ArrayDeque <LocalWatchPath> ();
+		finderList.add (new LocalWatchPath (dir));
 
 		runPathFinder (finderList, false);
 	}
 	
 	public final void removePath (Path dir) {
 		
-		ArrayDeque <Path> finderList = new ArrayDeque <Path> ();
-		finderList.add(dir);
+		ArrayDeque <LocalWatchPath> finderList = 
+											new ArrayDeque <LocalWatchPath> ();
+		finderList.add(new LocalWatchPath (dir));
 		
 		runPathFinder (finderList, true);
 	}
 	
-	private void runPathFinder (ArrayDeque <Path> paths, boolean isRemoving) {
+	private void runPathFinder (ArrayDeque <LocalWatchPath> paths, 
+														boolean isRemoving) {
 		
 		//need to add blocking code / mechanism in case a path finder is 
 		//currently running (rare case)
@@ -231,54 +219,29 @@ System.out.println ("LocalWatchService.register() " + dir.toString());
     	for (WatchEvent<?> event: key.pollEvents()) {
 	    	
             WatchEvent.Kind kind = event.kind();		
-            System.out.println ("dir: " + dir);	
-          //  TARGET RESOLUTION FAILS FOR DELETED FILES!!!
-            Path target = resolveTarget (event, dir);
             
 	        // TBD - provide example of how OVERFLOW event is handled
 	        if (kind == OVERFLOW) {
 	    		enqueueMessage ("Overflow encountered", TaskMessageType.TASK_ERROR);
 	            continue;
 	        }
-	
-	        if (kind == ENTRY_CREATE)
-	        	enqueueMessage ("File added: " + target.toString(), TaskMessageType.TASK_ACTIVITY);
-	        	addPath (target);
-	
-	        if (kind == ENTRY_MODIFY)
-	        	enqueueMessage ("File modified: " + target.toString(), TaskMessageType.TASK_ACTIVITY);
-	        
+
 	        if (kind == ENTRY_DELETE) {
-	        	removePath (target);
-	        	enqueueMessage ("File deleted: " + target.toString(), TaskMessageType.TASK_ACTIVITY);
+	        	//removePath (target);
+	        	enqueueMessage ("File deleted: " + dir.toString(), TaskMessageType.TASK_ACTIVITY);
+	        	continue;
+	        }
+	        
+	        if (kind == ENTRY_CREATE) {
+	        	enqueueMessage ("File added: " + dir.toString(), TaskMessageType.TASK_ACTIVITY);
+	        	addPath (dir);
+	        	continue;
+	        }
+	        
+	        if (kind == ENTRY_MODIFY) {
+	        	enqueueMessage ("File modified: " + dir.toString(), TaskMessageType.TASK_ACTIVITY);
 	        }
 	    }
-	}
-    
-	private Path resolveTarget (WatchEvent <?> event, Path dir) {
-
-		//resolve target resolves the target of the event against it's parent
-		//directory.  Symbolic links return the link target.
-		//In cases where the event kind is ENTRY_DELETE, resoltion will fail.
-		//
-        WatchEvent<Path> ev = cast(event);
-        Path child = dir.resolve(ev.context());
-
-	System.out.println ("resolving " + event.context() + " as " + child + ": " + Files.isSymbolicLink(child) );
-
-    	if (Files.isDirectory(child,  NOFOLLOW_LINKS))
-			return child;
-    	
-    	if (Files.isSymbolicLink(child))
-			try {
-System.out.println ("Symbolic link resolved.  Target: " + child.toRealPath());				
-				return child.toRealPath();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}  
-    	
-    	return dir;        
 	}
 	
     @SuppressWarnings("unchecked")
@@ -291,7 +254,7 @@ System.out.println ("Symbolic link resolved.  Target: " + child.toRealPath());
 
     boolean interrupted = false;
 
-    register (rootPath);
+    register (LocalWatchPath.getRoot());
 
     try {
 		// enter watch cycle
