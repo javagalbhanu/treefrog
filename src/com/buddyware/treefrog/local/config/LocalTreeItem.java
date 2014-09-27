@@ -16,7 +16,7 @@ public class LocalTreeItem extends TreeItem <String>{
 	}
 	
 	public LocalTreeItem (LocalWatchPath path) {
-		super (path.getFullPath().toString());
+		super (path.getRelativeName());
 		treeItemPath = path;
 	}
 	

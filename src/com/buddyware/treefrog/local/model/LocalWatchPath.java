@@ -36,10 +36,12 @@ public class LocalWatchPath {
 	
 	public LocalWatchPath (String value) {
 		mFullPath = Paths.get(value);
+		mIsSymbolicLink = Files.isSymbolicLink(mFullPath);
 	};
 	
 	public LocalWatchPath (Path targetPath) {
 		mFullPath = targetPath;
+		mIsSymbolicLink = Files.isSymbolicLink(mFullPath);
 	};
 	
 	public Path getFullPath() { return mFullPath; };
@@ -56,17 +58,39 @@ public class LocalWatchPath {
 		return mFullPath.equals(target.getFullPath());
 	}
 	
+	public void resetIterator () {
+		
+		if (!mIsSymbolicLink)
+			pathIterator = mFullPath.iterator();
+		else {
+			relativizePath();
+			pathIterator = mRelativePath.iterator();
+		}
+	}
+	
 	public boolean hasNext() {
 		if (pathIterator == null)
-			pathIterator = mFullPath.iterator();
+			resetIterator();
 		
 		return pathIterator.hasNext();
 	}
 	
 	public String next() {
 		
-		if (pathIterator == null)
-			pathIterator = mFullPath.iterator();
+		if (pathIterator == null) {
+			
+			if (mIsSymbolicLink) {
+				
+System.out.println ("getting iterator for symlink " + mRelativePath.toString());				
+				
+				pathIterator = mRelativePath.iterator();
+			}
+			else {
+System.out.println ("getting iterator for real path " + mFullPath.toString());				
+				
+				pathIterator = mFullPath.iterator();
+			}
+		}
 		
 		if (!pathIterator.hasNext())
 			return "";
@@ -76,9 +100,11 @@ public class LocalWatchPath {
 	
 	private void relativizePath () {
 
+		if (mRelativePath != null)
+			return;
+		
 		//symbolic links are relativized against their target's parent
 		//actual directories are relativized against the watch path root
-		mIsSymbolicLink = Files.isSymbolicLink(mFullPath);
 		
 		if (mIsSymbolicLink) {
 			try {
