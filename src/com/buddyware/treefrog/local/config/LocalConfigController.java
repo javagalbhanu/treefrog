@@ -44,8 +44,10 @@ public class LocalConfigController extends BaseController {
 
 				System.out.println ("Found " + newvalues.size() + " paths to add");
 
-			//	while (!newpaths.isEmpty())
-				//	addTreeItems (newpaths.remove().iterator(), fsRoot);
+				while (!newvalues.isEmpty()) {
+System.out.println ("Parsing path " + newvalues.peek().getFullPathName().toString());					
+					addTreeItem (newvalues.remove(), fsRoot);
+				}
 			}
 
     	});
@@ -67,6 +69,7 @@ public class LocalConfigController extends BaseController {
 		});
     	
     	//initial populating of tree view
+System.out.println ("adding initial path list");    	
     	for (LocalWatchPath item: mMain.getLocalFileModel().getWatchedPaths()) { 
     		addTreeItem (item, fsRoot);
     	}
@@ -98,39 +101,73 @@ public class LocalConfigController extends BaseController {
     	return false;
     }
     
-    private void addTreeItem (LocalWatchPath item, LocalTreeItem treeItem) {
-    	
-    	if (!item.hasNext())
+    private void addTreeItem (LocalWatchPath pathItem, LocalTreeItem treeItem) {
+
+    	/*
+    	 * addTreeItem (LocalWatchPath item, LocalTreeItem treeItem)
+    	 * 
+    	 * pathItem - 	an item representing an element to be added 
+    	 * 				to the tree view
+    	 * treeItem - 	an existing element of the tree view which is an 
+    	 * 				ancestor of the pathItem
+    	 * 
+    	 * Method recurses the tree view's items with each pathItem passed.
+    	 * Recursion stops when the current treeItem is no longer an ancestor
+    	 * of the pathItem.  At this point, it is added to the treeview. 
+    	 */
+
+    	if (!pathItem.hasNext())
     		return;
     	
-    	String nextName = item.next();
-    	
+    	//at the first level, incoming paths need to be converted to relative
+    	//paths against their proper ancestor
+    	boolean isRoot = (treeItem == fsRoot);
+    		
+    	String pathName = pathItem.next();
+System.out.println ("next pathname: " + pathName);    	
+    	//Recursion occurs if the pathItem is a descendant of (or is exactly)
+		//the tree item's path.
     	for (int x = 0; x < treeItem.getChildren().size(); x++) {
     		
-    		LocalTreeItem child = treeItem.getChild(x);
+    		LocalTreeItem treeChild = treeItem.getChild(x);
+    		LocalWatchPath descendantPath = pathItem;
     		
-    		//if relative paths match, recurse and return 
-    		if (child.getValue().equals(nextName)) {
-    			addTreeItem (item, child);
-    			return;
+    		if (isRoot) {
+    			if (treeChild.isAncestorOf(pathItem)) {
+    				descendantPath = treeChild.getDescendant(pathItem);
+    			}
+    		} else {
+    			
+	    		if (!treeChild.isAncestorOf(pathName))
+	    			return;
     		}
+    		
+    		//if still here, it's a descendant path.
+    		if (descendantPath != null)
+    			addTreeItem (descendantPath, treeChild);
     	}
     	
-    	//still here?  then the item found no matches against the current
-    	//tree item's children.  That means we need to add the item itself
-    	//as a child.  However, if the item's full path is longer, then this
-    	//is not a real watch path, so it's watch path reference should be
-    	//set to null
+    	/*
+    	 * Still here?  Add the pathItem itself as a child.  
+    	 * However, if the pathItem still has more names to parse,
+    	 * then this is not a watch path "destination", so it's watch path 
+    	 * reference should be set to null by assigning only a string value 
+    	 * to the tree item.
+    	 * 
+    	 * This efficiency works because the Java FileVisitor parses depth-first
+    	 * ensuring that ancestors will always occur the list before their
+    	 * descendants.  Only the order of siblings cannot be guaranteed.
+    	 */
     	
     	LocalTreeItem treeChild = null;
     	
-    	if (item.hasNext())
-    		treeChild = new LocalTreeItem (nextName);
+    	if (pathItem.hasNext())
+    		treeChild = new LocalTreeItem (pathName);
     	else
-    		treeChild = new LocalTreeItem (item);
+    		treeChild = new LocalTreeItem (pathItem);
     	
     	treeItem.getChildren().add(treeChild);
-    	addTreeItem (item, treeChild);
+    	addTreeItem (pathItem, treeChild);
     }
     
     @FXML

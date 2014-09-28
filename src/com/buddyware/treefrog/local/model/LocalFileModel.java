@@ -40,7 +40,7 @@ public class LocalFileModel extends BaseModel {
 	public LocalFileModel() {
 		
 	    //rootpath points to the bucketsync directory in user's home
-	    LocalWatchPath.setRoot (
+	    LocalWatchPath.setRootPath (
 	    			Paths.get(System.getProperty("user.home") + "/bucketsync")
 	    );
 	    
@@ -84,7 +84,7 @@ public class LocalFileModel extends BaseModel {
 	}
 	
 	public Path getRootPath() {
-		return LocalWatchPath.getRoot();
+		return LocalWatchPath.getRootPath();
 	};
 	
 	public void setOnPathsAdded 

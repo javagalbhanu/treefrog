@@ -100,7 +100,7 @@ public final class LocalWatchService extends BaseTask {
 		//apply the filter to a directory stream opened on the root path
 		//and save everything returned.
 		try (DirectoryStream <Path> stream = 
-			Files.newDirectoryStream (LocalWatchPath.getRoot(), filter)) {
+			Files.newDirectoryStream (LocalWatchPath.getRootPath(), filter)) {
 			
 			for (Path entry: stream)
 				paths.add(new LocalWatchPath (entry));
@@ -160,7 +160,7 @@ System.out.println ("LocalWatchService: adding inital list for recursion...");
 		
 		//callbacks on successful completion of pathfinder
 
-		EventHandler eh = null;
+		EventHandler <WorkerStateEvent> eh = null;
 		
 		if (!isRemoving) {
 			eh = new EventHandler <WorkerStateEvent> () {
@@ -254,7 +254,7 @@ System.out.println ("LocalWatchService.register() " + dir.toString());
 
     boolean interrupted = false;
 
-    register (LocalWatchPath.getRoot());
+    register (LocalWatchPath.getRootPath());
 
     try {
 		// enter watch cycle

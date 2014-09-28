@@ -104,6 +104,7 @@ public final class LocalPathFinder extends BaseTask {
     public final ArrayDeque <LocalWatchPath> getPaths() {
     	
     	ArrayDeque <LocalWatchPath> result = new ArrayDeque <LocalWatchPath> ();
+    	
     	for (Path path: foundPaths)
     		result.push (new LocalWatchPath (path));
     	

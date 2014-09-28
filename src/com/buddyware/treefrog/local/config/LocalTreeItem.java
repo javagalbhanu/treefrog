@@ -9,7 +9,7 @@ import javafx.scene.control.TreeItem;
 
 public class LocalTreeItem extends TreeItem <String>{
 	
-	private LocalWatchPath treeItemPath = null;
+	private LocalWatchPath mPath = null;
 	
 	public LocalTreeItem (String value) {
 		super (value);
@@ -17,16 +17,16 @@ public class LocalTreeItem extends TreeItem <String>{
 	
 	public LocalTreeItem (LocalWatchPath path) {
 		super (path.getRelativeName());
-		treeItemPath = path;
+		mPath = path;
 	}
 	
 	public LocalTreeItem (Path path) {
 		super (path.toString());
-		treeItemPath = new LocalWatchPath (path);
+		mPath = new LocalWatchPath (path);
 	}
 	
 	public LocalWatchPath getPath () {
-		return treeItemPath;
+		return mPath;
 	}
 	
 	public int getChildCount() {
@@ -35,5 +35,32 @@ public class LocalTreeItem extends TreeItem <String>{
 	
 	public LocalTreeItem getChild(int index) {
 		return (LocalTreeItem) (super.getChildren().get(index));
+	}
+	
+	public LocalWatchPath getDescendant (LocalWatchPath path) {
+		
+		LocalWatchPath result = null;
+		
+		if (path.startsWith (mPath.getFullPathName()))
+			result = mPath.relativize (path);
+
+		if (result == null)
+			return null;
+		
+		if (result.getFullPathName().isEmpty())
+			return null;
+			
+		return result;
+	}
+	
+	public boolean isAncestorOf (String pathName) {
+		
+		//ancestry based on matching path names
+		return this.getValue().equals(pathName);
+	}
+	
+	public boolean isAncestorOf (LocalWatchPath path) {
+		//ancestry based on shared root paths
+		return path.getFullPath().startsWith(mPath.getFullPathName());
 	}
 }
