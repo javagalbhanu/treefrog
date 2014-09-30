@@ -19,6 +19,7 @@ import com.buddyware.treefrog.util.utils;
 public class Main extends Application {
 
 	private final LocalFileModel localModel = new LocalFileModel();
+	private Stage primaryStage;
 	
 	@Override
 	public void start(Stage primaryStage) {
@@ -26,7 +27,11 @@ public class Main extends Application {
 		BaseController.mMain = this;
 		utils. <BorderPane, BaseController> loadFxml ("RootLayout.fxml", primaryStage, null);
 		primaryStage.setTitle ("BucketSync");
-		
+		this.primaryStage=primaryStage;
+	}
+	
+	public Stage getPrimaryStage(){
+		return this.primaryStage;
 	}
 	
 	public static void main(String[] args) {
