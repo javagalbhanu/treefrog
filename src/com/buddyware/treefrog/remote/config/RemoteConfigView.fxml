@@ -12,8 +12,9 @@
       <TextField layoutX="95.0" layoutY="222.0" prefHeight="25.0" prefWidth="234.0" />
       <Label layoutX="95.0" layoutY="142.0" text="AWS ID" />
       <Label layoutX="95.0" layoutY="200.0" text="AWS Secret ID" />
-      <Button layoutX="393.0" layoutY="329.0" mnemonicParsing="false" text="Save" />
-      <Button fx:id="connect_to_s3_button" layoutX="88.0" layoutY="317.0" mnemonicParsing="false" onAction="#on_click" text="Connect to S3" />
+      <Button layoutX="343.0" layoutY="262.0" mnemonicParsing="false" text="Save" />
+      <Button fx:id="connect_to_s3_button" layoutX="95.0" layoutY="262.0" mnemonicParsing="false" onAction="#on_click" text="Connect to S3" />
       <ListView fx:id="BucketList" layoutX="343.0" layoutY="50.0" prefHeight="200.0" prefWidth="200.0" />
+      <Button layoutX="95.0" layoutY="320.0" mnemonicParsing="false" onAction="#ChooseSingleFile" text="Browse" />
    </children>
 </AnchorPane>
