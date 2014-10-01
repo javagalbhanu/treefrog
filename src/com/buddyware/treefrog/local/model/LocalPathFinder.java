@@ -69,25 +69,15 @@ public final class LocalPathFinder extends BaseTask {
 	
 	@Override
     public final Void call() {
-		
+
 		for (LocalWatchPath path: finderPaths) {
 
 			if (isCancelled())
 				break;
-		
-			
+				
 	    	try {
-	    		if (followSymLinks) {
-	    			EnumSet<FileVisitOption> opts = 
-	    							EnumSet.of (FileVisitOption.FOLLOW_LINKS); 
-
-	    			Files.walkFileTree(path.getFullPath(), 
-	    											opts, visitDepth, visitor);
-	    		}
-	    		else {
-	    			Files.walkFileTree(path.getFullPath(),  visitor);
-	    		}
-	    			
+	    		Files.walkFileTree(path.toCanonicalPath(),  visitor);
+	    		
 	        } catch (IOException e) {
 	        	System.out.println ("IOException: " + e.getMessage() + "\n" + e.getStackTrace().toString());
 	        	enqueueMessage("IOException: " + e.getMessage() + "\n" + e.getStackTrace().toString(),
@@ -106,7 +96,7 @@ public final class LocalPathFinder extends BaseTask {
     	ArrayDeque <LocalWatchPath> result = new ArrayDeque <LocalWatchPath> ();
     	
     	for (Path path: foundPaths)
-    		result.push (new LocalWatchPath (path));
+    		result.add (new LocalWatchPath (path));
     	
     	return result;
     }

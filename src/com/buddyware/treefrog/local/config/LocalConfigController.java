@@ -44,8 +44,7 @@ public class LocalConfigController extends BaseController {
 
 				System.out.println ("Found " + newvalues.size() + " paths to add");
 
-				while (!newvalues.isEmpty()) {
-System.out.println ("Parsing path " + newvalues.peek().getFullPathName().toString());					
+				while (!newvalues.isEmpty()) {				
 					addTreeItem (newvalues.remove(), fsRoot);
 				}
 			}
@@ -116,35 +115,44 @@ System.out.println ("adding initial path list");
     	 * of the pathItem.  At this point, it is added to the treeview. 
     	 */
 
-    	if (!pathItem.hasNext())
-    		return;
-    	
     	//at the first level, incoming paths need to be converted to relative
     	//paths against their proper ancestor
+
+    	if (!pathItem.hasNext()) { 		
+    		return;
+    	}
+    	
     	boolean isRoot = (treeItem == fsRoot);
-    		
-    	String pathName = pathItem.next();
-System.out.println ("next pathname: " + pathName);    	
+    	
+    	String pathName = "";
+    	
+    	if (!isRoot)
+    		pathName = pathItem.next();
+
     	//Recursion occurs if the pathItem is a descendant of (or is exactly)
 		//the tree item's path.
-    	for (int x = 0; x < treeItem.getChildren().size(); x++) {
-    		
+    	for (int x = 0; x < treeItem.getChildCount(); x++) {
+
     		LocalTreeItem treeChild = treeItem.getChild(x);
-    		LocalWatchPath descendantPath = pathItem;
+    		LocalWatchPath childPath = pathItem;
     		
-    		if (isRoot) {
-    			if (treeChild.isAncestorOf(pathItem)) {
-    				descendantPath = treeChild.getDescendant(pathItem);
-    			}
-    		} else {
-    			
-	    		if (!treeChild.isAncestorOf(pathName))
-	    			return;
+    		//below root level, continue if the pathName doesn't match
+    		//the treeitme's values
+    		if (!isRoot) {
+    			if (!treeChild.getValue().equals(pathName))
+    				continue;
+    		}
+    		//otherwise, at root level, convert the pathItem to a descendant
+    		//of the treeItem's path
+    		else {
+				childPath = treeChild.getAsDescendant(pathItem);
     		}
     		
-    		//if still here, it's a descendant path.
-    		if (descendantPath != null)
-    			addTreeItem (descendantPath, treeChild);
+			//if still here, it's a proper child path.
+    		if (childPath != null) {
+    			addTreeItem (childPath, treeChild);
+    			return;
+    		}
     	}
     	
     	/*
@@ -160,14 +168,24 @@ System.out.println ("next pathname: " + pathName);
     	 */
     	
     	LocalTreeItem treeChild = null;
-    	
+    	LocalWatchPath pathChild = pathItem;
+
+    	if (isRoot) {
+    		pathChild = pathItem.relativizeToParent();
+    		pathChild.next();
+    		treeChild = new LocalTreeItem (pathItem);
+    	}
+    	else { 
+
     	if (pathItem.hasNext())
     		treeChild = new LocalTreeItem (pathName);
     	else
     		treeChild = new LocalTreeItem (pathItem);
+    	}
     	
     	treeItem.getChildren().add(treeChild);
-    	addTreeItem (pathItem, treeChild);
+    	
+    	addTreeItem (pathChild, treeChild);
     }
     
     @FXML

@@ -3,13 +3,13 @@ package com.buddyware.treefrog.local.model;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileSystemLoopException;
+import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Queue;
 
@@ -25,9 +25,6 @@ public class LocalFileVisitor extends SimpleFileVisitor<Path> {
 	private final ArrayDeque <Path> watchPaths = new ArrayDeque <Path> ();
 	private HashMap<String, String> exclusionsMap = null;
 	
-	private final Path rootPath = 
-					Paths.get(System.getProperty("user.home") + "/bucketsync");
-	
 	//constructor
 	LocalFileVisitor (Queue <Path> queue) {
 		this.watchQueue = queue;
@@ -37,6 +34,7 @@ public class LocalFileVisitor extends SimpleFileVisitor<Path> {
     public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
         throws IOException
     {
+
 		if (exclusionsMap.containsKey(dir.toString())) {
 			System.err.println ("Skipping " + dir.toString());			
 			return FileVisitResult.SKIP_SUBTREE;
@@ -55,23 +53,8 @@ public class LocalFileVisitor extends SimpleFileVisitor<Path> {
 	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) 
 			throws IOException {
 	
-		if (attrs.isSymbolicLink()) {
-			//unless this is link is in the bucket sync root folder, don't
-			//save the link's target path.
-			if (!rootPath.equals(file.getParent()))
-				return FileVisitResult.CONTINUE;
-			
-			String linkPath = "";
-
-			try {
-				linkPath = file.toRealPath().toString();
-			} catch (IOException e) {
-				return FileVisitResult.CONTINUE;
-			}
-			
-			//if the link target is valid, save it
-			this.watchPaths.add(Paths.get(linkPath));
-		}	
+		if (attrs.isSymbolicLink())
+			return FileVisitResult.CONTINUE;
 		
 		if (exclusionsMap.containsKey(file.toString())) {
 			return FileVisitResult.TERMINATE;			
@@ -100,6 +83,9 @@ public class LocalFileVisitor extends SimpleFileVisitor<Path> {
     		 
     	 } else if (e instanceof AccessDeniedException) {
     		 utils.appendToFile(utils.exlusionsFilepath, file.toString());
+    	/*	 
+    	 } else if (e instanceof FileSystemNotFoundException) {
+    		 utils.appendToFile(utils.exlusionsFilepath, file.toString());*/
     		 
     	 } else {
     		 utils.appendToFile(utils.exlusionsFilepath, file.toString());
@@ -109,8 +95,7 @@ public class LocalFileVisitor extends SimpleFileVisitor<Path> {
         return FileVisitResult.SKIP_SUBTREE;
     }	
     
-    public ArrayDeque <Path> getPaths() {
-System.out.println("Returning " + watchPaths.size());    	
+    public ArrayDeque <Path> getPaths() {  	
     	return watchPaths;
     }
     
