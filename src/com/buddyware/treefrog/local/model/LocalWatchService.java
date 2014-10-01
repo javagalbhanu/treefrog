@@ -110,8 +110,8 @@ public final class LocalWatchService extends BaseTask {
 		}
 		
 		//save the list to the watch service property for UI notification
-System.out.println ("LocalWatchService: retrivied inital list.  Setting property...");		
-		this.addedPaths.setValue(paths);
+//System.out.println ("LocalWatchService: retrivied inital list.  Setting property...");		
+		//this.addedPaths.setValue(paths);
 
 System.out.println ("LocalWatchService: adding inital list for recursion...");		
 		addPaths (paths);
@@ -182,7 +182,7 @@ System.out.println ("LocalWatchService: adding inital list for recursion...");
 		}
 		
     	finder.setOnSucceeded(eh);
-    	
+ 	
 		pathFinderExecutor.execute (finder);    	
 	}
 	
