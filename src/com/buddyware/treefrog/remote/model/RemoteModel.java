@@ -46,15 +46,18 @@ public class RemoteModel {
 		
 		s3 = new AmazonS3Client(credentials);
     	buildTransferManager();
-    	bucketName = "treefrog-transfer-test-akiaiqq5r75nzrr7j6xq";
+    	bucketName = "foo4you";
         //bucketName = "treefrog-transfer-test-" + credentials.getAWSAccessKeyId().toLowerCase();
         //createAmazonS3Bucket();
 	}
 
     
-    public void transferFile (File fileToUpload, ProgressListener listener) {
-    	buildObjectRequest (fileToUpload, listener);
-    }
+    public void transferFile (String bucketName, File fileToUpload, ProgressListener listener) {
+    	PutObjectRequest request = new PutObjectRequest(bucketName, fileToUpload.getName(), fileToUpload)
+    	.withGeneralProgressListener (listener);
+          
+        Upload upload = tx.upload(request);
+        }
     
     private void buildTransferManager() {
     	
@@ -64,16 +67,7 @@ public class RemoteModel {
         tx = new TransferManager(s3);
         
     }
-    
-    private void buildObjectRequest (File fileToUpload, ProgressListener listener) {
-    	
-        PutObjectRequest request = new PutObjectRequest(
-                bucketName, fileToUpload.getName(), fileToUpload)
-            .withGeneralProgressListener (listener);
-        Upload upload = tx.upload(request);
-       
-    }
-         
+             
     private void getCredentials() throws Exception {
     	
         try {
@@ -110,6 +104,6 @@ public class RemoteModel {
     	    	
     	return results;
     }
-    
+ 
 	
 }
