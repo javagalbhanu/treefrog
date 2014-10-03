@@ -47,8 +47,6 @@ public class RemoteModel {
 		s3 = new AmazonS3Client(credentials);
     	buildTransferManager();
     	bucketName = "treefrog-transfer-test-akiaiqq5r75nzrr7j6xq";
-        //bucketName = "treefrog-transfer-test-" + credentials.getAWSAccessKeyId().toLowerCase();
-        //createAmazonS3Bucket();
 	}
 
     
