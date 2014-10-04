@@ -1,6 +1,5 @@
 package com.buddyware.treefrog.local.model;
 
-import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
@@ -76,7 +75,6 @@ public final class LocalWatchService extends BaseTask {
 				pathFinderExecutor.shutdown();
 			}
 		});
-
 	};
 
 
@@ -109,11 +107,6 @@ public final class LocalWatchService extends BaseTask {
 			x.printStackTrace();
 		}
 		
-		//save the list to the watch service property for UI notification
-//System.out.println ("LocalWatchService: retrivied inital list.  Setting property...");		
-		//this.addedPaths.setValue(paths);
-
-System.out.println ("LocalWatchService: adding inital list for recursion...");		
 		addPaths (paths);
 	}
 	
@@ -193,7 +186,6 @@ System.out.println ("LocalWatchService: adding inital list for recursion...");
     public final void register(Path dir) 
     								throws IOException, InterruptedException {
  	
-System.out.println ("LocalWatchService.register() " + dir.toString());
     	//register the key with the watch service
         WatchKey key = 
     		dir.register (watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
@@ -214,33 +206,42 @@ System.out.println ("LocalWatchService.register() " + dir.toString());
         keys.put(key, dir);
     }
 		 
-	private void processWatchEvent (WatchKey key, Path dir) {
+	private void processWatchEvent (WatchKey key, Path dir) throws IOException, InterruptedException {
 		
     	for (WatchEvent<?> event: key.pollEvents()) {
 	    	
             WatchEvent.Kind kind = event.kind();		
             
+            System.out.println("Kind: " + event.kind());
+            System.out.println("Context: " + event.context());
+            System.out.println("Count: " + event.count());            
+            System.out.println();   
+            
 	        // TBD - provide example of how OVERFLOW event is handled
 	        if (kind == OVERFLOW) {
 	    		enqueueMessage ("Overflow encountered", TaskMessageType.TASK_ERROR);
-	            continue;
 	        }
-
+	        
+	        WatchEvent<Path> ev = (WatchEvent<Path>)event;
+	        Path target = dir.resolve(ev.context());
+	        
 	        if (kind == ENTRY_DELETE) {
-	        	//removePath (target);
-	        	enqueueMessage ("File deleted: " + dir.toString(), TaskMessageType.TASK_ACTIVITY);
-	        	continue;
-	        }
+	        	enqueueMessage ("File deleted: " + dir.resolve(target).toString(), TaskMessageType.TASK_ACTIVITY);
+	        	removePath (target);	        	
 	        
-	        if (kind == ENTRY_CREATE) {
-	        	enqueueMessage ("File added: " + dir.toString(), TaskMessageType.TASK_ACTIVITY);
-	        	addPath (dir);
-	        	continue;
-	        }
-	        
-	        if (kind == ENTRY_MODIFY) {
+	        } else if (kind == ENTRY_CREATE) {
+	        	enqueueMessage ("File added: " + dir.resolve(target).toString(), TaskMessageType.TASK_ACTIVITY);
+	        	register (target);
+	        	addPath (target);
+	        	
+
+	        } else if (kind == ENTRY_MODIFY) {
 	        	enqueueMessage ("File modified: " + dir.toString(), TaskMessageType.TASK_ACTIVITY);
 	        }
+	        boolean valid = key.reset();
+	        
+	        if (!valid)
+	        	break;
 	    }
 	}
 	
@@ -253,9 +254,11 @@ System.out.println ("LocalWatchService.register() " + dir.toString());
 	protected Void call () throws IOException, InterruptedException {
 
     boolean interrupted = false;
+    
+    initializeWatchPaths();
 
     register (LocalWatchPath.getRootPath());
-
+    
     try {
 		// enter watch cycle
         while (!interrupted) {

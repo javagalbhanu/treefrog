@@ -44,7 +44,8 @@ public class LocalConfigController extends BaseController {
 
 				System.out.println ("Found " + newvalues.size() + " paths to add");
 
-				while (!newvalues.isEmpty()) {				
+				while (!newvalues.isEmpty()) {
+System.out.println ("Adding " + newvalues.peek());					
 					addTreeItem (newvalues.remove(), fsRoot);
 				}
 			}
@@ -68,7 +69,7 @@ public class LocalConfigController extends BaseController {
 		});
     	
     	//initial populating of tree view
-System.out.println ("adding initial path list");    	
+   	
     	for (LocalWatchPath item: mMain.getLocalFileModel().getWatchedPaths()) { 
     		addTreeItem (item, fsRoot);
     	}

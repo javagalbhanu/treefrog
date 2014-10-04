@@ -74,9 +74,8 @@ public class LocalFileModel extends BaseModel {
 					watchPaths.remove (newValues.remove());
 			}
 		});
-		
-		watchService.initializeWatchPaths();
-		//startWatchService();
+
+		startWatchService();
 	}
 	
 	public void shutdown() {

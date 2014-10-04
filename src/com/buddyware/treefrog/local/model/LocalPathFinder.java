@@ -30,8 +30,6 @@ public final class LocalPathFinder extends BaseTask {
 	
 	private final LocalFileVisitor visitor;
 	private final BooleanProperty isCancelled = new SimpleBooleanProperty (false);
-	private Integer visitDepth = Integer.MAX_VALUE;
-	private Boolean followSymLinks = false;
 	
     protected LocalPathFinder ( BlockingQueue<TaskMessage> messageQueue, 
     												Queue <Path> watchQueue) {
@@ -55,18 +53,6 @@ public final class LocalPathFinder extends BaseTask {
 		});
 	};
 
-	public void setFollowLinks (Boolean flag) {
-		
-		if (this.isRunning())
-			return;
-		
-		followSymLinks = flag;
-	}
-	
-	public void setDepth (Integer depth) {
-		visitDepth = depth;
-	}
-	
 	@Override
     public final Void call() {
 
