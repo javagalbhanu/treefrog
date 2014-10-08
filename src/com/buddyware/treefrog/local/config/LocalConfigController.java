@@ -44,10 +44,8 @@ public class LocalConfigController extends BaseController {
 
 				System.out.println ("Found " + newvalues.size() + " paths to add");
 
-				while (!newvalues.isEmpty()) {
-System.out.println ("Adding " + newvalues.peek());					
-					addTreeItem (newvalues.remove(), fsRoot);
-				}
+				for (LocalWatchPath path: newvalues)
+					addTreeItem (path, fsRoot);
 			}
 
     	});

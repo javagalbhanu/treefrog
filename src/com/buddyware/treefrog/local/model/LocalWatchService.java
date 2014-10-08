@@ -22,6 +22,8 @@ import java.util.concurrent.ExecutorService;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -75,6 +77,54 @@ public final class LocalWatchService extends BaseTask {
 				pathFinderExecutor.shutdown();
 			}
 		});
+		
+		this.addedPaths.addListener(						
+						new ChangeListener <ArrayDeque <LocalWatchPath> >() {
+
+			@Override
+			public void changed( 
+				ObservableValue<? extends ArrayDeque <LocalWatchPath> > changes,
+				ArrayDeque <LocalWatchPath> oldvalues, 
+				ArrayDeque <LocalWatchPath> newvalues) {
+System.out.println ("Found " + newvalues.size() + "paths");
+					while (!newvalues.isEmpty()) {
+						try {
+							System.out.println ("Registering " + newvalues.peek().toString());
+							
+							register (newvalues.remove().toCanonicalPath());
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+						}
+					}
+				}
+			}
+		);
+		
+		this.removedPaths.addListener(						
+				new ChangeListener <ArrayDeque <LocalWatchPath> >() {
+
+			@Override
+			public void changed( 
+				ObservableValue<? extends ArrayDeque <LocalWatchPath> > changes,
+				ArrayDeque <LocalWatchPath> oldvalues, 
+				ArrayDeque <LocalWatchPath> newvalues) {
+					
+				//	for (LocalWatchPath path: newvalues)
+						//try {
+							System.out.println("paths to remove!");
+							//register (path.toCanonicalPath());
+					/*	} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+						}*/
+				}
+			}
+		);		
 	};
 
 
@@ -107,7 +157,7 @@ public final class LocalWatchService extends BaseTask {
 			x.printStackTrace();
 		}
 		
-		addPaths (paths);
+		runPathFinder (paths, false);
 	}
 	
 	public ObjectProperty <ArrayDeque <LocalWatchPath> > addedPaths() {
@@ -116,12 +166,6 @@ public final class LocalWatchService extends BaseTask {
 
 	public ObjectProperty <ArrayDeque <LocalWatchPath> > removedPaths() {
 		return this.removedPaths;
-	}
-	
-	public void addPaths (ArrayDeque <LocalWatchPath> paths) {
-		
-		//execute path finder on an array list of paths
-		runPathFinder (paths, false);
 	}
 	
 	public final void addPath (Path dir) {
@@ -142,6 +186,16 @@ public final class LocalWatchService extends BaseTask {
 		runPathFinder (finderList, true);
 	}
 	
+	public final void removeDeletedPath (String pathName) {
+		/*
+		 * Paths (and subpaths) the watch service reports as having been deleted
+		 * need to be removed from the watch keys as well as the tree view.
+		 * 
+		 * Watchservice should automatically invalidate keys that have been
+		 * deleted from the filesystem
+		 */
+	}
+	
 	private void runPathFinder (ArrayDeque <LocalWatchPath> paths, 
 														boolean isRemoving) {
 		
@@ -160,7 +214,11 @@ public final class LocalWatchService extends BaseTask {
 	
 				@Override
 				public void handle(WorkerStateEvent arg0) {
-					addedPaths.set(finder.getPaths());
+					
+					ArrayDeque <LocalWatchPath> paths = finder.getPaths();
+System.out.println ("Finder onsucceeded adding " + paths.size() + " paths");	
+					addedPaths.set(paths);
+System.out.println ("Finder onsucceeded added " + paths.size() + " paths");				
 				}
 			};
 			
@@ -227,7 +285,7 @@ public final class LocalWatchService extends BaseTask {
 	        
 	        if (kind == ENTRY_DELETE) {
 	        	enqueueMessage ("File deleted: " + dir.resolve(target).toString(), TaskMessageType.TASK_ACTIVITY);
-	        	removePath (target);	        	
+	        	removeDeletedPath (target.toString());	        	
 	        
 	        } else if (kind == ENTRY_CREATE) {
 	        	enqueueMessage ("File added: " + dir.resolve(target).toString(), TaskMessageType.TASK_ACTIVITY);
@@ -257,7 +315,7 @@ public final class LocalWatchService extends BaseTask {
     
     initializeWatchPaths();
 
-    register (LocalWatchPath.getRootPath());
+    //register (LocalWatchPath.getRootPath());
     
     try {
 		// enter watch cycle
