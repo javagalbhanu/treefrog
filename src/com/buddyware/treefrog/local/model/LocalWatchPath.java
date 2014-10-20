@@ -14,7 +14,7 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Iterator;
 
-public class LocalWatchPath implements Path {
+public class LocalWatchPath {
 
 	/*
 	 * A local watch path is a path which is linked from, or exists directly in
@@ -33,9 +33,7 @@ public class LocalWatchPath implements Path {
 	public static Path getRootPath () {	return mWatchPathRoot;	}
 	
 	public LocalWatchPath (String value) {
-		mPath = Paths.get(value);
-		mPathName = mPath.toString();
-		resolveSymbolicLink();
+		mPathName = value;
 	}
 	
 	public LocalWatchPath (Path targetPath) {
@@ -54,135 +52,105 @@ public class LocalWatchPath implements Path {
 			}
 	}
 	
-	public Path toCanonicalPath () { return mPath; }
+	public String toString() {
+		return mPathName;
+	}
+	
+	private boolean resolvePath() {
+		if (mPath != null)
+			return true;
+		
+		if (mPathName.isEmpty())
+			return false;
+		
+		mPath = Paths.get(mPathName);
+		
+		return (mPath != null);
+	}
+	
+	public Path toCanonicalPath () {
+		
+		if (mPath == null)
+			resolvePath();
+		
+		return mPath; 
+	}
+	
 	public void resetIterator () {
-		pathIterator = mPath.iterator();
+		
+		if (mPath == null)
+			resolvePath();
+		
+		try {
+			pathIterator = mPath.iterator();
+		} catch ( NullPointerException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public boolean hasNext() {
+		
+		boolean success = false;
+		
 		if (pathIterator == null)
 			resetIterator();
 		
-		return pathIterator.hasNext();
+		try {
+			success = pathIterator.hasNext();
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+		}
+		
+		return success;
 	}
 	
 	public String next() {
 		
+		boolean success = false;
+		
 		if (pathIterator == null)
 			resetIterator();
 		
-		if (!pathIterator.hasNext())
+		try {
+			success = pathIterator.hasNext();
+		} catch ( NullPointerException e) {
+			e.printStackTrace();
 			return "";
+		}
 		
 		return pathIterator.next().toString();
 	}
 	
 	public LocalWatchPath relativizeToParent () {
-		return new LocalWatchPath (mPath.getParent().relativize(mPath));
+		
+		LocalWatchPath result = null;
+		
+		if (mPath == null)
+			resolvePath();
+		
+		try {
+			result = new LocalWatchPath (mPath.getParent().relativize(mPath));
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+		}
+		
+		return result;
 	}
 	
 	public LocalWatchPath relativize (LocalWatchPath other) {
-		return new LocalWatchPath (mPath.relativize (other.toCanonicalPath()));
+		
+		LocalWatchPath result = null;
+		
+		if (mPath == null)
+			resolvePath();
+		
+		try {
+			result = 
+				new LocalWatchPath (mPath.relativize (other.toCanonicalPath()));
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+		}
+		
+		return result;
 	}
-	/*
-	 *Default interface method implementations
-	 */
-	@Override
-	public String toString() { return mPathName; } 
-	
-	@Override
-	public FileSystem getFileSystem() { return mPath.getFileSystem(); }
-
-	@Override
-	public boolean isAbsolute() { return mPath.isAbsolute(); }
-
-	@Override
-	public Path getFileName() { return mPath.getFileName();	}
-	
-	@Override
-	public Path getParent() { return mPath.getParent(); }
-
-	@Override
-	public int getNameCount() { return mPath.getNameCount(); }
-
-	@Override
-	public Path getName(int index) { return mPath.getName(index); }
-	
-	@Override
-	public Path subpath(int beginIndex, int endIndex) { 
-		return mPath.subpath(beginIndex, endIndex);
-	}
-	
-	@Override
-	public boolean startsWith(Path other) { 
-		return mPath.startsWith(other); 
-	}
-	
-	@Override
-	public boolean startsWith(String other) { 
-		return mPath.startsWith(other);
-	}
-	
-	@Override
-	public boolean endsWith(Path other) { return mPath.endsWith(other);	}
-	
-	@Override
-	public boolean endsWith(String other) { return mPath.endsWith(other); }
-	
-	@Override
-	public Path normalize() { return mPath.normalize(); }
-	
-	@Override
-	public Path resolve(Path other) { return mPath.resolve(other); }
-	
-	@Override
-	public Path resolve(String other) { return mPath.resolve(other); }
-	
-	@Override
-	public Path resolveSibling(Path other) {
-		return mPath.resolveSibling(other);
-	}
-	
-	@Override
-	public Path resolveSibling(String other) {
-		return mPath.resolveSibling(other);
-	}
-	
-	@Override
-	public Path relativize(Path other) { return mPath.relativize(other); }
-	
-	@Override
-	public URI toUri() { return mPath.toUri(); }
-	
-	@Override
-	public Path toAbsolutePath() { return mPath.toAbsolutePath(); }
-	
-	@Override
-	public Path toRealPath(LinkOption... options) throws IOException {
-		return mPath.toRealPath(options);
-	}
-	
-	@Override
-	public File toFile() { return mPath.toFile(); }
-	
-	@Override
-	public WatchKey register(WatchService watcher, Kind<?>[] events,
-			Modifier... modifiers) throws IOException {
-		return mPath.register (watcher, events, modifiers);
-	}
-	
-	@Override
-	public WatchKey register(WatchService watcher, Kind<?>... events)
-			throws IOException {
-		return mPath.register (watcher, events);
-	}
-	
-	@Override
-	public Iterator<Path> iterator() { return mPath.iterator();	}
-	
-	@Override
-	public int compareTo(Path other) { return mPath.compareTo (other); }
-	
-	@Override
-	public Path getRoot() { return mPath.getRoot(); }
 }

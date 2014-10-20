@@ -6,11 +6,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 import javafx.application.Application;
-import javafx.event.Event;
-import javafx.event.EventHandler;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.stage.Stage;
 import javafx.scene.layout.BorderPane;
 
+import com.buddyware.treefrog.local.model.ListPropertyTest;
 import com.buddyware.treefrog.local.model.LocalFileModel;
 import com.buddyware.treefrog.util.TaskMessage;
 import com.buddyware.treefrog.util.utils;
@@ -20,21 +22,23 @@ public class Main extends Application {
 
 	private final LocalFileModel localModel = new LocalFileModel();
 	private Stage primaryStage;
-	
+
 	@Override
-	public void start(Stage primaryStage) {
-		
+	public void start(Stage primaryStage) {	
 		BaseController.mMain = this;
+			
+		
 		utils. <BorderPane, BaseController> loadFxml ("RootLayout.fxml", primaryStage, null);
 		primaryStage.setTitle ("BucketSync");
 		this.primaryStage=primaryStage;
+		localModel.start();
 	}
 	
 	public Stage getPrimaryStage(){
 		return this.primaryStage;
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) {		
 		launch(args);
 	}
 	
@@ -44,7 +48,7 @@ public class Main extends Application {
 	
 	@Override
 	public void stop() {
-		localModel.shutdown();
+	//	localModel.shutdown();
 	}
 	
 	public ArrayList <TaskMessage> pollLocalFileModel() {

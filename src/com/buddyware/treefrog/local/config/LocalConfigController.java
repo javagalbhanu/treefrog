@@ -9,6 +9,7 @@ import com.buddyware.treefrog.local.model.LocalWatchPath;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TreeItem;
@@ -22,8 +23,8 @@ public class LocalConfigController extends BaseController {
 	@FXML
 	private ListView fileList;
 	
-	private LocalTreeItem fsRoot = 
-					new LocalTreeItem (mMain.getLocalFileModel().getRootPath());
+	private LocalTreeItem fsRoot =
+			new LocalTreeItem (mMain.getLocalFileModel().getRootPath());
 	
     /**
      * FXML initialization requirement
@@ -33,44 +34,33 @@ public class LocalConfigController extends BaseController {
     	
     	fileTree.setRoot(fsRoot);
     	
-    	mMain.getLocalFileModel().setOnPathsAdded(
-						new ChangeListener <ArrayDeque <LocalWatchPath> >() {
+    	mMain.getLocalFileModel().setOnPathsAdded(new ListChangeListener <String>(){
 
 			@Override
-			public void changed( 
-				ObservableValue<? extends ArrayDeque <LocalWatchPath> > changes,
-				ArrayDeque <LocalWatchPath> oldvalues, 
-				ArrayDeque <LocalWatchPath> newvalues) {
+			public void onChanged(
+					javafx.collections.ListChangeListener.Change<? extends String> arg0) {
+				
+				System.out.println ("Found " + arg0.getList().size() + " paths to add");
 
-				System.out.println ("Found " + newvalues.size() + " paths to add");
-
-				for (LocalWatchPath path: newvalues)
-					addTreeItem (path, fsRoot);
+				for (String path: arg0.getList())
+					addTreeItem (new LocalWatchPath (path), fsRoot);				
 			}
-
+    		
     	});
-
-    	mMain.getLocalFileModel().setOnPathsRemoved(
-						new ChangeListener <ArrayDeque <LocalWatchPath> >() {
+    	
+    	mMain.getLocalFileModel().setOnPathsRemoved(new ListChangeListener <String>(){
 
 			@Override
-			public void changed (
-				ObservableValue<? extends ArrayDeque <LocalWatchPath> > changes,
-				ArrayDeque <LocalWatchPath> oldvalues, 
-				ArrayDeque<LocalWatchPath> newvalues) {
-		
-			System.out.println ("Found " + newvalues.size() + " paths to remove");
-		
-			//while (!newvalues.isEmpty())
-				//removeTreeItems (newvalues.remove().iterator(), fsRoot);
+			public void onChanged(
+					javafx.collections.ListChangeListener.Change<? extends String> arg0) {
+				
+				System.out.println ("Found " + arg0.getList().size() + " paths to remove");
+
+				for (String path: arg0.getList())
+					System.out.println (path);				
 			}
-		});
-    	
-    	//initial populating of tree view
-   	
-    	for (LocalWatchPath item: mMain.getLocalFileModel().getWatchedPaths()) { 
-    		addTreeItem (item, fsRoot);
-    	}
+    		
+    	});    	
     }
     
     private boolean removeTreeItems (Iterator <Path> pathIt, TreeItem <String> treeItem) {

@@ -3,16 +3,19 @@ package com.buddyware.treefrog.local.model;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 
 import com.buddyware.treefrog.BaseModel;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
 
 
 public class LocalFileModel extends BaseModel {
@@ -22,21 +25,10 @@ public class LocalFileModel extends BaseModel {
 
 	private final ExecutorService watchServiceExecutor = 
 										createExecutor("WatchService", true);
-    
 	
-	//property which returns the paths last added to the watch service
-    private final ObjectProperty <ArrayDeque <LocalWatchPath> > addedPaths = 
-					new SimpleObjectProperty <ArrayDeque <LocalWatchPath> > ();
-
-    //returns the paths last removed from the watch service
-    private final ObjectProperty <ArrayDeque <LocalWatchPath> > removedPaths = 
-					new SimpleObjectProperty <ArrayDeque <LocalWatchPath> > ();
-
-    
-    //total list of paths currently watched by the watch service
-    private final ArrayDeque <LocalWatchPath> watchPaths = 
-    										new ArrayDeque <LocalWatchPath> ();
-       
+	private SimpleListProperty <String> mWatchPathsAdded;
+	private SimpleListProperty <String> mWatchPathsRemoved;
+	
 	public LocalFileModel() {
 		
 	    //rootpath points to the bucketsync directory in user's home
@@ -44,38 +36,14 @@ public class LocalFileModel extends BaseModel {
 	    			Paths.get(System.getProperty("user.home") + "/bucketsync")
 	    );
 	    
-		watchService = new LocalWatchService (taskMessages);
+		watchService = new LocalWatchService ();
 		
-		addedPaths.bind (watchService.addedPaths());
-		removedPaths.bind (watchService.removedPaths());
-		
-		setOnPathsAdded (new ChangeListener <ArrayDeque <LocalWatchPath> >() {
-
-			@Override
-			public void changed( 
-				ObservableValue<? extends ArrayDeque<LocalWatchPath> > changes,
-				ArrayDeque<LocalWatchPath> oldValues, 
-				ArrayDeque<LocalWatchPath> newValues) {
-			
-				watchPaths.addAll(newValues);
-			}
-		});
-		
-		setOnPathsRemoved (new ChangeListener <ArrayDeque <LocalWatchPath> >() {
-
-			@Override
-			public void changed(
-				ObservableValue<? extends ArrayDeque<LocalWatchPath> > changes,
-				ArrayDeque<LocalWatchPath> oldValues, 
-				ArrayDeque<LocalWatchPath> newValues) {
-				
-				//pop paths from deque and remove them from the watch paths
-				while (!newValues.isEmpty())
-					watchPaths.remove (newValues.remove());
-			}
-		});
-
-		startWatchService();
+		mWatchPathsAdded = watchService.addedPaths();
+		mWatchPathsRemoved = watchService.removedPaths();
+	}
+	
+	public void start() {
+		startWatchService();		
 	}
 	
 	public void shutdown() {
@@ -87,17 +55,13 @@ public class LocalFileModel extends BaseModel {
 	};
 	
 	public void setOnPathsAdded 
-					(ChangeListener <ArrayDeque <LocalWatchPath> > listener) {
-		addedPaths.addListener(listener);
+		(ListChangeListener <String> changeListener) {
+			mWatchPathsAdded.addListener(changeListener);
 	};
 
 	public void setOnPathsRemoved 
-					(ChangeListener <ArrayDeque <LocalWatchPath> > listener) {
-		removedPaths.addListener(listener);
-	};
-	
-	public ArrayDeque<LocalWatchPath> getWatchedPaths () {
-		return watchPaths;
+		(ListChangeListener <String> listener) {
+			mWatchPathsRemoved.addListener(listener);
 	};
 	
 	public void startWatchService () {

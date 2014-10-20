@@ -16,7 +16,7 @@ public class LocalTreeItem extends TreeItem <String>{
 	}
 	
 	public LocalTreeItem (LocalWatchPath path) {
-		super (path.getName(path.getNameCount()-1).toString());
+		super (path.toString());
 		mPath = path;
 	}
 	
@@ -43,15 +43,14 @@ public class LocalTreeItem extends TreeItem <String>{
 		
 		String treePath = mPath.toString();
 		
-		if (path.startsWith (treePath))
+		if (path.toCanonicalPath().startsWith (treePath))
 			result = mPath.relativize (path);
 
-		if (result == null)
-			return null;
+		if (result != null) {
+			if (result.toString().isEmpty())
+				result = null;
+		}
 		
-		if (result.toString().isEmpty())
-			return null;
-			
 		return result;
 	}
 }

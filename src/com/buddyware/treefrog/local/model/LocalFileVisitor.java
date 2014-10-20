@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Queue;
 
@@ -21,13 +22,13 @@ import javafx.beans.property.SimpleBooleanProperty;
 public class LocalFileVisitor extends SimpleFileVisitor<Path> {
 	
 	private final BooleanProperty isCancelled = new SimpleBooleanProperty();
-	private final Queue <Path> watchQueue;
-	private final ArrayDeque <Path> watchPaths = new ArrayDeque <Path> ();
+	private final ArrayList <String> watchPaths = new ArrayList <String> ();
+	
 	private HashMap<String, String> exclusionsMap = null;
 	
 	//constructor
-	LocalFileVisitor (Queue <Path> queue) {
-		this.watchQueue = queue;
+	LocalFileVisitor () {
+
 	}
 	
 	@Override
@@ -40,8 +41,7 @@ public class LocalFileVisitor extends SimpleFileVisitor<Path> {
 			return FileVisitResult.SKIP_SUBTREE;
 		}
 
-		this.watchQueue.add(dir);
-		this.watchPaths.add(dir);
+		this.watchPaths.add(dir.toString());
 
 		if (isCancelled.get()) {
 			return FileVisitResult.TERMINATE;
@@ -95,7 +95,7 @@ public class LocalFileVisitor extends SimpleFileVisitor<Path> {
         return FileVisitResult.SKIP_SUBTREE;
     }	
     
-    public ArrayDeque <Path> getPaths() {  	
+    public ArrayList  <String> getPaths() {  	
     	return watchPaths;
     }
     

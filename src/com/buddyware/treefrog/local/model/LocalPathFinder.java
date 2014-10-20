@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -22,21 +23,18 @@ import com.buddyware.treefrog.util.utils;
 
 public final class LocalPathFinder extends BaseTask {
 
-	private final ArrayList <LocalWatchPath> finderPaths = 
-											new ArrayList <LocalWatchPath>();
+	private final ArrayList <String> finderPaths = new ArrayList <String>();
 	
-	private final ArrayDeque <Path> foundPaths = 
-											new ArrayDeque <Path> ();
+	private final ArrayList <String> foundPaths = new ArrayList <String> ();
 	
 	private final LocalFileVisitor visitor;
 	private final BooleanProperty isCancelled = new SimpleBooleanProperty (false);
 	
-    protected LocalPathFinder ( BlockingQueue<TaskMessage> messageQueue, 
-    												Queue <Path> watchQueue) {
+    protected LocalPathFinder () {
 
-    	super(messageQueue);
+    	super();
 
-		visitor = new LocalFileVisitor (watchQueue);
+		visitor = new LocalFileVisitor ();
 		visitor.getCancelledProperty().bind(isCancelled);
 
 		LocalFileModelScanner s = new LocalFileModelScanner(utils.exlusionsFilepath);
@@ -56,18 +54,15 @@ public final class LocalPathFinder extends BaseTask {
 	@Override
     public final Void call() {
 
-		for (LocalWatchPath path: finderPaths) {
+		for (String path: finderPaths) {
 
 			if (isCancelled())
 				break;
 				
 	    	try {
-	    		Files.walkFileTree(path.toCanonicalPath(),  visitor);
+	    		Files.walkFileTree(Paths.get(path),  visitor);
 	    		
 	        } catch (IOException e) {
-	        	System.out.println ("IOException: " + e.getMessage() + "\n" + e.getStackTrace().toString());
-	        	enqueueMessage("IOException: " + e.getMessage() + "\n" + e.getStackTrace().toString(),
-						TaskMessageType.TASK_ERROR);
 	        	e.printStackTrace();
 	        }
 		};
@@ -77,17 +72,12 @@ public final class LocalPathFinder extends BaseTask {
 		return null;
     };
     
-    public final ArrayDeque <LocalWatchPath> getPaths() {
+    public final ArrayList <String> getPathNames() {
     	
-    	ArrayDeque <LocalWatchPath> result = new ArrayDeque <LocalWatchPath> ();
-    	
-    	for (Path path: foundPaths)
-    		result.add (new LocalWatchPath (path));
-    	
-    	return result;
+    	return foundPaths;
     }
     
-    public final void setPaths (ArrayDeque <LocalWatchPath> paths) {
+    public final void setPaths (ArrayList <String> paths) {
     	finderPaths.addAll(paths);
     };
 }

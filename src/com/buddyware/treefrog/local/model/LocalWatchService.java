@@ -10,20 +10,27 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 
+import javafx.beans.property.ListProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -45,24 +52,20 @@ public final class LocalWatchService extends BaseTask {
 
     //class hash map which keys watched paths to generated watch keys
     private final Map<WatchKey, Path> keys = new HashMap<WatchKey, Path>();
+      
+    //reference to model property of watched paths.
+    private final SimpleListProperty <String> mAddedPaths = 
+    		new SimpleListProperty <String> 
+    							(FXCollections.<String> observableArrayList());
     
-    //queue shared between watchservice and pathfinder sub tasks
-    private final ConcurrentLinkedQueue <Path> watchQueue = 
-								new ConcurrentLinkedQueue <Path> ();
-    
-    //returns paths added to the watch service
-    private final ObjectProperty <ArrayDeque <LocalWatchPath> > addedPaths = 
-					new SimpleObjectProperty <ArrayDeque <LocalWatchPath> > ();
+    private final SimpleListProperty <String> mRemovedPaths = 
+    		new SimpleListProperty <String> 
+    							(FXCollections.<String> observableArrayList());
+ 
+	public LocalWatchService () {
 
-    //returns paths removed from the watch service
-    private final ObjectProperty <ArrayDeque <LocalWatchPath> > removedPaths = 
-			new SimpleObjectProperty <ArrayDeque <LocalWatchPath> > ();
-    
-    
-	public LocalWatchService (BlockingQueue <TaskMessage> messageQueue) {
-
-		super (messageQueue);
-		
+		super ();
+	
 		//create the watch service
     	try {
 			this.watcher = FileSystems.getDefault().newWatchService();
@@ -78,59 +81,37 @@ public final class LocalWatchService extends BaseTask {
 			}
 		});
 		
-		this.addedPaths.addListener(						
-						new ChangeListener <ArrayDeque <LocalWatchPath> >() {
+		mAddedPaths.addListener(new ListChangeListener <String> (){
 
 			@Override
-			public void changed( 
-				ObservableValue<? extends ArrayDeque <LocalWatchPath> > changes,
-				ArrayDeque <LocalWatchPath> oldvalues, 
-				ArrayDeque <LocalWatchPath> newvalues) {
-System.out.println ("Found " + newvalues.size() + "paths");
-					while (!newvalues.isEmpty()) {
+			public void onChanged( 
+				javafx.collections.ListChangeListener.Change<? extends String> 
+								arg0) {
+				
+					for (String pathName: arg0.getList()) {
 						try {
-							System.out.println ("Registering " + newvalues.peek().toString());
-							
-							register (newvalues.remove().toCanonicalPath());
+							register (Paths.get(pathName));
 						} catch (IOException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						} catch (InterruptedException e) {
 							Thread.currentThread().interrupt();
 						}
 					}
 				}
-			}
-		);
-		
-		this.removedPaths.addListener(						
-				new ChangeListener <ArrayDeque <LocalWatchPath> >() {
-
-			@Override
-			public void changed( 
-				ObservableValue<? extends ArrayDeque <LocalWatchPath> > changes,
-				ArrayDeque <LocalWatchPath> oldvalues, 
-				ArrayDeque <LocalWatchPath> newvalues) {
-					
-				//	for (LocalWatchPath path: newvalues)
-						//try {
-							System.out.println("paths to remove!");
-							//register (path.toCanonicalPath());
-					/*	} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (InterruptedException e) {
-							Thread.currentThread().interrupt();
-						}*/
-				}
-			}
-		);		
+			});
 	};
 
-
+	public SimpleListProperty<String> addedPaths() {
+		return mAddedPaths;
+	}
+	
+	public SimpleListProperty<String> removedPaths() {
+		return mRemovedPaths;
+	}
+	
 	public void initializeWatchPaths() {
 		
-		ArrayDeque <LocalWatchPath> paths = new ArrayDeque <LocalWatchPath> ();
+		ArrayList <String> paths = new ArrayList <String> ();
 		
 		//create a DirectoryStream filter that finds only directories
 		//and symlinks
@@ -151,87 +132,60 @@ System.out.println ("Found " + newvalues.size() + "paths");
 			Files.newDirectoryStream (LocalWatchPath.getRootPath(), filter)) {
 			
 			for (Path entry: stream)
-				paths.add(new LocalWatchPath (entry));
+				paths.add(entry.toString());
 			
 		} catch (IOException x) {
 			x.printStackTrace();
 		}
 		
-		runPathFinder (paths, false);
-	}
-	
-	public ObjectProperty <ArrayDeque <LocalWatchPath> > addedPaths() {
-		return this.addedPaths;
-	}
-
-	public ObjectProperty <ArrayDeque <LocalWatchPath> > removedPaths() {
-		return this.removedPaths;
+		runPathFinder (paths);
 	}
 	
 	public final void addPath (Path dir) {
 
-		ArrayDeque <LocalWatchPath> finderList = 
-											new ArrayDeque <LocalWatchPath> ();
-		finderList.add (new LocalWatchPath (dir));
+		ArrayList <String> finderList = new ArrayList <String> ();
+		
+		finderList.add (dir.toString());
 
-		runPathFinder (finderList, false);
+		runPathFinder (finderList);
 	}
 	
-	public final void removePath (Path dir) {
+	public final void removePath (String dir) {
+		/*
+		 * Paths (and subpaths) the watch service reports as having been deleted
+		 * need to be pushed to the removedPaths property for model-level
+		 * notification
+		 * 
+		 * Watch service automatically deletes invalidated keys from local
+		 * hashmap
+		 */
 		
-		ArrayDeque <LocalWatchPath> finderList = 
-											new ArrayDeque <LocalWatchPath> ();
-		finderList.add(new LocalWatchPath (dir));
-		
-		runPathFinder (finderList, true);
+		mRemovedPaths.add(dir);
 	}
 	
 	public final void removeDeletedPath (String pathName) {
-		/*
-		 * Paths (and subpaths) the watch service reports as having been deleted
-		 * need to be removed from the watch keys as well as the tree view.
-		 * 
-		 * Watchservice should automatically invalidate keys that have been
-		 * deleted from the filesystem
-		 */
+
 	}
 	
-	private void runPathFinder (ArrayDeque <LocalWatchPath> paths, 
-														boolean isRemoving) {
+	private void runPathFinder (ArrayList <String> paths) {
 		
 		//need to add blocking code / mechanism in case a path finder is 
 		//currently running (rare case)
-
-		finder = new LocalPathFinder (messageQueue, watchQueue);
+		
+		finder = new LocalPathFinder();
 		finder.setPaths (paths);
 		
 		//callbacks on successful completion of pathfinder
 
-		EventHandler <WorkerStateEvent> eh = null;
-		
-		if (!isRemoving) {
-			eh = new EventHandler <WorkerStateEvent> () {
-	
+		EventHandler <WorkerStateEvent> eh = 
+			new EventHandler <WorkerStateEvent> () {
+
 				@Override
 				public void handle(WorkerStateEvent arg0) {
-					
-					ArrayDeque <LocalWatchPath> paths = finder.getPaths();
-System.out.println ("Finder onsucceeded adding " + paths.size() + " paths");	
-					addedPaths.set(paths);
-System.out.println ("Finder onsucceeded added " + paths.size() + " paths");				
-				}
+						mAddedPaths.setAll(finder.getPathNames());
+					}
 			};
 			
-		} else {
-			eh = new EventHandler <WorkerStateEvent> () {
-				
-				@Override
-				public void handle(WorkerStateEvent arg0) {
-					removedPaths.set(finder.getPaths());
-				}
-			};			
-		}
-		
     	finder.setOnSucceeded(eh);
  	
 		pathFinderExecutor.execute (finder);    	
@@ -277,24 +231,24 @@ System.out.println ("Finder onsucceeded added " + paths.size() + " paths");
             
 	        // TBD - provide example of how OVERFLOW event is handled
 	        if (kind == OVERFLOW) {
-	    		enqueueMessage ("Overflow encountered", TaskMessageType.TASK_ERROR);
+	    		System.out.println ("Overflow encountered");
 	        }
 	        
 	        WatchEvent<Path> ev = (WatchEvent<Path>)event;
 	        Path target = dir.resolve(ev.context());
 	        
 	        if (kind == ENTRY_DELETE) {
-	        	enqueueMessage ("File deleted: " + dir.resolve(target).toString(), TaskMessageType.TASK_ACTIVITY);
-	        	removeDeletedPath (target.toString());	        	
+	        	System.out.println ("File deleted: " + dir.resolve(target).toString());
+	        	removePath (target.toString());	        	
 	        
 	        } else if (kind == ENTRY_CREATE) {
-	        	enqueueMessage ("File added: " + dir.resolve(target).toString(), TaskMessageType.TASK_ACTIVITY);
+	        	System.out.println ("File added: " + dir.resolve(target).toString());
 	        	register (target);
 	        	addPath (target);
 	        	
 
 	        } else if (kind == ENTRY_MODIFY) {
-	        	enqueueMessage ("File modified: " + dir.toString(), TaskMessageType.TASK_ACTIVITY);
+	        	System.out.println ("File modified: " + dir.toString());
 	        }
 	        boolean valid = key.reset();
 	        
@@ -344,7 +298,7 @@ System.out.println ("Finder onsucceeded added " + paths.size() + " paths");
             Path dir = keys.get (key);
             
             if (dir == null) {
-               enqueueMessage ("Null directory key encountered.", TaskMessageType.TASK_ERROR);
+               System.out.println ("Null directory key encountered.");
                 continue;
             }
  
