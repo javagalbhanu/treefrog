@@ -16,12 +16,12 @@ public class LocalTreeItem extends TreeItem <String>{
 	}
 	
 	public LocalTreeItem (LocalWatchPath path) {
-		super (path.toString());
+		super (path.getLastName());
 		mPath = path;
 	}
 	
 	public LocalTreeItem (Path path) {
-		super (path.toString());
+		super ( path.toString());
 		mPath = new LocalWatchPath (path);
 	}
 	

@@ -160,7 +160,7 @@ public final class LocalWatchService extends BaseTask {
 		 * hashmap
 		 */
 		
-		mRemovedPaths.add(dir);
+		mRemovedPaths.setAll(dir);
 	}
 	
 	public final void removeDeletedPath (String pathName) {

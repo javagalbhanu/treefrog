@@ -52,6 +52,17 @@ public class LocalWatchPath {
 			}
 	}
 	
+	public String getLastName() {
+		
+		if (mPath == null)
+			resolvePath();
+			
+		if (mPath == null)
+			return "";
+		
+		return mPath.getName(mPath.getNameCount()-1).toString();
+	}
+	
 	public String toString() {
 		return mPathName;
 	}
@@ -135,6 +146,18 @@ public class LocalWatchPath {
 		}
 		
 		return result;
+	}
+	
+	public boolean isAncestorOf(LocalWatchPath target) {
+		return target.toCanonicalPath().startsWith(mPath.toString());
+	}
+	
+	public boolean equals (LocalWatchPath target) {
+		return mPath.equals(target.toCanonicalPath());
+	}
+	
+	public boolean equals (Path target) {
+		return mPath.equals(target);
 	}
 	
 	public LocalWatchPath relativize (LocalWatchPath other) {

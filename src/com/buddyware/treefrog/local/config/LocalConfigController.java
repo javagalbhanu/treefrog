@@ -42,8 +42,8 @@ public class LocalConfigController extends BaseController {
 				
 				System.out.println ("Found " + arg0.getList().size() + " paths to add");
 
-				for (String path: arg0.getList())
-					addTreeItem (new LocalWatchPath (path), fsRoot);				
+				for (String path: arg0.getList())	
+					updateTree (new LocalWatchPath (path), fsRoot, false);
 			}
     		
     	});
@@ -57,39 +57,15 @@ public class LocalConfigController extends BaseController {
 				System.out.println ("Found " + arg0.getList().size() + " paths to remove");
 
 				for (String path: arg0.getList())
-					System.out.println (path);				
+					updateTree (new LocalWatchPath (path), fsRoot, true);			
 			}
     		
     	});    	
     }
     
-    private boolean removeTreeItems (Iterator <Path> pathIt, TreeItem <String> treeItem) {
- /*   	
-    	//if we've reached the end of the path, then this tree item and it's
-    	//children need to be removed.
-    	
-    	if (!pathIt.hasNext())
-    		return true;
-    	
-    	String pathValue = pathIt.next().toString();
-    	
-    	for (LocalTreeItem treeChild: treeItem.getChildren()) {
-    		
-    		//if the path matches, recurse
-    		if (treeChild.getValue().equals (pathValue)) {
-    			
-    			//if the recurse returns true, the end of the path has been
-    			//reached, so delete the tree item.
-    			if (removeTreeItems (pathIt, treeChild))
-    				treeChild.getParent().getChildren().remove(treeChild);
-    				
-    			return false;
-    		}
-    	}*/
-    	return false;
-    }
-    
-    private void addTreeItem (LocalWatchPath pathItem, LocalTreeItem treeItem) {
+    private void updateTree (LocalWatchPath pathItem, LocalTreeItem treeItem,
+    		boolean doRemoval) 
+    {
 
     	/*
     	 * addTreeItem (LocalWatchPath item, LocalTreeItem treeItem)
@@ -104,77 +80,39 @@ public class LocalConfigController extends BaseController {
     	 * of the pathItem.  At this point, it is added to the treeview. 
     	 */
 
-    	//at the first level, incoming paths need to be converted to relative
-    	//paths against their proper ancestor
-
-    	if (!pathItem.hasNext()) { 		
-    		return;
-    	}
-    	
-    	boolean isRoot = (treeItem == fsRoot);
-    	
-    	String pathName = "";
-    	
-    	if (!isRoot)
-    		pathName = pathItem.next();
-
     	//Recursion occurs if the pathItem is a descendant of (or is exactly)
 		//the tree item's path.
     	for (int x = 0; x < treeItem.getChildCount(); x++) {
 
     		LocalTreeItem treeChild = treeItem.getChild(x);
-    		LocalWatchPath childPath = pathItem;
     		
-    		//below root level, continue if the pathName doesn't match
-    		//the treeitme's values
-    		if (!isRoot) {
-    			if (!treeChild.getValue().equals(pathName))
-    				continue;
-    		}
-    		//otherwise, at root level, convert the pathItem to a descendant
-    		//of the treeItem's path
-    		else {
-				childPath = treeChild.getAsDescendant(pathItem);
+    		//skip loop if this child is not an ancestor of the pathitem
+    		if (!treeChild.getPath().isAncestorOf(pathItem))
+    			continue;
+    		
+    		//if is an ancestor, it may also be the path itself.
+    		//if we're removing and the tree child is the path item,
+    		//remove the tree child.
+    		if (doRemoval) {
+    			if (treeChild.getPath().equals(pathItem)) {
+    				treeItem.getChildren().remove(x);
+    				return;
+    			}
     		}
     		
-			//if still here, it's a proper child path.
-    		if (childPath != null) {
-    			addTreeItem (childPath, treeChild);
-    			return;
-    		}
+    		updateTree (pathItem, treeChild, doRemoval);
+    		return;
+
     	}
     	
-    	/*
-    	 * Still here?  Add the pathItem itself as a child.  
-    	 * However, if the pathItem still has more names to parse,
-    	 * then this is not a watch path "destination", so it's watch path 
-    	 * reference should be set to null by assigning only a string value 
-    	 * to the tree item.
-    	 * 
-    	 * This efficiency works because the Java FileVisitor parses depth-first
-    	 * ensuring that ancestors will always occur the list before their
-    	 * descendants.  Only the order of siblings cannot be guaranteed.
+    	/* still here? Then item was not found.  If adding items,
+    	 * add to treeitem's children.  If removing, then abort.
     	 */
     	
-    	LocalTreeItem treeChild = null;
-    	LocalWatchPath pathChild = pathItem;
-
-    	if (isRoot) {
-    		pathChild = pathItem.relativizeToParent();
-    		pathChild.next();
-    		treeChild = new LocalTreeItem (pathItem);
-    	}
-    	else { 
-
-    	if (pathItem.hasNext())
-    		treeChild = new LocalTreeItem (pathName);
-    	else
-    		treeChild = new LocalTreeItem (pathItem);
-    	}
+    	if (doRemoval)
+    		return;
     	
-    	treeItem.getChildren().add(treeChild);
-    	
-    	addTreeItem (pathChild, treeChild);
+		treeItem.getChildren().add (new LocalTreeItem (pathItem));
     }
     
     @FXML
