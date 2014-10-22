@@ -48,7 +48,7 @@ public class Main extends Application {
 	
 	@Override
 	public void stop() {
-	//	localModel.shutdown();
+		localModel.shutdown();
 	}
 	
 	public ArrayList <TaskMessage> pollLocalFileModel() {
