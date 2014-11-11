@@ -1,11 +1,11 @@
-package com.buddyware.treefrog.local.config;
+package com.buddyware.treefrog.filesystem.local.view;
 
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Iterator;
 
 import com.buddyware.treefrog.BaseController;
-import com.buddyware.treefrog.local.model.LocalWatchPath;
+import com.buddyware.treefrog.filesystem.local.model.LocalWatchPath;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;

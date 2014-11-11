@@ -1,4 +1,4 @@
-package com.buddyware.treefrog.local.model;
+package com.buddyware.treefrog.filesystem.local.model;
 
 import java.io.FileInputStream;
 import java.io.IOException;

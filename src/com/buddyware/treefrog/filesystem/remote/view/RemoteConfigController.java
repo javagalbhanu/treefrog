@@ -1,4 +1,4 @@
-package com.buddyware.treefrog.remote.config;
+package com.buddyware.treefrog.filesystem.remote.view;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -8,7 +8,7 @@ import javax.swing.JOptionPane;
 
 import com.buddyware.treefrog.BaseController;
 import com.buddyware.treefrog.Main;
-import com.buddyware.treefrog.remote.model.RemoteModel;
+import com.buddyware.treefrog.filesystem.remote.model.RemoteModel;
 import com.amazonaws.event.ProgressListener;
 
 import javafx.collections.FXCollections;

@@ -1,8 +1,8 @@
-package com.buddyware.treefrog.local.config;
+package com.buddyware.treefrog.filesystem.local.view;
 
 import java.nio.file.Path;
 
-import com.buddyware.treefrog.local.model.LocalWatchPath;
+import com.buddyware.treefrog.filesystem.local.model.LocalWatchPath;
 
 import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;

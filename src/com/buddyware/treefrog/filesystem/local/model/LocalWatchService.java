@@ -1,4 +1,4 @@
-package com.buddyware.treefrog.local.model;
+package com.buddyware.treefrog.filesystem.local.model;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;

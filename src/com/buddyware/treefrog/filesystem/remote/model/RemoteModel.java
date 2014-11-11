@@ -1,4 +1,4 @@
-package com.buddyware.treefrog.remote.model;
+package com.buddyware.treefrog.filesystem.remote.model;
 
 import java.io.File;
 import java.io.IOException;

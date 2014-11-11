@@ -16,12 +16,12 @@
           </Tab>
           <Tab fx:id="remote_tab" text="Remote">
             <content>
-			  <fx:include fx:id="remote_tab_view" source="remote/config/RemoteConfigView.fxml" />            
+			  <fx:include fx:id="remote_tab_view" source="filesystem/remote/view/RemoteConfigView.fxml" />            
             </content>
           </Tab>
             <Tab fx:id="local_tab" text="Local">
               <content>
-                <fx:include fx:id="local_tab_view" source="local/config/LocalConfigView.fxml" />
+                <fx:include fx:id="local_tab_view" source="filesystem/local/view/LocalConfigView.fxml" />
               </content>
             </Tab>
             <Tab fx:id="help_tab" text="Help">

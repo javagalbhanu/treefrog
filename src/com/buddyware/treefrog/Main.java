@@ -12,8 +12,8 @@ import javafx.collections.ObservableList;
 import javafx.stage.Stage;
 import javafx.scene.layout.BorderPane;
 
-import com.buddyware.treefrog.local.model.ListPropertyTest;
-import com.buddyware.treefrog.local.model.LocalFileModel;
+import com.buddyware.treefrog.filesystem.local.model.ListPropertyTest;
+import com.buddyware.treefrog.filesystem.local.model.LocalFileModel;
 import com.buddyware.treefrog.util.TaskMessage;
 import com.buddyware.treefrog.util.utils;
 

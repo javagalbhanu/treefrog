@@ -1,4 +1,4 @@
-package com.buddyware.treefrog.local.model;
+package com.buddyware.treefrog.filesystem.local.model;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 
 import com.buddyware.treefrog.BaseModel;
+import com.buddyware.treefrog.filesystem.IFileSystem;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -18,7 +19,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 
 
-public class LocalFileModel extends BaseModel {
+public class LocalFileModel extends BaseModel implements IFileSystem {
 	
 	//watchService task and associated executor
 	private final LocalWatchService watchService;
@@ -42,26 +43,8 @@ public class LocalFileModel extends BaseModel {
 		mWatchPathsRemoved = watchService.removedPaths();
 	}
 	
-	public void start() {
-		startWatchService();		
-	}
-	
-	public void shutdown() {
-		watchService.cancel();
-	}
-	
 	public Path getRootPath() {
 		return LocalWatchPath.getRootPath();
-	};
-	
-	public void setOnPathsAdded 
-		(ListChangeListener <String> changeListener) {
-			mWatchPathsAdded.addListener(changeListener);
-	};
-
-	public void setOnPathsRemoved 
-		(ListChangeListener <String> listener) {
-			mWatchPathsRemoved.addListener(listener);
 	};
 	
 	public void startWatchService () {
@@ -94,5 +77,61 @@ public class LocalFileModel extends BaseModel {
 			}
 			
 		};
+	}
+	
+	@Override
+	public void start() {
+		startWatchService();		
+	}
+	
+	@Override
+	public void shutdown() {
+		watchService.cancel();
+	}	
+
+	@Override
+	public void serialize(String filepath) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void deserialize(String filepath) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setOnPathsAdded (ListChangeListener <String> changeListener) {
+		mWatchPathsAdded.addListener(changeListener);
+	};
+
+	@Override
+	public void setOnPathsRemoved (ListChangeListener <String> listener) {
+		mWatchPathsRemoved.addListener(listener);
+	};
+
+	@Override
+	public void setOnPathsChanged(ListChangeListener<String> listener) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void removeOnPathsAdded(ListChangeListener<String> listener) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void removeOnPathsRemoved(ListChangeListener<String> listener) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void removeOnPathsChanged(ListChangeListener<String> listener) {
+		// TODO Auto-generated method stub
+		
 	};
 }
