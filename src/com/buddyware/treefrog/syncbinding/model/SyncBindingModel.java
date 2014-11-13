@@ -3,7 +3,7 @@ package com.buddyware.treefrog.syncbinding.model;
 import java.util.EnumSet;
 
 import com.buddyware.treefrog.BaseModel;
-import com.buddyware.treefrog.filesystem.IFileSystem;
+import com.buddyware.treefrog.filesystem.FileSystemModel;
 
 public class SyncBindingModel extends BaseModel {
 
@@ -28,8 +28,8 @@ public class SyncBindingModel extends BaseModel {
 	
 
 	//source / target file systems for the binding
-	private final IFileSystem mSourceFileSystem;
-	private final IFileSystem mTargetFileSystem;
+	private final FileSystemModel mSourceFileSystem;
+	private final FileSystemModel mTargetFileSystem;
 	
 	//active sync flags for the binding
 	private EnumSet<SyncFlag> mSyncFlags;
@@ -38,7 +38,7 @@ public class SyncBindingModel extends BaseModel {
 	/*
 	 * Class constructor
 	 */
-	public SyncBindingModel (IFileSystem source, IFileSystem target) {
+	public SyncBindingModel (FileSystemModel source, FileSystemModel target) {
 		mSourceFileSystem = source;
 		mTargetFileSystem = target;
 		

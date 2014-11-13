@@ -61,6 +61,10 @@ public final class LocalWatchService extends BaseTask {
     private final SimpleListProperty <String> mRemovedPaths = 
     		new SimpleListProperty <String> 
     							(FXCollections.<String> observableArrayList());
+    
+    private final SimpleListProperty <String> mChangedPaths = 
+    		new SimpleListProperty <String> 
+    							(FXCollections.<String> observableArrayList());    
  
 	public LocalWatchService () {
 
@@ -107,6 +111,10 @@ public final class LocalWatchService extends BaseTask {
 	
 	public SimpleListProperty<String> removedPaths() {
 		return mRemovedPaths;
+	}
+
+	public SimpleListProperty<String> changedPaths() {
+		return mChangedPaths;
 	}
 	
 	public void initializeWatchPaths() {
