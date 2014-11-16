@@ -136,6 +136,7 @@ public final class LocalWatchService extends BaseTask {
 		
 		//apply the filter to a directory stream opened on the root path
 		//and save everything returned.
+System.out.println("Finding paths in root path: " + LocalWatchPath.getRootPath().toString());
 		try (DirectoryStream <Path> stream = 
 			Files.newDirectoryStream (LocalWatchPath.getRootPath(), filter)) {
 			

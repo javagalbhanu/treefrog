@@ -1,37 +1,44 @@
 package com.buddyware.treefrog;
 	
-import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 import javafx.application.Application;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.stage.Stage;
 import javafx.scene.layout.BorderPane;
 
-import com.buddyware.treefrog.filesystem.local.model.ListPropertyTest;
-import com.buddyware.treefrog.filesystem.local.model.LocalFileModel;
-import com.buddyware.treefrog.util.TaskMessage;
+import com.buddyware.treefrog.filesystem.FileSystem;
+import com.buddyware.treefrog.filesystem.FileSystemFactory;
+import com.buddyware.treefrog.filesystem.FileSystemType;
+import com.buddyware.treefrog.util.ApplicationPreferences;
+import com.buddyware.treefrog.util.ApplicationPreferences.PreferenceId;
 import com.buddyware.treefrog.util.utils;
 
 
 public class Main extends Application {
 
-	private final LocalFileModel localModel = new LocalFileModel();
 	private Stage primaryStage;
-
+	private final ApplicationPreferences mAppPrefs = 
+												new ApplicationPreferences();
+	
+	private final FileSystem mSourceModel = FileSystemFactory
+					.buildFileSystem(FileSystemType.LOCAL_DISK,
+										mAppPrefs.get(PreferenceId.ROOT_PATH)
+									);
+	
+	private final Hashtable <String, FileSystem> mFileSystems = 
+			new Hashtable <String, FileSystem> ();
+	
 	@Override
-	public void start(Stage primaryStage) {	
+	public void start(Stage primaryStage) {
+
 		BaseController.mMain = this;
 			
-		
 		utils. <BorderPane, BaseController> loadFxml ("RootLayout.fxml", primaryStage, null);
 		primaryStage.setTitle ("BucketSync");
 		this.primaryStage=primaryStage;
-		localModel.start();
 	}
 	
 	public Stage getPrimaryStage(){
@@ -42,18 +49,15 @@ public class Main extends Application {
 		launch(args);
 	}
 	
-	public LocalFileModel getLocalFileModel() {
-		return localModel;
-	}
-	
 	@Override
 	public void stop() {
-		localModel.shutdown();
+		mSourceModel.shutdown();
 	}
 	
-	public ArrayList <TaskMessage> pollLocalFileModel() {
-		return new ArrayList <TaskMessage>(); //localModel.pollMessages();
+	public FileSystem getLocalFileModel() {
+		return mSourceModel;
 	}
+	
 	protected ExecutorService createExecutor(final String name) {
 		 
 		 ThreadFactory factory = new ThreadFactory() {

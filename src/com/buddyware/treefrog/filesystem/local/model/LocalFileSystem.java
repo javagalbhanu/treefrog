@@ -4,33 +4,23 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 
-import com.buddyware.treefrog.filesystem.FileSystemModel;
+import com.buddyware.treefrog.filesystem.FileSystem;
+import com.buddyware.treefrog.filesystem.FileSystemType;
 
 import javafx.beans.property.ReadOnlyObjectProperty;
 
 
-public class LocalFileModel extends FileSystemModel {
+public class LocalFileSystem extends FileSystem {
 	
 	//watchService task and associated executor
-	private final LocalWatchService mWatchService;
+	private final LocalWatchService mWatchService = new LocalWatchService ();
 
 	private final ExecutorService mWatchServiceExecutor = 
 										createExecutor("WatchService", true);
 
-	public LocalFileModel() {
-		
-		super();
-		
-	    //rootpath points to the bucketsync directory in user's home
-	    LocalWatchPath.setRootPath (
-	    			Paths.get(System.getProperty("user.home") + "/bucketsync")
-	    );
-	    
-		mWatchService = new LocalWatchService ();
-		
-		this.addedPaths().bind(mWatchService.addedPaths());
-		this.removedPaths().bind(mWatchService.removedPaths());
-		this.changedPaths().bind(mWatchService.changedPaths());
+	public LocalFileSystem(String rootPath) {
+		super(FileSystemType.LOCAL_DISK, rootPath);
+		construct();
 	}
 	
 	public void start() {
@@ -40,10 +30,6 @@ public class LocalFileModel extends FileSystemModel {
 	public void shutdown() {
 		killWatchService();
 	}
-	
-	public Path getRootPath() {
-		return LocalWatchPath.getRootPath();
-	};
 	
 	public void startWatchService () {
 		
@@ -61,5 +47,15 @@ public class LocalFileModel extends FileSystemModel {
 	
 	public ReadOnlyObjectProperty watchServiceState() {
 		return mWatchService.stateProperty();
+	}
+
+	@Override
+	protected void construct() {
+		
+	    LocalWatchPath.setRootPath (Paths.get(this.getRootPath()));
+	    
+		this.addedPaths().bind(mWatchService.addedPaths());
+		this.removedPaths().bind(mWatchService.removedPaths());
+		this.changedPaths().bind(mWatchService.changedPaths());
 	}
 }

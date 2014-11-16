@@ -7,25 +7,37 @@ import javafx.collections.ListChangeListener;
 
 import com.buddyware.treefrog.BaseModel;
 
-public class FileSystemModel extends BaseModel{
+public abstract class FileSystem extends BaseModel{
 /*
  * Base class for FileSystem models
  */
-	private final SimpleListProperty <String> mPathsAdded;
-	private final SimpleListProperty <String> mPathsRemoved;
-	private final SimpleListProperty <String> mPathsChanged;
+	protected final SimpleListProperty <String> mPathsAdded;
+	protected final SimpleListProperty <String> mPathsRemoved;
+	protected final SimpleListProperty <String> mPathsChanged;
+	private String mRootPath = null;
+	private final FileSystemType mType ;
 	
-	public FileSystemModel () {
+	public FileSystem (FileSystemType type, String rootPath) {
+		mType = type;
+		mRootPath = rootPath;
 		mPathsAdded = new SimpleListProperty <String> ();
 		mPathsRemoved = new SimpleListProperty <String> ();
 		mPathsChanged = new SimpleListProperty <String> ();
  	}
 
+	public abstract void start();
+	public abstract void shutdown();
+	protected abstract void construct();
+	
+	public FileSystemType getType() {
+		return mType;
+	}
+	
 	//serialize the model data for future session
-	void serialize(String filepath) {}
+	public void serialize(String filepath) {}
 	
 	//deserialize the model data for current session
-	void deserialize (String filepath) {}
+	public void deserialize (String filepath) {}
 	
 	public SimpleListProperty <String> addedPaths() {
 	
@@ -41,7 +53,7 @@ public class FileSystemModel extends BaseModel{
 		
 		return mPathsChanged;
 	}
-
+	
 	public void setOnPathsAdded (ListChangeListener <String> changeListener) {
 		mPathsAdded.addListener(changeListener);
 	}
@@ -50,15 +62,27 @@ public class FileSystemModel extends BaseModel{
 		mPathsRemoved.addListener(listener);
 	}
 	
-	void removeOnPathsChanged (ListChangeListener <String> listener) {
+	public void removeOnPathsChanged (ListChangeListener <String> listener) {
 		mPathsChanged.addListener(listener);
 	}
 	
 	//retrieves a file
-	File getFile(String filepath) {
+	public File getFile(String filepath) {
+		System.out.println("getting file " + filepath);
 		return null;
 	}
 	
 	//saves a file
-	void putFile(File filepath) {}
+	public void putFile(File filepath) {
+		System.out.println("putting file " + filepath);
+	}
+	
+	public String getRootPath() {
+		return mRootPath; 
+	}
+	
+	//toString is used for binding hastable keys
+	public String toString() {
+		return mRootPath;
+	}	
 }

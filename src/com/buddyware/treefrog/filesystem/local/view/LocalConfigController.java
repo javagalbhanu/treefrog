@@ -1,18 +1,11 @@
 package com.buddyware.treefrog.filesystem.local.view;
 
-import java.nio.file.Path;
-import java.util.ArrayDeque;
-import java.util.Iterator;
-
 import com.buddyware.treefrog.BaseController;
 import com.buddyware.treefrog.filesystem.local.model.LocalWatchPath;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
-import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 
 public class LocalConfigController extends BaseController {
@@ -24,7 +17,7 @@ public class LocalConfigController extends BaseController {
 	private ListView fileList;
 	
 	private LocalTreeItem fsRoot =
-			new LocalTreeItem (mMain.getLocalFileModel().getRootPath());
+			new LocalTreeItem (mMain.getLocalFileModel().toString());
 	
     /**
      * FXML initialization requirement
@@ -61,6 +54,7 @@ public class LocalConfigController extends BaseController {
 			}
     		
     	});    	
+    	mMain.getLocalFileModel().start();
     }
     
     private void updateTree (LocalWatchPath pathItem, LocalTreeItem treeItem,
@@ -117,6 +111,6 @@ public class LocalConfigController extends BaseController {
     
     @FXML
     public void start() {
-    	mMain.getLocalFileModel().startWatchService();
+    	
     }
 }

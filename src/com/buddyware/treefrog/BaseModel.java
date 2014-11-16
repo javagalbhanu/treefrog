@@ -20,7 +20,7 @@ import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 
-public class BaseModel {
+public abstract class BaseModel {
 
 	protected final BlockingQueue<TaskMessage> taskMessages = new ArrayBlockingQueue(1);
 	
