@@ -7,14 +7,11 @@ import java.util.List;
 import javax.swing.JOptionPane;
 
 import com.buddyware.treefrog.BaseController;
-import com.buddyware.treefrog.Main;
 import com.buddyware.treefrog.filesystem.remote.model.RemoteModel;
-import com.amazonaws.event.ProgressListener;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;

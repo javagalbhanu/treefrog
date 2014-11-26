@@ -1,26 +1,26 @@
-package com.buddyware.treefrog.filesystem.local.view;
+package com.buddyware.treefrog.filesystem.view;
 
 import java.nio.file.Path;
 
-import com.buddyware.treefrog.filesystem.local.model.LocalWatchPath;
+import com.buddyware.treefrog.filesystem.model.local.LocalWatchPath;
 
 import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 
-public class LocalTreeItem extends TreeItem <String>{
+public class FileSystemTreeItem extends TreeItem <String>{
 	
 	private LocalWatchPath mPath = null;
 	
-	public LocalTreeItem (String value) {
+	public FileSystemTreeItem (String value) {
 		super (value);
 	}
 	
-	public LocalTreeItem (LocalWatchPath path) {
+	public FileSystemTreeItem (LocalWatchPath path) {
 		super (path.getLastName());
 		mPath = path;
 	}
 	
-	public LocalTreeItem (Path path) {
+	public FileSystemTreeItem (Path path) {
 		super ( path.toString());
 		mPath = new LocalWatchPath (path);
 	}
@@ -33,8 +33,8 @@ public class LocalTreeItem extends TreeItem <String>{
 		return this.getChildren().size();
 	}
 	
-	public LocalTreeItem getChild(int index) {
-		return (LocalTreeItem) (super.getChildren().get(index));
+	public FileSystemTreeItem getChild(int index) {
+		return (FileSystemTreeItem) (super.getChildren().get(index));
 	}
 	
 	public LocalWatchPath getAsDescendant (LocalWatchPath path) {

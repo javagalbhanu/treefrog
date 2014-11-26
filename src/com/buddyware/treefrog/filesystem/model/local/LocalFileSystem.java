@@ -1,13 +1,15 @@
-package com.buddyware.treefrog.filesystem.local.model;
+package com.buddyware.treefrog.filesystem.model.local;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 
-import com.buddyware.treefrog.filesystem.FileSystem;
-import com.buddyware.treefrog.filesystem.FileSystemType;
+import com.buddyware.treefrog.filesystem.model.FileSystem;
+import com.buddyware.treefrog.filesystem.model.FileSystemType;
 
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.stage.FileChooser;
 
 
 public class LocalFileSystem extends FileSystem {
@@ -19,7 +21,7 @@ public class LocalFileSystem extends FileSystem {
 										createExecutor("WatchService", true);
 
 	public LocalFileSystem(String rootPath) {
-		super(FileSystemType.LOCAL_DISK, rootPath);
+		super(FileSystemType.SOURCE_DISK, rootPath);
 		construct();
 	}
 	
@@ -36,7 +38,7 @@ public class LocalFileSystem extends FileSystem {
 		if (mWatchServiceExecutor.isShutdown())
 			return;
 		
-		mWatchServiceExecutor.execute(mWatchService);	
+		mWatchServiceExecutor.execute(mWatchService);
 		mWatchServiceExecutor.shutdown();
 	}
 
@@ -57,5 +59,5 @@ public class LocalFileSystem extends FileSystem {
 		this.addedPaths().bind(mWatchService.addedPaths());
 		this.removedPaths().bind(mWatchService.removedPaths());
 		this.changedPaths().bind(mWatchService.changedPaths());
-	}
+	}	
 }

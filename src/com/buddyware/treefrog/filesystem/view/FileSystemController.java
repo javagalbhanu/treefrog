@@ -1,14 +1,23 @@
-package com.buddyware.treefrog.filesystem.local.view;
+package com.buddyware.treefrog.filesystem.view;
 
 import com.buddyware.treefrog.BaseController;
-import com.buddyware.treefrog.filesystem.local.model.LocalWatchPath;
+import com.buddyware.treefrog.filesystem.model.local.LocalWatchPath;
+import com.buddyware.treefrog.util.utils;
 
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TreeView;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
-public class LocalConfigController extends BaseController {
+public class FileSystemController extends BaseController {
 
 	@FXML
 	private TreeView fileTree;
@@ -16,8 +25,14 @@ public class LocalConfigController extends BaseController {
 	@FXML
 	private ListView fileList;
 	
-	private LocalTreeItem fsRoot =
-			new LocalTreeItem (mMain.getLocalFileModel().toString());
+	@FXML
+	private StackPane paneWizardContent;
+	
+	@FXML
+	private Button addNewFileSystem;
+	
+	private FileSystemTreeItem fsRoot =
+			new FileSystemTreeItem (mMain.getLocalFileModel().toString());
 	
     /**
      * FXML initialization requirement
@@ -25,6 +40,8 @@ public class LocalConfigController extends BaseController {
     @FXML
     private void initialize() {
     	
+System.out.println ("Creating FileSystemController...");
+
     	fileTree.setRoot(fsRoot);
     	
     	mMain.getLocalFileModel().setOnPathsAdded(new ListChangeListener <String>(){
@@ -55,14 +72,17 @@ public class LocalConfigController extends BaseController {
     		
     	});    	
     	mMain.getLocalFileModel().start();
+    	this.parentStage = mMain.getPrimaryStage();
+    	System.out.println (this.parentStage);
+    	System.out.println (mMain.getPrimaryStage());
     }
     
-    private void updateTree (LocalWatchPath pathItem, LocalTreeItem treeItem,
+    private void updateTree (LocalWatchPath pathItem, FileSystemTreeItem treeItem,
     		boolean doRemoval) 
     {
 
     	/*
-    	 * addTreeItem (LocalWatchPath item, LocalTreeItem treeItem)
+    	 * addTreeItem (LocalWatchPath item, FileSystemTreeItem treeItem)
     	 * 
     	 * pathItem - 	an item representing an element to be added 
     	 * 				to the tree view
@@ -78,7 +98,7 @@ public class LocalConfigController extends BaseController {
 		//the tree item's path.
     	for (int x = 0; x < treeItem.getChildCount(); x++) {
 
-    		LocalTreeItem treeChild = treeItem.getChild(x);
+    		FileSystemTreeItem treeChild = treeItem.getChild(x);
     		
     		//skip loop if this child is not an ancestor of the pathitem
     		if (!treeChild.getPath().isAncestorOf(pathItem))
@@ -106,11 +126,14 @@ public class LocalConfigController extends BaseController {
     	if (doRemoval)
     		return;
     	
-		treeItem.getChildren().add (new LocalTreeItem (pathItem));
+		treeItem.getChildren().add (new FileSystemTreeItem (pathItem));
     }
     
     @FXML
-    public void start() {
-    	
+    public void createNewFileSystem() {
+
+    	System.out.println (this.parentStage == null);
+    	utils.<AnchorPane>createDialogStage("filesystem/view/AddFileSystem.fxml", Modality.WINDOW_MODAL, this.parentStage).show();
+
     }
 }

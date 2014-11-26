@@ -4,7 +4,7 @@ import java.util.EnumSet;
 
 import javafx.collections.ListChangeListener;
 
-import com.buddyware.treefrog.filesystem.FileSystem;
+import com.buddyware.treefrog.filesystem.model.FileSystem;
 
 public class SyncBinding {
 /*

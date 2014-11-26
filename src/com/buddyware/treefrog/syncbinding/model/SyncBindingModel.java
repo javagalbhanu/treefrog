@@ -4,7 +4,7 @@ import java.util.EnumSet;
 import java.util.Hashtable;
 
 import com.buddyware.treefrog.BaseModel;
-import com.buddyware.treefrog.filesystem.FileSystem;
+import com.buddyware.treefrog.filesystem.model.FileSystem;
 import com.buddyware.treefrog.syncbinding.model.SyncBinding.SyncFlag;
 
 public class SyncBindingModel extends BaseModel {

@@ -21,7 +21,7 @@
           </Tab>
             <Tab fx:id="local_tab" text="Local">
               <content>
-                <fx:include fx:id="local_tab_view" source="filesystem/local/view/LocalConfigView.fxml" />
+                <fx:include fx:id="local_tab_view" source="filesystem/view/FileSystemView.fxml" />
               </content>
             </Tab>
             <Tab fx:id="help_tab" text="Help">

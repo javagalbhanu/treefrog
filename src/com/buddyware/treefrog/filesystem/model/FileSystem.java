@@ -1,4 +1,4 @@
-package com.buddyware.treefrog.filesystem;
+package com.buddyware.treefrog.filesystem.model;
 
 import java.io.File;
 
