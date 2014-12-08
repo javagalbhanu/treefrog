@@ -283,7 +283,7 @@ System.out.println("Finding paths in root path: " + mRootPath);
     
     initializeWatchPaths();
 
-    //register (LocalWatchPath.getRootPath());
+    register (LocalWatchPath.getRootPath());
     
     try {
 		// enter watch cycle
