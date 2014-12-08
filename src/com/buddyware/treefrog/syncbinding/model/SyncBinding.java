@@ -66,6 +66,7 @@ public class SyncBinding {
 					@Override
 					public void onChanged(javafx.collections.ListChangeListener
 						.Change<? extends String> arg0) {
+System.out.println("File change occured for " + arg0.getList().get(0));					
 							for (String filepath: arg0.getList()) {
 								source.putFile(target.getFile(filepath));
 							}

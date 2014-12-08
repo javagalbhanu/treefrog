@@ -48,7 +48,7 @@ public final class LocalWatchService extends BaseTask {
     private LocalPathFinder finder;
     
     //root path where the watch service begins 
-    private final String mRootPath;
+    private final Path mRootPath;
     
     private final ExecutorService pathFinderExecutor = 
     									createExecutor ("pathFinder", false);
@@ -73,7 +73,7 @@ public final class LocalWatchService extends BaseTask {
 
 		super ();
 	
-		mRootPath = rootPath;
+		mRootPath = Paths.get(rootPath);
 		
 		//create the watch service
     	try {
@@ -96,7 +96,7 @@ public final class LocalWatchService extends BaseTask {
 			public void onChanged( 
 				javafx.collections.ListChangeListener.Change<? extends String> 
 								arg0) {
-				
+System.out.println("paths added to queue");				
 					for (String pathName: arg0.getList()) {
 						try {
 							register (Paths.get(pathName));
@@ -143,7 +143,7 @@ public final class LocalWatchService extends BaseTask {
 		//and save everything returned.
 System.out.println("Finding paths in root path: " + mRootPath);
 		try (DirectoryStream <Path> stream = 
-			Files.newDirectoryStream (Paths.get(mRootPath), filter)) {
+			Files.newDirectoryStream (mRootPath, filter)) {
 			
 			for (Path entry: stream)
 				paths.add(entry.toString());
@@ -257,7 +257,7 @@ System.out.println("Finding paths in root path: " + mRootPath);
 	        
 	        } else if (kind == ENTRY_CREATE) {
 	        	System.out.println ("File added: " + dir.resolve(target).toString());
-	        	register (target);
+	        	//register (target);
 	        	addPath (target);
 	        	
 
@@ -283,7 +283,7 @@ System.out.println("Finding paths in root path: " + mRootPath);
     
     initializeWatchPaths();
 
-    register (LocalWatchPath.getRootPath());
+    register (mRootPath);
     
     try {
 		// enter watch cycle
