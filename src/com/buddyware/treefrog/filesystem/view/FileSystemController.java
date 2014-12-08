@@ -71,10 +71,8 @@ System.out.println ("Creating FileSystemController...");
 			}
     		
     	});    	
-    	mMain.getLocalFileModel().start();
+    	mMain.startFileSystems();
     	this.parentStage = mMain.getPrimaryStage();
-    	System.out.println (this.parentStage);
-    	System.out.println (mMain.getPrimaryStage());
     }
     
     private void updateTree (LocalWatchPath pathItem, FileSystemTreeItem treeItem,

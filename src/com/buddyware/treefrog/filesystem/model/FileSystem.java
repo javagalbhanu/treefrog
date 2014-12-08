@@ -1,6 +1,8 @@
 package com.buddyware.treefrog.filesystem.model;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.ListChangeListener;
@@ -14,12 +16,12 @@ public abstract class FileSystem extends BaseModel{
 	protected final SimpleListProperty <String> mPathsAdded;
 	protected final SimpleListProperty <String> mPathsRemoved;
 	protected final SimpleListProperty <String> mPathsChanged;
-	private String mRootPath = null;
+	private final Path mRootPath;
 	private final FileSystemType mType ;
 	
 	public FileSystem (FileSystemType type, String rootPath) {
 		mType = type;
-		mRootPath = rootPath;
+		mRootPath = Paths.get(rootPath);
 		mPathsAdded = new SimpleListProperty <String> ();
 		mPathsRemoved = new SimpleListProperty <String> ();
 		mPathsChanged = new SimpleListProperty <String> ();
@@ -67,22 +69,29 @@ public abstract class FileSystem extends BaseModel{
 	}
 	
 	//retrieves a file
-	public File getFile(String filepath) {
-		System.out.println("getting file " + filepath);
-		return null;
+	public SyncFile getFile(String filepath) {
+		
+		Path relPath = mRootPath.relativize(Paths.get(filepath));
+		
+		SyncFile fil = new SyncFile(relPath, new File(filepath)); 
+		System.out.println("FileSystem.getFile() " + fil.getPath().toString() + "/" + fil.getFile().toString());
+		return fil;
 	}
 	
 	//saves a file
-	public void putFile(File filepath) {
-		System.out.println("putting file " + filepath);
+	public void putFile(SyncFile fil) {
+		System.out.println("FileSystem.putFile() \nPath:" + fil.getPath().toString());
+		
+		if (fil.getFile() != null)
+			System.out.println("File:" + fil.getFile().toString());
 	}
 	
-	public String getRootPath() {
+	public Path getRootPath() {
 		return mRootPath; 
 	}
 	
 	//toString is used for binding hastable keys
 	public String toString() {
-		return mRootPath;
+		return mRootPath.toString();
 	}	
 }

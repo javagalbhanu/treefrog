@@ -11,8 +11,9 @@ public class FileSystemFactory {
 		
 		switch (type) {
 		
+		case SOURCE_DISK:
 		case LOCAL_DISK:
-			fs = new LocalFileSystem(rootPath);
+			fs = new LocalFileSystem(type, rootPath);
 			break;
 			
 		case AMAZON_S3:

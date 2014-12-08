@@ -8,7 +8,8 @@ public class ApplicationPreferences {
 	private final Preferences mPreferences;
 
 	public enum PreferenceId {
-		ROOT_PATH
+		ROOT_PATH,
+		AMAZON_S3_CREDENTIAL_PATH
 	}
 		
 	public ApplicationPreferences() {

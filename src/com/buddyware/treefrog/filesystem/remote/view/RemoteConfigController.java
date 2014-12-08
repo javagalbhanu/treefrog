@@ -32,8 +32,6 @@ public class RemoteConfigController extends BaseController {
     private void initialize() {
     }
     
-    
-    
     // Connect to S3 Button //
     @FXML
 	private void on_click() {

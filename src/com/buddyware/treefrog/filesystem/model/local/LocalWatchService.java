@@ -47,6 +47,9 @@ public final class LocalWatchService extends BaseTask {
     //path finding task and associated executor
     private LocalPathFinder finder;
     
+    //root path where the watch service begins 
+    private final String mRootPath;
+    
     private final ExecutorService pathFinderExecutor = 
     									createExecutor ("pathFinder", false);
 
@@ -66,10 +69,12 @@ public final class LocalWatchService extends BaseTask {
     		new SimpleListProperty <String> 
     							(FXCollections.<String> observableArrayList());    
  
-	public LocalWatchService () {
+	public LocalWatchService (String rootPath) {
 
 		super ();
 	
+		mRootPath = rootPath;
+		
 		//create the watch service
     	try {
 			this.watcher = FileSystems.getDefault().newWatchService();
@@ -136,9 +141,9 @@ public final class LocalWatchService extends BaseTask {
 		
 		//apply the filter to a directory stream opened on the root path
 		//and save everything returned.
-System.out.println("Finding paths in root path: " + LocalWatchPath.getRootPath().toString());
+System.out.println("Finding paths in root path: " + mRootPath);
 		try (DirectoryStream <Path> stream = 
-			Files.newDirectoryStream (LocalWatchPath.getRootPath(), filter)) {
+			Files.newDirectoryStream (Paths.get(mRootPath), filter)) {
 			
 			for (Path entry: stream)
 				paths.add(entry.toString());
