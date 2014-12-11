@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -216,4 +217,22 @@ public class utils {
 		
 		return files.toArray(new File[files.size()]);
 	}
+	
+	public static ArrayList <Path> getFiles(Path path, 
+										DirectoryStream.Filter<Path> filter) {
+		
+		ArrayList <Path> paths = new ArrayList <Path> ();
+		
+		try (DirectoryStream <Path> stream = 
+			Files.newDirectoryStream (path, filter)) {
+			
+			for (Path entry: stream)
+				paths.add(entry);
+				
+		} catch (IOException x) {
+			x.printStackTrace();
+		}
+		
+		return paths;
+	}		
 }

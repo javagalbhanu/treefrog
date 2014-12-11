@@ -1,5 +1,6 @@
 package com.buddyware.treefrog.syncbinding.model;
 
+import java.io.File;
 import java.util.EnumSet;
 
 import javafx.collections.ListChangeListener;
@@ -11,6 +12,8 @@ public class SyncBinding {
  * Provides active synchronization between a source and target file model
  * 
  */
+	
+	private final static String TAG = "SyncBinding";
 	
 	/*
 	 * SyncFlags provide fine-grained control over synchronization by
@@ -41,22 +44,22 @@ public class SyncBinding {
 		//full mirror (two-way add/change/remove updates)
 		
 		source.addedPaths().addListener( createFileSystemChangeListener 
-										(source, target));
+										(target, source));
 
 		source.changedPaths().addListener( createFileSystemChangeListener 
-										(source, target));
+										(target, source));
 
 		source.removedPaths().addListener( createFileSystemChangeListener 
-										(source, target));
+										(target, source));
 
 		target.addedPaths().addListener( createFileSystemChangeListener 
-										(target, source));
+										(source, target));
 
 		target.changedPaths().addListener( createFileSystemChangeListener 
-										(target, source));
+										(source, target));
 
 		target.removedPaths().addListener( createFileSystemChangeListener 
-										(target, source));		
+										(source, target));		
 	}
 	
 	private final ListChangeListener<String> createFileSystemChangeListener(
@@ -66,9 +69,9 @@ public class SyncBinding {
 					@Override
 					public void onChanged(javafx.collections.ListChangeListener
 						.Change<? extends String> arg0) {
-System.out.println("File change occured for " + arg0.getList().get(0));					
+System.out.println(TAG + ": File change occured for " + arg0.getList().size() + " files");					
 							for (String filepath: arg0.getList()) {
-								source.putFile(target.getFile(filepath));
+								source.putFile( target.getFile(filepath));
 							}
 					}
 				};

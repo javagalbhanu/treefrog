@@ -69,22 +69,10 @@ public abstract class FileSystem extends BaseModel{
 	}
 	
 	//retrieves a file
-	public SyncFile getFile(String filepath) {
-		
-		Path relPath = mRootPath.relativize(Paths.get(filepath));
-		
-		SyncFile fil = new SyncFile(relPath, new File(filepath)); 
-		System.out.println("FileSystem.getFile() " + fil.getPath().toString() + "/" + fil.getFile().toString());
-		return fil;
-	}
+	public abstract SyncPath getFile(String path);
 	
 	//saves a file
-	public void putFile(SyncFile fil) {
-		System.out.println("FileSystem.putFile() \nPath:" + fil.getPath().toString());
-		
-		if (fil.getFile() != null)
-			System.out.println("File:" + fil.getFile().toString());
-	}
+	public abstract void putFile(SyncPath target);
 	
 	public Path getRootPath() {
 		return mRootPath; 

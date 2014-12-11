@@ -22,7 +22,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 public class LocalFileVisitor extends SimpleFileVisitor<Path> {
 	
 	private final BooleanProperty isCancelled = new SimpleBooleanProperty();
-	private final ArrayList <String> watchPaths = new ArrayList <String> ();
+	private final ArrayList <Path> mWatchPaths = new ArrayList <Path> ();
 	
 	private HashMap<String, String> exclusionsMap = null;
 	
@@ -41,7 +41,7 @@ public class LocalFileVisitor extends SimpleFileVisitor<Path> {
 			return FileVisitResult.SKIP_SUBTREE;
 		}
 
-		this.watchPaths.add(dir.toString());
+		mWatchPaths.add(dir);
 
 		if (isCancelled.get()) {
 			return FileVisitResult.TERMINATE;
@@ -95,11 +95,16 @@ public class LocalFileVisitor extends SimpleFileVisitor<Path> {
         return FileVisitResult.SKIP_SUBTREE;
     }	
     
-    public ArrayList  <String> getPaths() {  	
-    	return watchPaths;
+    public ArrayList  <Path> getPaths() {  	
+    	return mWatchPaths;
     }
     
     public void setExclusionsMap (HashMap <String, String> map) {
     	exclusionsMap = map;
     }
+    
+    public void reset() {
+    	mWatchPaths.clear();
+    }
+    
 }

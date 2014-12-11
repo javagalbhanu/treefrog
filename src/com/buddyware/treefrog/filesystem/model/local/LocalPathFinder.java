@@ -23,9 +23,10 @@ import com.buddyware.treefrog.util.utils;
 
 public final class LocalPathFinder extends BaseTask {
 
-	private final ArrayList <String> finderPaths = new ArrayList <String>();
+	private final static String TAG = "LocalPathFinder";
+	private final ArrayList <Path> finderPaths = new ArrayList <Path>();
 	
-	private final ArrayList <String> foundPaths = new ArrayList <String> ();
+	private final ArrayList <Path> foundPaths = new ArrayList <Path> ();
 	
 	private final LocalFileVisitor visitor;
 	private final BooleanProperty isCancelled = new SimpleBooleanProperty (false);
@@ -54,30 +55,38 @@ public final class LocalPathFinder extends BaseTask {
 	@Override
     public final Void call() {
 
-		for (String path: finderPaths) {
-
+		foundPaths.clear();
+		
+		for (Path path: finderPaths) {
+System.out.println(TAG + ".call(): recursing " + path);
 			if (isCancelled())
 				break;
-				
+/*
+			if (Files.isDirectory(path)) {
+				foundPaths.add(path);
+				continue;
+			}
+	*/		
 	    	try {
-	    		Files.walkFileTree(Paths.get(path),  visitor);
+	    		visitor.reset();
+	    		Files.walkFileTree(path,  visitor);
 	    		
 	        } catch (IOException e) {
 	        	e.printStackTrace();
 	        }
+	    	System.out.println(TAG + ".call(): found " + visitor.getPaths());
+			foundPaths.addAll(visitor.getPaths());	    	
 		};
-
-		foundPaths.addAll(visitor.getPaths());
 
 		return null;
     };
     
-    public final ArrayList <String> getPathNames() {
+    public final ArrayList <Path> getPaths() {
     	
     	return foundPaths;
     }
     
-    public final void setPaths (ArrayList <String> paths) {
+    public final void setPaths (ArrayList <Path> paths) {
     	finderPaths.addAll(paths);
     };
 }

@@ -38,9 +38,11 @@ import javafx.event.EventHandler;
 import com.buddyware.treefrog.BaseTask;
 import com.buddyware.treefrog.util.TaskMessage;
 import com.buddyware.treefrog.util.TaskMessage.TaskMessageType;
+import com.buddyware.treefrog.util.utils;
 
 public final class LocalWatchService extends BaseTask {
 
+	private final static String TAG  = "LocalWatchService";
 	//watch service task
     private WatchService watcher;
     
@@ -96,8 +98,10 @@ public final class LocalWatchService extends BaseTask {
 			public void onChanged( 
 				javafx.collections.ListChangeListener.Change<? extends String> 
 								arg0) {
-System.out.println("paths added to queue");				
+System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue");				
 					for (String pathName: arg0.getList()) {
+
+						
 						try {
 							register (Paths.get(pathName));
 						} catch (IOException e) {
@@ -110,21 +114,13 @@ System.out.println("paths added to queue");
 			});
 	};
 
-	public SimpleListProperty<String> addedPaths() {
-		return mAddedPaths;
-	}
-	
-	public SimpleListProperty<String> removedPaths() {
-		return mRemovedPaths;
-	}
-
-	public SimpleListProperty<String> changedPaths() {
-		return mChangedPaths;
-	}
+	public SimpleListProperty<String> addedPaths() { return mAddedPaths; }
+	public SimpleListProperty<String> removedPaths() { return mRemovedPaths; }
+	public SimpleListProperty<String> changedPaths() { return mChangedPaths; }
 	
 	public void initializeWatchPaths() {
 		
-		ArrayList <String> paths = new ArrayList <String> ();
+		ArrayList <Path> paths = new ArrayList <Path> ();
 		
 		//create a DirectoryStream filter that finds only directories
 		//and symlinks
@@ -141,47 +137,17 @@ System.out.println("paths added to queue");
 		
 		//apply the filter to a directory stream opened on the root path
 		//and save everything returned.
-System.out.println("Finding paths in root path: " + mRootPath);
-		try (DirectoryStream <Path> stream = 
-			Files.newDirectoryStream (mRootPath, filter)) {
-			
-			for (Path entry: stream)
-				paths.add(entry.toString());
-			
-		} catch (IOException x) {
-			x.printStackTrace();
-		}
+
+		paths.add (mRootPath);
+		paths.addAll(utils.getFiles(mRootPath, filter));
+
+		for (Path p:paths)
+			System.out.println (TAG + ".initializeWatchPaths(): " + p.toString());
 		
 		runPathFinder (paths);
 	}
 	
-	public final void addPath (Path dir) {
-
-		ArrayList <String> finderList = new ArrayList <String> ();
-		
-		finderList.add (dir.toString());
-
-		runPathFinder (finderList);
-	}
-	
-	public final void removePath (String dir) {
-		/*
-		 * Paths (and subpaths) the watch service reports as having been deleted
-		 * need to be pushed to the removedPaths property for model-level
-		 * notification
-		 * 
-		 * Watch service automatically deletes invalidated keys from local
-		 * hashmap
-		 */
-		
-		mRemovedPaths.setAll(dir);
-	}
-	
-	public final void removeDeletedPath (String pathName) {
-
-	}
-	
-	private void runPathFinder (ArrayList <String> paths) {
+	private void runPathFinder (ArrayList <Path> paths) {
 		
 		//need to add blocking code / mechanism in case a path finder is 
 		//currently running (rare case)
@@ -194,15 +160,29 @@ System.out.println("Finding paths in root path: " + mRootPath);
 		EventHandler <WorkerStateEvent> eh = 
 			new EventHandler <WorkerStateEvent> () {
 
+				ArrayList <String> paths = new ArrayList <String>();
+				
 				@Override
 				public void handle(WorkerStateEvent arg0) {
-						mAddedPaths.setAll(finder.getPathNames());
-					}
+						for (Path p: finder.getPaths()) {
+							paths.add(p.toString());
+						}
+					addPaths(paths);
+				}
+				
 			};
 			
     	finder.setOnSucceeded(eh);
  	
 		pathFinderExecutor.execute (finder);    	
+	}
+	
+	private void addPath(String path) {
+		mAddedPaths.setAll(path);
+	}
+	
+	private void addPaths(ArrayList<String> paths) {
+		mAddedPaths.setAll(paths);
 	}
 	
     /**
@@ -215,33 +195,30 @@ System.out.println("Finding paths in root path: " + mRootPath);
     	//register the key with the watch service
         WatchKey key = 
     		dir.register (watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+
         
         if (!keys.isEmpty()) {
-        	
-            Path prev = keys.get(key);
-            
-            if (prev == null) {	                		
-				//enqueueMessage ("Registered: " + dir, TaskMessageType.TASK_ACTIVITY);
-            } 
-            else {
-	            if (!dir.equals(prev));
-				//	enqueueMessage ("Registered: " + dir, TaskMessageType.TASK_ACTIVITY);
-            }
-        }
+        
+        	Path prev = keys.get(key);
 
+        	if (prev == null) {
+        		//This is a new key
+        	}
+        	else if (!dir.equals(prev)) {
+        		//This is an update
+        	}
+        }
+        
+    	System.out.println(TAG + ".register(): Registering " + dir.toString() +" with key " + key.toString());
+        
         keys.put(key, dir);
     }
-		 
+    
 	private void processWatchEvent (WatchKey key, Path dir) throws IOException, InterruptedException {
 		
     	for (WatchEvent<?> event: key.pollEvents()) {
 	    	
             WatchEvent.Kind kind = event.kind();		
-            
-            System.out.println("Kind: " + event.kind());
-            System.out.println("Context: " + event.context());
-            System.out.println("Count: " + event.count());            
-            System.out.println();   
             
 	        // TBD - provide example of how OVERFLOW event is handled
 	        if (kind == OVERFLOW) {
@@ -252,17 +229,33 @@ System.out.println("Finding paths in root path: " + mRootPath);
 	        Path target = dir.resolve(ev.context());
 	        
 	        if (kind == ENTRY_DELETE) {
-	        	System.out.println ("File deleted: " + dir.resolve(target).toString());
-	        	removePath (target.toString());	        	
+
+	        	//removePath (target.toString());	        	
 	        
 	        } else if (kind == ENTRY_CREATE) {
-	        	System.out.println ("File added: " + dir.resolve(target).toString());
-	        	//register (target);
-	        	addPath (target);
 	        	
+	        	/*
+	        	 * Added paths are passed to the pathfinder service for
+	        	 * subdirectory discovery.  Path and subpaths are then added
+	        	 * to the AddedPaths property via an event listener on
+	        	 * service's onSucceeded() event.
+	        	 * 
+	        	 * Added files are added directly to the AddedPaths property
+	        	 */
+	        	
+	    		ArrayList <Path> finderList = new ArrayList <Path> ();
+	    		
+	    		if (Files.isDirectory(target)) {
+	    			finderList.add (target);
+	    			runPathFinder (finderList);
+	    		}
+	    		//add files directly to the addedPaths property
+	    		else {
+	    			addPath (mRootPath.relativize(target).toString());
+	    		}
 
 	        } else if (kind == ENTRY_MODIFY) {
-	        	System.out.println ("File modified: " + dir.toString());
+	        	System.out.println ("File modified: " + target.toString());
 	        }
 	        boolean valid = key.reset();
 	        
@@ -283,7 +276,7 @@ System.out.println("Finding paths in root path: " + mRootPath);
     
     initializeWatchPaths();
 
-    register (mRootPath);
+    //register (mRootPath);
     
     try {
 		// enter watch cycle
@@ -308,14 +301,14 @@ System.out.println("Finding paths in root path: " + mRootPath);
 				}
                 // fall through and retry
             }
-			
+System.out.println("Processing key " + key.toString());			
             Path dir = keys.get (key);
             
             if (dir == null) {
                System.out.println ("Null directory key encountered.");
                 continue;
             }
- 
+
             //process key change once it occurs
             processWatchEvent(key, dir);
            

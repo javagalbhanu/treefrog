@@ -3,16 +3,16 @@ package com.buddyware.treefrog.filesystem.model;
 import java.io.File;
 import java.nio.file.Path;
 
-public class SyncFile {
+public class SyncPath {
 
 		private final File mFile;
-		private final Path mPath;
-		
-		public SyncFile (Path relPath, File fil) {
-			mPath = relPath;
+		private final String mPath;
+
+		public SyncPath (Path relPath, File fil) {
+			mPath = relPath.toString();
 			mFile = fil;
 		}
 		
-		public Path getPath() { return mPath; }
+		public String getPath() { return mPath; }
 		public File getFile() { return mFile; }
 }
