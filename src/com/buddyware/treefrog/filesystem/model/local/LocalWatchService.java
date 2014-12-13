@@ -14,30 +14,21 @@ import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 
-import javafx.beans.property.ListProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleListProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 
 import com.buddyware.treefrog.BaseTask;
-import com.buddyware.treefrog.util.TaskMessage;
-import com.buddyware.treefrog.util.TaskMessage.TaskMessageType;
+import com.buddyware.treefrog.filesystem.model.SyncPath;
+import com.buddyware.treefrog.filesystem.model.SyncType;
 import com.buddyware.treefrog.util.utils;
 
 public final class LocalWatchService extends BaseTask {
@@ -59,17 +50,9 @@ public final class LocalWatchService extends BaseTask {
     private final Map<WatchKey, Path> keys = new HashMap<WatchKey, Path>();
       
     //reference to model property of watched paths.
-    private final SimpleListProperty <String> mAddedPaths = 
-    		new SimpleListProperty <String> 
-    							(FXCollections.<String> observableArrayList());
-    
-    private final SimpleListProperty <String> mRemovedPaths = 
-    		new SimpleListProperty <String> 
-    							(FXCollections.<String> observableArrayList());
-    
-    private final SimpleListProperty <String> mChangedPaths = 
-    		new SimpleListProperty <String> 
-    							(FXCollections.<String> observableArrayList());    
+    private final SimpleListProperty <SyncPath> mChangedPaths = 
+    		new SimpleListProperty <SyncPath> 
+    							(FXCollections.<SyncPath> observableArrayList());
  
 	public LocalWatchService (String rootPath) {
 
@@ -92,31 +75,31 @@ public final class LocalWatchService extends BaseTask {
 			}
 		});
 		
-		mAddedPaths.addListener(new ListChangeListener <String> (){
+		mChangedPaths.addListener(new ListChangeListener <SyncPath> (){
 
 			@Override
 			public void onChanged( 
-				javafx.collections.ListChangeListener.Change<? extends String> 
+				javafx.collections.ListChangeListener.Change<? extends SyncPath> 
 								arg0) {
 System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue");				
-					for (String pathName: arg0.getList()) {
+					for (SyncPath path: arg0.getList()) {
 
-						
-						try {
-							register (Paths.get(pathName));
-						} catch (IOException e) {
-							e.printStackTrace();
-						} catch (InterruptedException e) {
-							Thread.currentThread().interrupt();
+						//call register only when a directory is found
+						if (path.getFile() == null) {
+							try {
+								register (path.getPath());
+							} catch (IOException e) {
+								e.printStackTrace();
+							} catch (InterruptedException e) {
+								Thread.currentThread().interrupt();
+							}
 						}
 					}
 				}
 			});
 	};
 
-	public SimpleListProperty<String> addedPaths() { return mAddedPaths; }
-	public SimpleListProperty<String> removedPaths() { return mRemovedPaths; }
-	public SimpleListProperty<String> changedPaths() { return mChangedPaths; }
+	public SimpleListProperty<SyncPath> changedPaths() { return mChangedPaths; }
 	
 	public void initializeWatchPaths() {
 		
@@ -137,12 +120,7 @@ System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue")
 		
 		//apply the filter to a directory stream opened on the root path
 		//and save everything returned.
-
-		paths.add (mRootPath);
 		paths.addAll(utils.getFiles(mRootPath, filter));
-
-		for (Path p:paths)
-			System.out.println (TAG + ".initializeWatchPaths(): " + p.toString());
 		
 		runPathFinder (paths);
 	}
@@ -160,13 +138,14 @@ System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue")
 		EventHandler <WorkerStateEvent> eh = 
 			new EventHandler <WorkerStateEvent> () {
 
-				ArrayList <String> paths = new ArrayList <String>();
+				ArrayList <SyncPath> paths = new ArrayList <SyncPath>();
 				
 				@Override
 				public void handle(WorkerStateEvent arg0) {
 						for (Path p: finder.getPaths()) {
-							paths.add(p.toString());
+							paths.add(new SyncPath(p, SyncType.SYNC_NONE));
 						}
+					
 					addPaths(paths);
 				}
 				
@@ -177,12 +156,12 @@ System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue")
 		pathFinderExecutor.execute (finder);    	
 	}
 	
-	private void addPath(String path) {
-		mAddedPaths.setAll(path);
+	private void addPath(Path path, SyncType syncType) {
+		mChangedPaths.setAll(new SyncPath(path, syncType));
 	}
 	
-	private void addPaths(ArrayList<String> paths) {
-		mAddedPaths.setAll(paths);
+	private void addPaths(ArrayList<SyncPath> paths) {
+		mChangedPaths.setAll(paths);
 	}
 	
     /**
@@ -209,7 +188,7 @@ System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue")
         	}
         }
         
-    	System.out.println(TAG + ".register(): Registering " + dir.toString() +" with key " + key.toString());
+    	//System.out.println(TAG + ".register(): Registering " + dir.toString() +" with key " + key.toString());
         
         keys.put(key, dir);
     }
@@ -244,14 +223,20 @@ System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue")
 	        	 */
 	        	
 	    		ArrayList <Path> finderList = new ArrayList <Path> ();
-	    		
+   	    		
 	    		if (Files.isDirectory(target)) {
 	    			finderList.add (target);
 	    			runPathFinder (finderList);
 	    		}
 	    		//add files directly to the addedPaths property
 	    		else {
-	    			addPath (mRootPath.relativize(target).toString());
+    			
+	    			//a newly created file may not be immediately readable
+	    			if (Files.isReadable(target)) {
+	    					addPath (target, SyncType.SYNC_CREATE);
+	    			}
+	    			else
+	    				System.err.println ("File " + target + " cannot be read");
 	    		}
 
 	        } else if (kind == ENTRY_MODIFY) {
@@ -274,9 +259,8 @@ System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue")
 
     boolean interrupted = false;
     
+    register (mRootPath);
     initializeWatchPaths();
-
-    //register (mRootPath);
     
     try {
 		// enter watch cycle

@@ -1,18 +1,29 @@
 package com.buddyware.treefrog.filesystem.model;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class SyncPath {
+		private final String mRelativePath;
+		private final Path mPath;
+		private final SyncType mSyncType;
 
-		private final File mFile;
-		private final String mPath;
-
-		public SyncPath (Path relPath, File fil) {
-			mPath = relPath.toString();
-			mFile = fil;
+		public SyncPath (Path path, SyncType syncType) {
+			mPath = path;
+			mSyncType = syncType;
+			mRelativePath = "";
 		}
 		
-		public String getPath() { return mPath; }
-		public File getFile() { return mFile; }
+		public Path getPath() { return mPath; }
+		public SyncType getSyncType() { return mSyncType; }
+		
+		public File getFile() {
+			
+			if (Files.isDirectory(mPath))
+					return null;
+			
+			return new File(mPath.toString());
+		}
+		
 }

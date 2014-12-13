@@ -15,6 +15,7 @@ import com.buddyware.treefrog.filesystem.model.SyncPath;
 import com.buddyware.treefrog.util.utils;
 
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.collections.ListChangeListener;
 
 public class LocalFileSystem extends FileSystem {
 	
@@ -67,11 +68,29 @@ System.out.println("Starting watch service on path " + this.getRootPath());
 System.out.println ("Constructing " + this.getRootPath());		
 	    LocalWatchPath.setRootPath (this.getRootPath());
 	    
-		this.addedPaths().bind(mWatchService.addedPaths());
-		this.removedPaths().bind(mWatchService.removedPaths());
-		this.changedPaths().bind(mWatchService.changedPaths());
-	}
+		mChangedPaths.bind(mWatchService.changedPaths());
+		
+		mChangedPaths.addListener(new ListChangeListener <SyncPath> (){
 
+			private boolean mFirstRun = true;
+			
+			@Override
+			public void onChanged( 
+				javafx.collections.ListChangeListener.Change<? extends SyncPath> 
+								arg0) {
+				
+					if (mStartup) {
+						if (!mFirstRun) {
+							mStartup = false;
+						}
+					}
+					
+					if (mFirstRun)
+						mFirstRun = false;
+				}
+			});
+	}
+	
 	private void addDirectory (Path target) {
 		System.out.println(TAG + "addDirectory: " + target.toString());
 	}
@@ -79,6 +98,7 @@ System.out.println ("Constructing " + this.getRootPath());
 	private void addFile (Path target) {
 		System.out.println(TAG + "addFile: " + target.toString());
 	}
+	
 	
 	@Override
 	public void putFile(SyncPath target) {
@@ -89,21 +109,30 @@ System.out.println ("Constructing " + this.getRootPath());
 		if (target.getFile() == null)
 			return;
 		
-		System.out.println (TAG + ": Update received for " + target.toString());
+		//build out the path if it doesn't already exist
+		Path newPath = getRootPath().resolve(target.getPath());
+		
+		System.out.println(TAG + ".putFile(): resolved " + newPath.toString());
+		
 	}
 	
 	@Override
-	public SyncPath getFile(String path) {
-		
-		Path targetPath = Paths.get(path);
-		File targetFile = new File(path);
+	public Path getFile(String path) {
 		
 		//skip empty strings
 		if (path.isEmpty())
 			return null;
+
+		Path targetPath = Paths.get(path);
 		
 		//do not sync symbolic links
 		if (Files.isSymbolicLink(targetPath))
+			return null;
+		
+		File targetFile = new File(path);
+
+		//do not process if the path is a directory
+		if (!targetFile.isFile())
 			return null;
 		
 		//relativize target against the root path.
@@ -130,10 +159,8 @@ System.out.println ("Constructing " + this.getRootPath());
 			}
 		}
 		
-		if (!targetFile.isFile())
-			targetFile = null;
 		
-		return new SyncPath(targetPath, targetFile);
+		return targetPath;
 	}
 
 }

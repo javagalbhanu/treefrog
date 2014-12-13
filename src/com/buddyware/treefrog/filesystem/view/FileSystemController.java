@@ -1,6 +1,7 @@
 package com.buddyware.treefrog.filesystem.view;
 
 import com.buddyware.treefrog.BaseController;
+import com.buddyware.treefrog.filesystem.model.SyncPath;
 import com.buddyware.treefrog.filesystem.model.local.LocalWatchPath;
 import com.buddyware.treefrog.util.utils;
 
@@ -8,17 +9,18 @@ import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
-import javafx.scene.control.RadioButton;
+
 import javafx.scene.control.TreeView;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.BorderPane;
+
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+
 import javafx.stage.Modality;
-import javafx.stage.Stage;
+
 
 public class FileSystemController extends BaseController {
 
+	private final static String TAG = "FileSystemController";
 	@FXML
 	private TreeView fileTree;
 	
@@ -44,33 +46,24 @@ System.out.println ("Creating FileSystemController...");
 
     	fileTree.setRoot(fsRoot);
     	
-    	mMain.getLocalFileModel().setOnPathsAdded(new ListChangeListener <String>(){
+    	mMain.getLocalFileModel().setOnPathsChanged(new ListChangeListener <SyncPath>(){
 
 			@Override
 			public void onChanged(
-					javafx.collections.ListChangeListener.Change<? extends String> arg0) {
+					javafx.collections.ListChangeListener.Change<? extends SyncPath> arg0) {
 				
 				System.out.println ("Found " + arg0.getList().size() + " paths to add");
 
-				for (String path: arg0.getList())	
-					updateTree (new LocalWatchPath (path), fsRoot, false);
+				for (SyncPath path: arg0.getList())	{
+					
+					//only update directories
+					if (path.getFile()==null)
+						updateTree (new LocalWatchPath (path.getPath()), fsRoot, false);
+				}
 			}
     		
     	});
-    	
-    	mMain.getLocalFileModel().setOnPathsRemoved(new ListChangeListener <String>(){
-
-			@Override
-			public void onChanged(
-					javafx.collections.ListChangeListener.Change<? extends String> arg0) {
-				
-				System.out.println ("Found " + arg0.getList().size() + " paths to remove");
-
-				for (String path: arg0.getList())
-					updateTree (new LocalWatchPath (path), fsRoot, true);			
-			}
-    		
-    	});    	
+    	    	
     	mMain.startFileSystems();
     	this.parentStage = mMain.getPrimaryStage();
     }
@@ -123,7 +116,7 @@ System.out.println ("Creating FileSystemController...");
     	
     	if (doRemoval)
     		return;
-    	
+
 		treeItem.getChildren().add (new FileSystemTreeItem (pathItem));
     }
     

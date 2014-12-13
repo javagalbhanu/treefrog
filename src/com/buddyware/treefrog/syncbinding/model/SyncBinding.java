@@ -1,11 +1,12 @@
 package com.buddyware.treefrog.syncbinding.model;
 
-import java.io.File;
 import java.util.EnumSet;
 
 import javafx.collections.ListChangeListener;
 
 import com.buddyware.treefrog.filesystem.model.FileSystem;
+import com.buddyware.treefrog.filesystem.model.SyncPath;
+import com.buddyware.treefrog.filesystem.model.SyncType;
 
 public class SyncBinding {
 /*
@@ -42,36 +43,30 @@ public class SyncBinding {
 		
 		//create listeners which correspond to a default synchronization of
 		//full mirror (two-way add/change/remove updates)
-		
-		source.addedPaths().addListener( createFileSystemChangeListener 
+	
+		source.pathsChanged().addListener( createFileSystemChangeListener 
 										(target, source));
-
-		source.changedPaths().addListener( createFileSystemChangeListener 
-										(target, source));
-
-		source.removedPaths().addListener( createFileSystemChangeListener 
-										(target, source));
-
-		target.addedPaths().addListener( createFileSystemChangeListener 
-										(source, target));
-
-		target.changedPaths().addListener( createFileSystemChangeListener 
-										(source, target));
-
-		target.removedPaths().addListener( createFileSystemChangeListener 
-										(source, target));		
 	}
 	
-	private final ListChangeListener<String> createFileSystemChangeListener(
+	private final ListChangeListener<SyncPath> createFileSystemChangeListener(
 			FileSystem source, FileSystem target) {
-				return new ListChangeListener<String>() {
+				return new ListChangeListener<SyncPath>() {
 
 					@Override
 					public void onChanged(javafx.collections.ListChangeListener
-						.Change<? extends String> arg0) {
-System.out.println(TAG + ": File change occured for " + arg0.getList().size() + " files");					
-							for (String filepath: arg0.getList()) {
-								source.putFile( target.getFile(filepath));
+						.Change<? extends SyncPath> arg0) {
+
+							if (!target.isStartingUp()) {
+								System.out.println(TAG + ": File change occured for " + arg0.getList());
+								for (SyncPath filepath: arg0.getList()) {
+									
+									//skip if no file is defined
+									if (filepath.getFile() == null)
+										continue;
+									
+									if (filepath.getSyncType() != SyncType.SYNC_DELETE)
+										source.putFile(filepath);
+								}
 							}
 					}
 				};

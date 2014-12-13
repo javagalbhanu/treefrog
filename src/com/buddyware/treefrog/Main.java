@@ -52,7 +52,7 @@ public class Main extends Application {
 		primaryStage.setTitle ("BucketSync");
 
 		File[] files = utils.getVolumes();
-	//	mBindingModel.bindFilesystems(mSourceModel, mLocalDiskModel, null);
+		mBindingModel.bindFilesystems(mSourceModel, mLocalDiskModel, null);
 	}
 	
 	public Stage getPrimaryStage(){
@@ -66,7 +66,7 @@ public class Main extends Application {
 	@Override
 	public void stop() {
 		mSourceModel.shutdown();
-	//	mLocalDiskModel.shutdown();
+		mLocalDiskModel.shutdown();
 	}
 	
 	public FileSystem getLocalFileModel() {
@@ -75,7 +75,7 @@ public class Main extends Application {
 	
 	public void startFileSystems() {
 		mSourceModel.start();
-	//	mLocalDiskModel.start();
+		mLocalDiskModel.start();
 	}
 	
 	protected ExecutorService createExecutor(final String name) {

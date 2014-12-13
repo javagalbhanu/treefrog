@@ -58,7 +58,7 @@ public final class LocalPathFinder extends BaseTask {
 		foundPaths.clear();
 		
 		for (Path path: finderPaths) {
-System.out.println(TAG + ".call(): recursing " + path);
+
 			if (isCancelled())
 				break;
 /*
@@ -67,14 +67,20 @@ System.out.println(TAG + ".call(): recursing " + path);
 				continue;
 			}
 	*/		
+System.out.println(TAG + ".call() visitng " + path.toString());
+			visitor.reset();
+			
 	    	try {
-	    		visitor.reset();
+
+	    		if (Files.isSymbolicLink(path))
+	    			path = Files.readSymbolicLink(path);
+	    		
 	    		Files.walkFileTree(path,  visitor);
 	    		
 	        } catch (IOException e) {
 	        	e.printStackTrace();
 	        }
-	    	System.out.println(TAG + ".call(): found " + visitor.getPaths());
+
 			foundPaths.addAll(visitor.getPaths());	    	
 		};
 
@@ -87,6 +93,7 @@ System.out.println(TAG + ".call(): recursing " + path);
     }
     
     public final void setPaths (ArrayList <Path> paths) {
+    	finderPaths.clear();
     	finderPaths.addAll(paths);
     };
 }
