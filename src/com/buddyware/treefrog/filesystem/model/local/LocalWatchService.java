@@ -125,6 +125,16 @@ System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue")
 		runPathFinder (paths);
 	}
 	
+	public void stopWatcher() {
+				
+		try {
+			watcher.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	private void runPathFinder (ArrayList <Path> paths) {
 		
 		//need to add blocking code / mechanism in case a path finder is 
@@ -143,7 +153,8 @@ System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue")
 				@Override
 				public void handle(WorkerStateEvent arg0) {
 						for (Path p: finder.getPaths()) {
-							paths.add(new SyncPath(p, SyncType.SYNC_NONE));
+							paths.add(
+								new SyncPath(mRootPath, p, SyncType.SYNC_NONE));
 						}
 					
 					addPaths(paths);
@@ -157,7 +168,7 @@ System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue")
 	}
 	
 	private void addPath(Path path, SyncType syncType) {
-		mChangedPaths.setAll(new SyncPath(path, syncType));
+		mChangedPaths.setAll(new SyncPath(mRootPath, path, syncType));
 	}
 	
 	private void addPaths(ArrayList<SyncPath> paths) {
@@ -209,7 +220,14 @@ System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue")
 	        
 	        if (kind == ENTRY_DELETE) {
 
-	        	//removePath (target.toString());	        	
+	        	ArrayList <Path> finderList = new ArrayList <Path> ();
+	        	
+	        	if (Files.isDirectory(target)) {
+	        		//directory deletion is not implemented apart from
+	        		//file deletion
+	        	}
+	        	else
+	        		addPath (target, SyncType.SYNC_DELETE);
 	        
 	        } else if (kind == ENTRY_CREATE) {
 	        	

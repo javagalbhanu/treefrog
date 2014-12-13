@@ -6,7 +6,9 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.concurrent.ExecutorService;
 
 import com.buddyware.treefrog.filesystem.model.FileSystem;
@@ -37,7 +39,7 @@ public class LocalFileSystem extends FileSystem {
 	}
 	
 	public void start() {
-System.out.println("Starting watch service on path " + this.getRootPath());		
+	
 		startWatchService();		
 	}
 	
@@ -55,8 +57,12 @@ System.out.println("Starting watch service on path " + this.getRootPath());
 	}
 
 	public void killWatchService() {
+		
+		mWatchService.stopWatcher();
 		if (mWatchService.isRunning())
 			mWatchService.cancel();
+		
+		
 	}
 	
 	public ReadOnlyObjectProperty watchServiceState() {
@@ -65,7 +71,7 @@ System.out.println("Starting watch service on path " + this.getRootPath());
 	
 	@Override
 	protected void construct() {
-System.out.println ("Constructing " + this.getRootPath());		
+		
 	    LocalWatchPath.setRootPath (this.getRootPath());
 	    
 		mChangedPaths.bind(mWatchService.changedPaths());
@@ -91,29 +97,44 @@ System.out.println ("Constructing " + this.getRootPath());
 			});
 	}
 	
-	private void addDirectory (Path target) {
-		System.out.println(TAG + "addDirectory: " + target.toString());
-	}
-	
-	private void addFile (Path target) {
-		System.out.println(TAG + "addFile: " + target.toString());
-	}
-	
-	
 	@Override
-	public void putFile(SyncPath target) {
+	public void putFile(SyncPath path) {
 
-		if (target == null)
+		if (path == null)
 			return;
 		
-		if (target.getFile() == null)
+		if (path.getFile() == null)
 			return;
+
+		Path target = getRootPath().resolve(path.getRelativePath());
 		
 		//build out the path if it doesn't already exist
-		Path newPath = getRootPath().resolve(target.getPath());
+		try {
+			Files.createDirectories(target.getParent());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
-		System.out.println(TAG + ".putFile(): resolved " + newPath.toString());
+		try {
+			Files.copy(path.getFile().toPath(), target);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	@Override
+	public boolean deleteFile(SyncPath path) {
 		
+		try {
+			return Files.deleteIfExists(getRootPath().resolve(path.getRelativePath()));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return false;
 	}
 	
 	@Override
@@ -158,8 +179,7 @@ System.out.println ("Constructing " + this.getRootPath());
 					targetPath = p.relativize(targetPath);
 			}
 		}
-		
-		
+
 		return targetPath;
 	}
 

@@ -57,15 +57,29 @@ public class SyncBinding {
 						.Change<? extends SyncPath> arg0) {
 
 							if (!target.isStartingUp()) {
-								System.out.println(TAG + ": File change occured for " + arg0.getList());
+
 								for (SyncPath filepath: arg0.getList()) {
 									
 									//skip if no file is defined
 									if (filepath.getFile() == null)
 										continue;
 									
-									if (filepath.getSyncType() != SyncType.SYNC_DELETE)
-										source.putFile(filepath);
+									switch (filepath.getSyncType()) {
+									
+									case SYNC_CREATE:
+										source.putFile(filepath);										
+									break;
+										
+									case SYNC_MODIFY:
+									break;
+										
+									case SYNC_DELETE:
+										System.out.println ("Delete success? " + source.deleteFile(filepath));
+									break;
+										
+									default:
+									break;
+									}
 								}
 							}
 					}

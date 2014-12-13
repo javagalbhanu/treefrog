@@ -9,18 +9,16 @@ import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
-
 import javafx.scene.control.TreeView;
 import javafx.scene.layout.AnchorPane;
-
 import javafx.scene.layout.StackPane;
-
 import javafx.stage.Modality;
 
 
 public class FileSystemController extends BaseController {
 
 	private final static String TAG = "FileSystemController";
+	private int mPathsAdded = 0;
 	@FXML
 	private TreeView fileTree;
 	
@@ -60,6 +58,8 @@ System.out.println ("Creating FileSystemController...");
 					if (path.getFile()==null)
 						updateTree (new LocalWatchPath (path.getPath()), fsRoot, false);
 				}
+				System.out.println (mPathsAdded + " path added");
+
 			}
     		
     	});

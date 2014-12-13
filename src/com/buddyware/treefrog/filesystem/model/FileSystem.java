@@ -48,11 +48,9 @@ public abstract class FileSystem extends BaseModel{
 		mChangedPaths.addListener(changeListener);
 	}
 
-	//retrieves a file
 	public abstract Path getFile(String path);
-	
-	//saves a file
-	public abstract void putFile(SyncPath target);
+	public abstract void putFile(SyncPath path);
+	public abstract boolean deleteFile(SyncPath path);
 	
 	public boolean isStartingUp() { return mStartup; }
 	
