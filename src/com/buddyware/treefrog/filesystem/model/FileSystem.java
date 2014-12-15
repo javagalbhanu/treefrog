@@ -21,6 +21,7 @@ public abstract class FileSystem extends BaseModel{
 	private final FileSystemType mType ;
 	
 	public FileSystem (FileSystemType type, String rootPath) {
+		
 		mType = type;
 		mRootPath = Paths.get(rootPath);
 		
@@ -32,9 +33,7 @@ public abstract class FileSystem extends BaseModel{
 	public abstract void shutdown();
 	protected abstract void construct();
 	
-	public FileSystemType getType() {
-		return mType;
-	}
+	public FileSystemType getType() { return mType;	}
 	
 	//serialize the model data for future session
 	public void serialize(String filepath) {}
@@ -54,12 +53,8 @@ public abstract class FileSystem extends BaseModel{
 	
 	public boolean isStartingUp() { return mStartup; }
 	
-	public Path getRootPath() {
-		return mRootPath; 
-	}
+	public Path getRootPath() { return mRootPath; }
 	
 	//toString is used for binding hastable keys
-	public String toString() {
-		return mRootPath.toString();
-	}	
+	public String toString() { return mRootPath.toString();	}	
 }

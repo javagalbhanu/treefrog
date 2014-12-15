@@ -125,16 +125,6 @@ System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue")
 		runPathFinder (paths);
 	}
 	
-	public void stopWatcher() {
-				
-		try {
-			watcher.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
 	private void runPathFinder (ArrayList <Path> paths) {
 		
 		//need to add blocking code / mechanism in case a path finder is 
@@ -303,7 +293,7 @@ System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue")
 				}
                 // fall through and retry
             }
-System.out.println("Processing key " + key.toString());			
+		
             Path dir = keys.get (key);
             
             if (dir == null) {
@@ -328,6 +318,9 @@ System.out.println("Processing key " + key.toString());
         if (interrupted)
             Thread.currentThread().interrupt();
     }
+    	keys.clear();
+    	watcher.close();
+    	
 		return null;
 	};
 }

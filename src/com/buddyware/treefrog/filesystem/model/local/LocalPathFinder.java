@@ -61,13 +61,7 @@ public final class LocalPathFinder extends BaseTask {
 
 			if (isCancelled())
 				break;
-/*
-			if (Files.isDirectory(path)) {
-				foundPaths.add(path);
-				continue;
-			}
-	*/		
-System.out.println(TAG + ".call() visitng " + path.toString());
+
 			visitor.reset();
 			
 	    	try {

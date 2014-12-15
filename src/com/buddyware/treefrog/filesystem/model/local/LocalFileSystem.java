@@ -2,6 +2,7 @@ package com.buddyware.treefrog.filesystem.model.local;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,7 +59,6 @@ public class LocalFileSystem extends FileSystem {
 
 	public void killWatchService() {
 		
-		mWatchService.stopWatcher();
 		if (mWatchService.isRunning())
 			mWatchService.cancel();
 		
@@ -86,13 +86,17 @@ public class LocalFileSystem extends FileSystem {
 								arg0) {
 				
 					if (mStartup) {
+System.out.println("In startup");						
 						if (!mFirstRun) {
+System.out.println("Complete startup");						
 							mStartup = false;
 						}
 					}
 					
-					if (mFirstRun)
+					if (mFirstRun) {
+System.out.println("In first run");						
 						mFirstRun = false;
+					}
 				}
 			});
 	}
@@ -117,7 +121,10 @@ public class LocalFileSystem extends FileSystem {
 		}
 		
 		try {
-			Files.copy(path.getFile().toPath(), target);
+			Files.copy(path.getFile().toPath(), target, 
+										StandardCopyOption.REPLACE_EXISTING, 
+										StandardCopyOption.COPY_ATTRIBUTES);
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -19,9 +19,11 @@ public class SyncPath {
 		public SyncType getSyncType() { return mSyncType; }
 		public Path getRelativePath() { return mRelativePath; }
 		
+		public boolean isFile() { return !Files.isDirectory(mPath); }
+		
 		public File getFile() {
 			
-			if (Files.isDirectory(mPath))
+			if (!isFile())
 					return null;
 			
 			return new File(mPath.toString());

@@ -1,7 +1,9 @@
 package com.buddyware.treefrog.syncbinding.model;
 
 import java.util.EnumSet;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
+import javafx.beans.property.SimpleListProperty;
 import javafx.collections.ListChangeListener;
 
 import com.buddyware.treefrog.filesystem.model.FileSystem;
@@ -15,7 +17,8 @@ public class SyncBinding {
  */
 	
 	private final static String TAG = "SyncBinding";
-	
+	private final ConcurrentLinkedQueue <String> mSyncSkipList = 
+										new ConcurrentLinkedQueue <String>();
 	/*
 	 * SyncFlags provide fine-grained control over synchronization by
 	 * direction (sync to source / target) and type of update (sync files
@@ -38,48 +41,80 @@ public class SyncBinding {
 	//active sync flags for the binding
 	private EnumSet<SyncFlag> mSyncFlags;
 	
-	public SyncBinding (FileSystem source, FileSystem target,
+	public SyncBinding (FileSystem bindSource, FileSystem bindTarget,
 						EnumSet<SyncFlag> syncFlags) {
 		
 		//create listeners which correspond to a default synchronization of
 		//full mirror (two-way add/change/remove updates)
-	
-		source.pathsChanged().addListener( createFileSystemChangeListener 
-										(target, source));
+
+		bindTarget.pathsChanged().addListener( createFileSystemChangeListener 
+				(bindSource, bindTarget, mSyncSkipList));
+		
+		bindSource.pathsChanged().addListener( createFileSystemChangeListener 
+				(bindTarget, bindSource, mSyncSkipList));
+		
+		
 	}
 	
 	private final ListChangeListener<SyncPath> createFileSystemChangeListener(
-			FileSystem source, FileSystem target) {
+			FileSystem target, FileSystem source, 
+									ConcurrentLinkedQueue <String> skiplist) {
+		
 				return new ListChangeListener<SyncPath>() {
 
+					private final ConcurrentLinkedQueue <String> mSkipList = 
+																	skiplist; 
+
+					public ConcurrentLinkedQueue <String> skipList() { 
+						return mSkipList; 
+					}
+					
 					@Override
 					public void onChanged(javafx.collections.ListChangeListener
 						.Change<? extends SyncPath> arg0) {
 
-							if (!target.isStartingUp()) {
+							//skip synchronizations that result from the initial
+							//pathfinding
+						
+							if (source.isStartingUp())
+								return;
+							
+							for (SyncPath filepath: arg0.getList()) {
+								
+								//skip if no file is defined
+								if (filepath.getFile() == null)
+									continue;
+								
+								String pathname = filepath.getRelativePath().toString();
 
-								for (SyncPath filepath: arg0.getList()) {
-									
-									//skip if no file is defined
-									if (filepath.getFile() == null)
-										continue;
-									
-									switch (filepath.getSyncType()) {
-									
-									case SYNC_CREATE:
-										source.putFile(filepath);										
-									break;
+								//if this is a file that's just been synced to
+								//the source, then don't sync back to the target
+								if (mSkipList.contains(pathname)) {
+								System.out.println ("Skipping " + pathname);
+									mSkipList.remove(pathname);
+									return;
+								}
 										
-									case SYNC_MODIFY:
-									break;
-										
-									case SYNC_DELETE:
-										System.out.println ("Delete success? " + source.deleteFile(filepath));
-									break;
-										
-									default:
-									break;
-									}
+								mSkipList.add(pathname);
+								
+								switch (filepath.getSyncType()) {
+								
+								case SYNC_CREATE:
+									System.out.println ("File created " + filepath.getPath());									
+									target.putFile(filepath);										
+								break;
+									
+								case SYNC_MODIFY:
+									System.out.println ("File modified " + filepath.getPath());
+								break;
+									
+								case SYNC_DELETE:
+									System.out.println ("File deleted " + filepath.getPath());									
+									target.deleteFile(filepath);
+								break;
+									
+								default:
+								break;
 								}
 							}
 					}
