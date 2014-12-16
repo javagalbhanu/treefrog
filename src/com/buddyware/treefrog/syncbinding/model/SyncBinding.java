@@ -70,7 +70,7 @@ public class SyncBinding {
 					}
 					
 					@Override
-					public void onChanged(javafx.collections.ListChangeListener
+					public synchronized void onChanged(javafx.collections.ListChangeListener
 						.Change<? extends SyncPath> arg0) {
 
 							//skip synchronizations that result from the initial
@@ -86,30 +86,30 @@ public class SyncBinding {
 									continue;
 								
 								String pathname = filepath.getRelativePath().toString();
-
+/*
 								//if this is a file that's just been synced to
 								//the source, then don't sync back to the target
 								if (mSkipList.contains(pathname)) {
-								System.out.println ("Skipping " + pathname);
+								System.out.println ("\n" + TAG + ".SKIPPING\n\t" + target.getRootPath() + "\n\t\t" + pathname);
 									mSkipList.remove(pathname);
 									return;
 								}
 										
 								mSkipList.add(pathname);
-								
+*/
 								switch (filepath.getSyncType()) {
 								
 								case SYNC_CREATE:
-									System.out.println ("File created " + filepath.getPath());									
+									System.out.println ("\n" + TAG + ".SYNC_CREATE\n\t" + target.getRootPath() + "\n\t\t" + filepath.getPath());									
 									target.putFile(filepath);										
 								break;
 									
 								case SYNC_MODIFY:
-									System.out.println ("File modified " + filepath.getPath());
+									System.out.println ("\n" + TAG + ".SYNC_MODIFY\n\t" + target.getRootPath() + "\n\t\t" + filepath.getPath());
 								break;
 									
 								case SYNC_DELETE:
-									System.out.println ("File deleted " + filepath.getPath());									
+									System.out.println ("\n" + TAG + ".SYNC_DELETE\n\t" + target.getRootPath() + "\n\t\t" + filepath.getPath());									
 									target.deleteFile(filepath);
 								break;
 									

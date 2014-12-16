@@ -7,9 +7,9 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayDeque;
+
 import java.util.ArrayList;
-import java.util.Deque;
+
 import java.util.concurrent.ExecutorService;
 
 import com.buddyware.treefrog.filesystem.model.FileSystem;
@@ -121,7 +121,8 @@ System.out.println("In first run");
 		}
 		
 		try {
-			Files.copy(path.getFile().toPath(), target, 
+			mWatchService.addSkippedWatch(target);
+			Files.copy(path.getPath(), target, 
 										StandardCopyOption.REPLACE_EXISTING, 
 										StandardCopyOption.COPY_ATTRIBUTES);
 			

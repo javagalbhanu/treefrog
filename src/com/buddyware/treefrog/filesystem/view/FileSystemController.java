@@ -49,8 +49,6 @@ System.out.println ("Creating FileSystemController...");
 			@Override
 			public void onChanged(
 					javafx.collections.ListChangeListener.Change<? extends SyncPath> arg0) {
-				
-				System.out.println ("Found " + arg0.getList().size() + " paths to add");
 
 				for (SyncPath path: arg0.getList())	{
 					
@@ -58,8 +56,6 @@ System.out.println ("Creating FileSystemController...");
 					if (path.getFile()==null)
 						updateTree (new LocalWatchPath (path.getPath()), fsRoot, false);
 				}
-				System.out.println (mPathsAdded + " path added");
-
 			}
     		
     	});

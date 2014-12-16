@@ -17,7 +17,10 @@ import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.FXCollections;
@@ -34,6 +37,10 @@ import com.buddyware.treefrog.util.utils;
 public final class LocalWatchService extends BaseTask {
 
 	private final static String TAG  = "LocalWatchService";
+	
+	private final BlockingQueue <Path> mSkippedWatches =
+										new LinkedBlockingQueue <Path> ();
+	
 	//watch service task
     private WatchService watcher;
     
@@ -80,8 +87,8 @@ public final class LocalWatchService extends BaseTask {
 			@Override
 			public void onChanged( 
 				javafx.collections.ListChangeListener.Change<? extends SyncPath> 
-								arg0) {
-System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue");				
+								arg0) {				
+System.out.println("\n" + TAG + "\n\t" + mRootPath + ": " + arg0.getList().size() + " paths added to queue");				
 					for (SyncPath path: arg0.getList()) {
 
 						//call register only when a directory is found
@@ -123,6 +130,10 @@ System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue")
 		paths.addAll(utils.getFiles(mRootPath, filter));
 		
 		runPathFinder (paths);
+	}
+	
+	public void addSkippedWatch (Path p) {
+		mSkippedWatches.add(p);
 	}
 	
 	private void runPathFinder (ArrayList <Path> paths) {
@@ -171,7 +182,9 @@ System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue")
      */
     public final void register(Path dir) 
     								throws IOException, InterruptedException {
- 	
+
+    System.out.println("\n" + TAG + "\n\tRegistering " + dir.toString());
+    	
     	//register the key with the watch service
         WatchKey key = 
     		dir.register (watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
@@ -208,6 +221,15 @@ System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue")
 	        WatchEvent<Path> ev = (WatchEvent<Path>)event;
 	        Path target = dir.resolve(ev.context());
 	        
+	        if (mSkippedWatches.size() > 0)
+System.out.println(TAG + ".processWatchEvent(): SKIPPED WATCH SIZE = " + mSkippedWatches.size() + "\n\t" + mSkippedWatches.peek().toString() + "\n\t" + target);
+	        
+	        if (mSkippedWatches.contains(target)) {
+		        System.out.println (TAG + ".processWatchEvent(): SKIPPED WATCH\n\t" + target);
+		        mSkippedWatches.remove(target);
+		        continue;
+	        }
+	        
 	        if (kind == ENTRY_DELETE) {
 
 	        	ArrayList <Path> finderList = new ArrayList <Path> ();
@@ -231,7 +253,7 @@ System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue")
 	        	 */
 	        	
 	    		ArrayList <Path> finderList = new ArrayList <Path> ();
-   	    		
+   	    		System.out.println("\n" + TAG + ".ProcessWatchEvent(): File created: \n\t" + target.toString());
 	    		if (Files.isDirectory(target)) {
 	    			finderList.add (target);
 	    			runPathFinder (finderList);
@@ -248,7 +270,7 @@ System.out.println(TAG + ": " + arg0.getList().size() + " paths added to queue")
 	    		}
 
 	        } else if (kind == ENTRY_MODIFY) {
-	        	System.out.println ("File modified: " + target.toString());
+	        	System.out.println ("\n" + TAG + ".ProcessWatchEvent(): File modified: \n\t" + target.toString());
 	        }
 	        boolean valid = key.reset();
 	        

@@ -58,7 +58,7 @@ public final class LocalPathFinder extends BaseTask {
 		foundPaths.clear();
 		
 		for (Path path: finderPaths) {
-
+System.out.println(TAG + ".call()\n\t" + "Finding on " + path);
 			if (isCancelled())
 				break;
 
