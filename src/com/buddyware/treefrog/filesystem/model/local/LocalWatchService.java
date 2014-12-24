@@ -5,22 +5,27 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
+import java.io.File;
 import java.io.IOException;
+
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.ArrayList;
+
 import java.util.HashMap;
+
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.FXCollections;
@@ -30,16 +35,18 @@ import javafx.event.Event;
 import javafx.event.EventHandler;
 
 import com.buddyware.treefrog.BaseTask;
+import com.buddyware.treefrog.filesystem.model.SyncBuffer;
 import com.buddyware.treefrog.filesystem.model.SyncPath;
 import com.buddyware.treefrog.filesystem.model.SyncType;
 import com.buddyware.treefrog.util.utils;
 
 public final class LocalWatchService extends BaseTask {
 
-	private final static String TAG  = "LocalWatchService";
+	private final static String TAG  = "\n\tLocalWatchService";
+	private final static int BUFFER_INTERVAL = 1000;
 	
-	private final BlockingQueue <Path> mSkippedWatches =
-										new LinkedBlockingQueue <Path> ();
+	private final SyncBuffer mCacheBuffer;
+	private final SyncBuffer mPublishBuffer;
 	
 	//watch service task
     private WatchService watcher;
@@ -49,13 +56,14 @@ public final class LocalWatchService extends BaseTask {
     
     //root path where the watch service begins 
     private final Path mRootPath;
+    private final Path mCachePath;
     
     private final ExecutorService pathFinderExecutor = 
     									createExecutor ("pathFinder", false);
 
     //class hash map which keys watched paths to generated watch keys
     private final Map<WatchKey, Path> keys = new HashMap<WatchKey, Path>();
-      
+    
     //reference to model property of watched paths.
     private final SimpleListProperty <SyncPath> mChangedPaths = 
     		new SimpleListProperty <SyncPath> 
@@ -66,6 +74,10 @@ public final class LocalWatchService extends BaseTask {
 		super ();
 	
 		mRootPath = Paths.get(rootPath);
+		mCachePath = mRootPath.resolve(".cache");
+		
+		mCacheBuffer = new SyncBuffer (mRootPath);
+		mPublishBuffer = new SyncBuffer (mRootPath);
 		
 		//create the watch service
     	try {
@@ -85,10 +97,13 @@ public final class LocalWatchService extends BaseTask {
 		mChangedPaths.addListener(new ListChangeListener <SyncPath> (){
 
 			@Override
-			public void onChanged( 
+			public final synchronized void onChanged( 
 				javafx.collections.ListChangeListener.Change<? extends SyncPath> 
-								arg0) {				
-System.out.println("\n" + TAG + "\n\t" + mRootPath + ": " + arg0.getList().size() + " paths added to queue");				
+								arg0) {
+				
+				if (arg0.getList().isEmpty())
+					return;
+			
 					for (SyncPath path: arg0.getList()) {
 
 						//call register only when a directory is found
@@ -106,9 +121,9 @@ System.out.println("\n" + TAG + "\n\t" + mRootPath + ": " + arg0.getList().size(
 			});
 	};
 
-	public SimpleListProperty<SyncPath> changedPaths() { return mChangedPaths; }
+	public final synchronized SimpleListProperty<SyncPath> changedPaths() { return mChangedPaths; }
 	
-	public void initializeWatchPaths() {
+	public final synchronized  void initializeWatchPaths() {
 		
 		ArrayList <Path> paths = new ArrayList <Path> ();
 		
@@ -131,12 +146,8 @@ System.out.println("\n" + TAG + "\n\t" + mRootPath + ": " + arg0.getList().size(
 		
 		runPathFinder (paths);
 	}
-	
-	public void addSkippedWatch (Path p) {
-		mSkippedWatches.add(p);
-	}
-	
-	private void runPathFinder (ArrayList <Path> paths) {
+
+	private final synchronized void runPathFinder (ArrayList <Path> paths) {
 		
 		//need to add blocking code / mechanism in case a path finder is 
 		//currently running (rare case)
@@ -154,8 +165,11 @@ System.out.println("\n" + TAG + "\n\t" + mRootPath + ": " + arg0.getList().size(
 				@Override
 				public void handle(WorkerStateEvent arg0) {
 						for (Path p: finder.getPaths()) {
-							paths.add(
-								new SyncPath(mRootPath, p, SyncType.SYNC_NONE));
+							
+							SyncPath sp = new SyncPath(mRootPath, p, SyncType.SYNC_NONE);
+							sp.setQueuedTime(System.currentTimeMillis());
+							
+							paths.add(sp);
 						}
 					
 					addPaths(paths);
@@ -168,22 +182,39 @@ System.out.println("\n" + TAG + "\n\t" + mRootPath + ": " + arg0.getList().size(
 		pathFinderExecutor.execute (finder);    	
 	}
 	
-	private void addPath(Path path, SyncType syncType) {
-		mChangedPaths.setAll(new SyncPath(mRootPath, path, syncType));
+	public final synchronized void cachePath(SyncPath path) {
+		
+		if (path == null)
+			return;
+		
+		mCacheBuffer.addOrUpdatePath(path);
 	}
 	
-	private void addPaths(ArrayList<SyncPath> paths) {
+	private final synchronized void addPath(Path path, SyncType syncType) {
+		
+		if (path == null)
+			return;
+		
+		SyncPath p = new SyncPath (mRootPath, path, syncType);
+		p.setQueuedTime(System.currentTimeMillis());
+		
+		mChangedPaths.setAll(p);
+	}
+	
+	private final synchronized void addPaths(List<SyncPath> paths) {
+		
+		if (paths == null)
+			return;
+	
 		mChangedPaths.setAll(paths);
 	}
-	
+
     /**
      * Register the given directory with the WatchService
      * @throws InterruptedException 
      */
-    public final void register(Path dir) 
+    public final synchronized void register(Path dir) 
     								throws IOException, InterruptedException {
-
-    System.out.println("\n" + TAG + "\n\tRegistering " + dir.toString());
     	
     	//register the key with the watch service
         WatchKey key = 
@@ -202,13 +233,11 @@ System.out.println("\n" + TAG + "\n\t" + mRootPath + ": " + arg0.getList().size(
         	}
         }
         
-    	//System.out.println(TAG + ".register(): Registering " + dir.toString() +" with key " + key.toString());
-        
         keys.put(key, dir);
     }
     
-	private void processWatchEvent (WatchKey key, Path dir) throws IOException, InterruptedException {
-		
+	private final synchronized void processWatchEvent (WatchKey key, Path dir) throws IOException, InterruptedException {
+
     	for (WatchEvent<?> event: key.pollEvents()) {
 	    	
             WatchEvent.Kind kind = event.kind();		
@@ -220,58 +249,56 @@ System.out.println("\n" + TAG + "\n\t" + mRootPath + ": " + arg0.getList().size(
 	        
 	        WatchEvent<Path> ev = (WatchEvent<Path>)event;
 	        Path target = dir.resolve(ev.context());
-	        
-	        if (mSkippedWatches.size() > 0)
-System.out.println(TAG + ".processWatchEvent(): SKIPPED WATCH SIZE = " + mSkippedWatches.size() + "\n\t" + mSkippedWatches.peek().toString() + "\n\t" + target);
-	        
-	        if (mSkippedWatches.contains(target)) {
-		        System.out.println (TAG + ".processWatchEvent(): SKIPPED WATCH\n\t" + target);
-		        mSkippedWatches.remove(target);
-		        continue;
-	        }
-	        
-	        if (kind == ENTRY_DELETE) {
 
-	        	ArrayList <Path> finderList = new ArrayList <Path> ();
-	        	
-	        	if (Files.isDirectory(target)) {
-	        		//directory deletion is not implemented apart from
-	        		//file deletion
-	        	}
-	        	else
-	        		addPath (target, SyncType.SYNC_DELETE);
-	        
-	        } else if (kind == ENTRY_CREATE) {
-	        	
-	        	/*
-	        	 * Added paths are passed to the pathfinder service for
-	        	 * subdirectory discovery.  Path and subpaths are then added
-	        	 * to the AddedPaths property via an event listener on
-	        	 * service's onSucceeded() event.
-	        	 * 
-	        	 * Added files are added directly to the AddedPaths property
-	        	 */
-	        	
-	    		ArrayList <Path> finderList = new ArrayList <Path> ();
-   	    		System.out.println("\n" + TAG + ".ProcessWatchEvent(): File created: \n\t" + target.toString());
-	    		if (Files.isDirectory(target)) {
-	    			finderList.add (target);
-	    			runPathFinder (finderList);
-	    		}
-	    		//add files directly to the addedPaths property
-	    		else {
-    			
-	    			//a newly created file may not be immediately readable
+			//if this is a push from another filesystem, store the path
+			//of the cached file for observation and later file moving
+			//or update the current entry to indicate it has been changed again
+
+			if (dir.equals(mCachePath)) { 
+
+				if (kind == ENTRY_DELETE)
+					mCacheBuffer.deleteIfExists(Integer.parseInt(ev.context().toString()));
+				else
+					mCacheBuffer.updatePath(Integer.parseInt(ev.context().toString()));
+
+				continue;
+			}
+			
+			ArrayList <Path> finderList = new ArrayList <Path> ();
+			
+			if (Files.isDirectory(target)) {
+				
+				if (kind == ENTRY_CREATE) {
+
+					finderList.add (target);
+					runPathFinder (finderList);
+				}
+			}
+			else {
+				if (kind == ENTRY_DELETE) {
+					
+					//if the file being deleted has been queued for sync, 
+					//remove it from the queue.
+					mPublishBuffer.deleteIfExists(target); 
+;						
+					addPath (target, SyncType.SYNC_DELETE);
+					
+				} else if (kind == ENTRY_CREATE) {
+
 	    			if (Files.isReadable(target)) {
-	    					addPath (target, SyncType.SYNC_CREATE);
+	    				
+	    				//update queued time if it's a cached path
+						mPublishBuffer.addOrUpdatePath(target, SyncType.SYNC_CREATE);
+
 	    			}
 	    			else
 	    				System.err.println ("File " + target + " cannot be read");
-	    		}
+	    			
+				} else if (kind == ENTRY_MODIFY) {				
+					mPublishBuffer.addOrUpdatePath(target,  SyncType.SYNC_MODIFY);
+				}
+			}
 
-	        } else if (kind == ENTRY_MODIFY) {
-	        	System.out.println ("\n" + TAG + ".ProcessWatchEvent(): File modified: \n\t" + target.toString());
-	        }
 	        boolean valid = key.reset();
 	        
 	        if (!valid)
@@ -296,6 +323,10 @@ System.out.println(TAG + ".processWatchEvent(): SKIPPED WATCH SIZE = " + mSkippe
 		// enter watch cycle
         while (!interrupted) {
 
+            // all directories are inaccessible
+            if (keys.isEmpty())
+                break;
+            
 			 //watch for a key change.  Thread blocks until a change occurs
 	    	WatchKey key = null;
 	    	interrupted = isCancelled();
@@ -304,7 +335,12 @@ System.out.println(TAG + ".processWatchEvent(): SKIPPED WATCH SIZE = " + mSkippe
         	 // (whether a new path is processed by finder or a watched item changes otherwise)
 
             try {
-                key = watcher.take();
+
+            	if (mPublishBuffer.isEmpty() && mCacheBuffer.isEmpty())
+            		key = watcher.take();
+            	else
+            		key = watcher.poll(BUFFER_INTERVAL, TimeUnit.MILLISECONDS);
+
             } catch (InterruptedException e) {
                 interrupted = true;
                 try {
@@ -315,26 +351,25 @@ System.out.println(TAG + ".processWatchEvent(): SKIPPED WATCH SIZE = " + mSkippe
 				}
                 // fall through and retry
             }
-		
+                        
+            
+            //process key change once it occurs
+            
             Path dir = keys.get (key);
             
-            if (dir == null) {
-               System.out.println ("Null directory key encountered.");
-                continue;
-            }
+            if (dir != null)
+                processWatchEvent(key, dir);
 
-            //process key change once it occurs
-            processWatchEvent(key, dir);
-           
+            processOutboundPaths();
+            processCachedPaths();
+
+			if (key == null)
+				continue;
+			
             // reset key and remove from set if directory no longer accessible
-            if (!key.reset()) {
-
+            if (!key.reset())
             	keys.remove(key);
- 
-                // all directories are inaccessible
-                if (keys.isEmpty())
-                    break;
-            }
+
         }
 	} finally {
         if (interrupted)
@@ -345,4 +380,47 @@ System.out.println(TAG + ".processWatchEvent(): SKIPPED WATCH SIZE = " + mSkippe
     	
 		return null;
 	};
+	
+	private final synchronized void processOutboundPaths() {
+
+		if (mPublishBuffer.isEmpty())
+			return;
+		
+		addPaths (mPublishBuffer.getExpiredPaths (BUFFER_INTERVAL));
+
+	}
+	
+	private final synchronized void processCachedPaths() {
+		
+		if (mCacheBuffer.isEmpty())
+			return;
+		
+		List <SyncPath> paths = mCacheBuffer.getExpiredPaths (BUFFER_INTERVAL);
+		
+		if (paths == null)
+			return;
+					
+		if (paths.isEmpty())
+			return;
+		
+		for (SyncPath p:paths) {
+			
+			File f = p.getFile();
+			
+			if (f == null)
+				continue;
+			
+			try {
+				Files.move(	mCachePath.resolve (Integer.toString(p.hashCode())), 
+							mRootPath.resolve(p.getRelativePath()),
+							StandardCopyOption.REPLACE_EXISTING, 
+							StandardCopyOption.ATOMIC_MOVE);
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+	}
 }

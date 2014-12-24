@@ -17,8 +17,7 @@ public class SyncBinding {
  */
 	
 	private final static String TAG = "SyncBinding";
-	private final ConcurrentLinkedQueue <String> mSyncSkipList = 
-										new ConcurrentLinkedQueue <String>();
+	
 	/*
 	 * SyncFlags provide fine-grained control over synchronization by
 	 * direction (sync to source / target) and type of update (sync files
@@ -48,29 +47,21 @@ public class SyncBinding {
 		//full mirror (two-way add/change/remove updates)
 
 		bindTarget.pathsChanged().addListener( createFileSystemChangeListener 
-				(bindSource, bindTarget, mSyncSkipList));
+				(bindSource, bindTarget));
 		
 		bindSource.pathsChanged().addListener( createFileSystemChangeListener 
-				(bindTarget, bindSource, mSyncSkipList));
+				(bindTarget, bindSource));
 		
 		
 	}
 	
 	private final ListChangeListener<SyncPath> createFileSystemChangeListener(
-			FileSystem target, FileSystem source, 
-									ConcurrentLinkedQueue <String> skiplist) {
+			FileSystem target, FileSystem source) {
 		
 				return new ListChangeListener<SyncPath>() {
 
-					private final ConcurrentLinkedQueue <String> mSkipList = 
-																	skiplist; 
-
-					public ConcurrentLinkedQueue <String> skipList() { 
-						return mSkipList; 
-					}
-					
 					@Override
-					public synchronized void onChanged(javafx.collections.ListChangeListener
+					public final synchronized void onChanged(javafx.collections.ListChangeListener
 						.Change<? extends SyncPath> arg0) {
 
 							//skip synchronizations that result from the initial
@@ -86,26 +77,17 @@ public class SyncBinding {
 									continue;
 								
 								String pathname = filepath.getRelativePath().toString();
-/*
-								//if this is a file that's just been synced to
-								//the source, then don't sync back to the target
-								if (mSkipList.contains(pathname)) {
-								System.out.println ("\n" + TAG + ".SKIPPING\n\t" + target.getRootPath() + "\n\t\t" + pathname);
-									mSkipList.remove(pathname);
-									return;
-								}
-										
-								mSkipList.add(pathname);
-*/
+								
 								switch (filepath.getSyncType()) {
 								
 								case SYNC_CREATE:
 									System.out.println ("\n" + TAG + ".SYNC_CREATE\n\t" + target.getRootPath() + "\n\t\t" + filepath.getPath());									
-									target.putFile(filepath);										
+									target.cacheFile(filepath);										
 								break;
 									
 								case SYNC_MODIFY:
 									System.out.println ("\n" + TAG + ".SYNC_MODIFY\n\t" + target.getRootPath() + "\n\t\t" + filepath.getPath());
+									target.cacheFile(filepath);
 								break;
 									
 								case SYNC_DELETE:

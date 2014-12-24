@@ -7,14 +7,13 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import java.util.ArrayList;
-
 import java.util.concurrent.ExecutorService;
 
 import com.buddyware.treefrog.filesystem.model.FileSystem;
 import com.buddyware.treefrog.filesystem.model.FileSystemType;
 import com.buddyware.treefrog.filesystem.model.SyncPath;
+import com.buddyware.treefrog.filesystem.model.SyncType;
 import com.buddyware.treefrog.util.utils;
 
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -30,18 +29,20 @@ public class LocalFileSystem extends FileSystem {
 	private final ExecutorService mWatchServiceExecutor = 
 										createExecutor("WatchService", true);
 
+	private final Path mCachePath;
+	
 	public LocalFileSystem(FileSystemType type, String rootPath) {
 		
 		super(type, rootPath);
 		
 		mWatchService = new LocalWatchService(rootPath);
+		mCachePath = getRootPath().resolve(".cache");
 		
 		construct();
 	}
 	
 	public void start() {
-	
-		startWatchService();		
+		startWatchService();	
 	}
 	
 	public void shutdown() {
@@ -61,8 +62,7 @@ public class LocalFileSystem extends FileSystem {
 		
 		if (mWatchService.isRunning())
 			mWatchService.cancel();
-		
-		
+
 	}
 	
 	public ReadOnlyObjectProperty watchServiceState() {
@@ -73,11 +73,12 @@ public class LocalFileSystem extends FileSystem {
 	protected void construct() {
 		
 	    LocalWatchPath.setRootPath (this.getRootPath());
-	    
+		initFileCache();
+		
 		mChangedPaths.bind(mWatchService.changedPaths());
 		
 		mChangedPaths.addListener(new ListChangeListener <SyncPath> (){
-
+		
 			private boolean mFirstRun = true;
 			
 			@Override
@@ -86,32 +87,134 @@ public class LocalFileSystem extends FileSystem {
 								arg0) {
 				
 					if (mStartup) {
-System.out.println("In startup");						
+						
 						if (!mFirstRun) {
-System.out.println("Complete startup");						
+					
 							mStartup = false;
 						}
 					}
 					
 					if (mFirstRun) {
-System.out.println("In first run");						
+						
 						mFirstRun = false;
 					}
 				}
 			});
 	}
+
+	
+	private void initFileCache() {
+		
+		//create the path if it does not exist, otherwise, ensure it is empty
+		if (!Files.exists(mCachePath))
+			try {
+				Files.createDirectory(mCachePath);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		else {
+			for(File file: mCachePath.toFile().listFiles()) 
+				file.delete();
+		}
+			
+	}	
+	@Override
+	public synchronized void cacheFile(SyncPath path) {
+		
+		if (path.getFile() == null)
+			return;
+		
+		//create the cache target filename based on the source path's hash code
+		Path target = mCachePath.resolve(Integer.toString(path.hashCode()));
+		Path source = path.getPath();
+		
+		try {
+
+			if (path.getSyncType() == SyncType.SYNC_CREATE) {
+				
+				//create a path representing the final location on the target
+				//filesystem
+				File exTarget = getRootPath().resolve(path.getRelativePath()).toFile();
+				
+				//abort if the file exists on the target system, has the same
+				//size and same time-date stamp.  
+				// TODO Replace with md5 checksum comparison
+				if (exTarget.exists()) {
+			
+					if (exTarget.length() == source.toFile().length() &&
+						exTarget.lastModified() == source.toFile().lastModified())
+							return;
+				}
+
+				// Saving original syncpath rather than new target.
+				// This saves the relative directory structure.
+				mWatchService.cachePath(path);
+				
+				//copies the source path saved in the syncpath object to the
+				//cache target location (filename = sourcepath hashcode)
+				Files.copy(path.getPath(), target, StandardCopyOption.COPY_ATTRIBUTES);
+			}
+			
+			//TODO need to determine what attributes are compared to decide if
+			//file has been modified
+			else {
+
+				mWatchService.cachePath(path);
+				Files.copy(path.getPath(), target, 
+					StandardCopyOption.REPLACE_EXISTING,
+					StandardCopyOption.COPY_ATTRIBUTES);
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private synchronized void dumpFileMeta (Path path) {
+	
+		File f = path.toFile();
+		
+System.out.println("Path: " + path +"\n\t Last Modified: " + f.lastModified() + "\n\t Size: " + f.length() );
+		
+	}
 	
 	@Override
-	public void putFile(SyncPath path) {
+	public synchronized void modifyFile(SyncPath path) {
+	
+		//abort for null values
+		if (path == null)
+			return;
+		
+		if (path.getFile() == null)
+			return;
+		
+		Path target = getRootPath().resolve(path.getRelativePath());
+		
+		//abort for modifying a file that doesn't exist
+		if (!Files.exists(target))
+			return;
+		
+		
+	}
+	
+	@Override
+	public synchronized void createFile(SyncPath path) {
 
+		//abort for null values
 		if (path == null)
 			return;
 		
 		if (path.getFile() == null)
 			return;
 
-		Path target = getRootPath().resolve(path.getRelativePath());
 		
+		Path target = getRootPath().resolve(path.getRelativePath());
+
+		//abort for creating a file that already exists
+		if (Files.exists(target))
+			return;
+				
 		//build out the path if it doesn't already exist
 		try {
 			Files.createDirectories(target.getParent());
@@ -119,12 +222,10 @@ System.out.println("In first run");
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		try {
-			mWatchService.addSkippedWatch(target);
-			Files.copy(path.getPath(), target, 
-										StandardCopyOption.REPLACE_EXISTING, 
-										StandardCopyOption.COPY_ATTRIBUTES);
+			//mWatchService.addSkippedWatch(target);
+			Files.copy(path.getPath(), target, StandardCopyOption.COPY_ATTRIBUTES);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -133,7 +234,7 @@ System.out.println("In first run");
 	}
 	
 	@Override
-	public boolean deleteFile(SyncPath path) {
+	public synchronized boolean deleteFile(SyncPath path) {
 		
 		try {
 			return Files.deleteIfExists(getRootPath().resolve(path.getRelativePath()));
@@ -146,7 +247,7 @@ System.out.println("In first run");
 	}
 	
 	@Override
-	public Path getFile(String path) {
+	public synchronized Path getFile(String path) {
 		
 		//skip empty strings
 		if (path.isEmpty())
@@ -190,5 +291,4 @@ System.out.println("In first run");
 
 		return targetPath;
 	}
-
 }

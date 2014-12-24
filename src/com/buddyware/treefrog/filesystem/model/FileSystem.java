@@ -1,8 +1,12 @@
 package com.buddyware.treefrog.filesystem.model;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.ListChangeListener;
@@ -26,7 +30,7 @@ public abstract class FileSystem extends BaseModel{
 		mRootPath = Paths.get(rootPath);
 		
 		mChangedPaths = new SimpleListProperty <SyncPath> ();
-	
+
  	}
 
 	public abstract void start();
@@ -48,7 +52,10 @@ public abstract class FileSystem extends BaseModel{
 	}
 
 	public abstract Path getFile(String path);
-	public abstract void putFile(SyncPath path);
+	
+	public abstract void cacheFile(SyncPath path);
+	public abstract void modifyFile(SyncPath path);
+	public abstract void createFile(SyncPath path);
 	public abstract boolean deleteFile(SyncPath path);
 	
 	public boolean isStartingUp() { return mStartup; }
@@ -56,5 +63,5 @@ public abstract class FileSystem extends BaseModel{
 	public Path getRootPath() { return mRootPath; }
 	
 	//toString is used for binding hastable keys
-	public String toString() { return mRootPath.toString();	}	
+	public String toString() { return mRootPath.toString();	}
 }
