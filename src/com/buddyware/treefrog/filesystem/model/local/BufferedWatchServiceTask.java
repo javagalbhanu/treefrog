@@ -5,61 +5,53 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
-import java.io.File;
 import java.io.IOException;
-
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.WatchEvent;
+import java.nio.file.WatchEvent.Kind;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+
 import java.util.ArrayList;
-
 import java.util.HashMap;
-
 import java.util.List;
 import java.util.Map;
-
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.concurrent.WorkerStateEvent;
-import javafx.event.Event;
 import javafx.event.EventHandler;
 
 import com.buddyware.treefrog.BaseTask;
+import com.buddyware.treefrog.ThreadPool;
 import com.buddyware.treefrog.filesystem.model.SyncBuffer;
 import com.buddyware.treefrog.filesystem.model.SyncPath;
 import com.buddyware.treefrog.filesystem.model.SyncType;
 import com.buddyware.treefrog.util.utils;
 
-public final class LocalWatchService extends BaseTask {
+public final class BufferedWatchServiceTask extends BaseTask <Void> {
 
 	private final static String TAG  = "\n\tLocalWatchService";
 	private final static int BUFFER_INTERVAL = 1000;
 	
-	private final SyncBuffer mCacheBuffer;
-	private final SyncBuffer mPublishBuffer;
-	
+	private final SyncBuffer mBuffer;
+
 	//watch service task
     private WatchService watcher;
     
-    //path finding task and associated executor
-    private LocalPathFinder finder;
+    //path finding task reference
+    private Future <List <Path>> mFinder;
     
     //root path where the watch service begins 
     private final Path mRootPath;
-    private final Path mCachePath;
-    
-    private final ExecutorService pathFinderExecutor = 
-    									createExecutor ("pathFinder", false);
 
     //class hash map which keys watched paths to generated watch keys
     private final Map<WatchKey, Path> keys = new HashMap<WatchKey, Path>();
@@ -69,15 +61,12 @@ public final class LocalWatchService extends BaseTask {
     		new SimpleListProperty <SyncPath> 
     							(FXCollections.<SyncPath> observableArrayList());
  
-	public LocalWatchService (String rootPath) {
+	public BufferedWatchServiceTask (String rootPath) {
 
 		super ();
 	
 		mRootPath = Paths.get(rootPath);
-		mCachePath = mRootPath.resolve(".cache");
-		
-		mCacheBuffer = new SyncBuffer (mRootPath);
-		mPublishBuffer = new SyncBuffer (mRootPath);
+		mBuffer = new SyncBuffer (mRootPath);
 		
 		//create the watch service
     	try {
@@ -86,12 +75,12 @@ public final class LocalWatchService extends BaseTask {
 			e.printStackTrace();
 		}
     	
-		setOnCancelled(new EventHandler() {
+		setOnCancelled(arg0 -> {
+			
+			if (mFinder == null)
+				return;
 
-			@Override
-			public void handle(Event arg0) {
-				pathFinderExecutor.shutdown();
-			}
+			mFinder.cancel(true);
 		});
 		
 		mChangedPaths.addListener(new ListChangeListener <SyncPath> (){
@@ -151,10 +140,16 @@ public final class LocalWatchService extends BaseTask {
 		
 		//need to add blocking code / mechanism in case a path finder is 
 		//currently running (rare case)
-		
-		finder = new LocalPathFinder();
-		finder.setPaths (paths);
-		
+		if (mFinder != null) {
+			if (!mFinder.isDone()) {
+				System.err.println (TAG + ".runPathFinder(): " +
+						"\n\tFinder task already running.  Unable to find paths!");
+				return;
+			}
+		}
+
+		final LocalPathFinderTask finder = new LocalPathFinderTask (paths);
+				
 		//callbacks on successful completion of pathfinder
 
 		EventHandler <WorkerStateEvent> eh = 
@@ -164,12 +159,17 @@ public final class LocalWatchService extends BaseTask {
 				
 				@Override
 				public void handle(WorkerStateEvent arg0) {
-						for (Path p: finder.getPaths()) {
-							
-							SyncPath sp = new SyncPath(mRootPath, p, SyncType.SYNC_NONE);
-							sp.setQueuedTime(System.currentTimeMillis());
-							
-							paths.add(sp);
+						try {
+							for (Path p: finder.get()) {
+								
+								SyncPath sp = new SyncPath(mRootPath, p, SyncType.SYNC_NONE);
+								sp.setQueuedTime(System.currentTimeMillis());
+								
+								paths.add(sp);
+							}
+						} catch (InterruptedException | ExecutionException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
 						}
 					
 					addPaths(paths);
@@ -178,16 +178,8 @@ public final class LocalWatchService extends BaseTask {
 			};
 			
     	finder.setOnSucceeded(eh);
- 	
-		pathFinderExecutor.execute (finder);    	
-	}
+		mFinder = ThreadPool.getInstance().executeCachedTask (finder);
 	
-	public final synchronized void cachePath(SyncPath path) {
-		
-		if (path == null)
-			return;
-		
-		mCacheBuffer.addOrUpdatePath(path);
 	}
 	
 	private final synchronized void addPath(Path path, SyncType syncType) {
@@ -239,31 +231,21 @@ public final class LocalWatchService extends BaseTask {
 	private final synchronized void processWatchEvent (WatchKey key, Path dir) throws IOException, InterruptedException {
 
     	for (WatchEvent<?> event: key.pollEvents()) {
-	    	
-            WatchEvent.Kind kind = event.kind();		
+System.out.println(TAG + ".processWatchEvent() detected event for " + dir);	    	
+            Kind<?> kind = event.kind();		
             
 	        // TBD - provide example of how OVERFLOW event is handled
 	        if (kind == OVERFLOW) {
 	    		System.out.println ("Overflow encountered");
 	        }
 	        
-	        WatchEvent<Path> ev = (WatchEvent<Path>)event;
+	        WatchEvent<Path> ev = (WatchEvent<Path>) event;
 	        Path target = dir.resolve(ev.context());
 
 			//if this is a push from another filesystem, store the path
 			//of the cached file for observation and later file moving
 			//or update the current entry to indicate it has been changed again
 
-			if (dir.equals(mCachePath)) { 
-
-				if (kind == ENTRY_DELETE)
-					mCacheBuffer.deleteIfExists(Integer.parseInt(ev.context().toString()));
-				else
-					mCacheBuffer.updatePath(Integer.parseInt(ev.context().toString()));
-
-				continue;
-			}
-			
 			ArrayList <Path> finderList = new ArrayList <Path> ();
 			
 			if (Files.isDirectory(target)) {
@@ -276,26 +258,23 @@ public final class LocalWatchService extends BaseTask {
 			}
 			else {
 				if (kind == ENTRY_DELETE) {
-					
+System.out.println(TAG + ".processWatchPaths DELETE\n\t" + target.toString());					
 					//if the file being deleted has been queued for sync, 
 					//remove it from the queue.
-					mPublishBuffer.deleteIfExists(target); 
+					mBuffer.deleteIfExists(target); 
 ;						
 					addPath (target, SyncType.SYNC_DELETE);
 					
 				} else if (kind == ENTRY_CREATE) {
-
-	    			if (Files.isReadable(target)) {
-	    				
-	    				//update queued time if it's a cached path
-						mPublishBuffer.addOrUpdatePath(target, SyncType.SYNC_CREATE);
-
-	    			}
+System.out.println(TAG + ".processWatchPaths CREATE\n\t" + target.toString());
+	    			if (Files.isReadable(target))	    				
+						mBuffer.addOrUpdatePath(target, SyncType.SYNC_CREATE);
 	    			else
 	    				System.err.println ("File " + target + " cannot be read");
 	    			
-				} else if (kind == ENTRY_MODIFY) {				
-					mPublishBuffer.addOrUpdatePath(target,  SyncType.SYNC_MODIFY);
+				} else if (kind == ENTRY_MODIFY) {
+System.out.println(TAG + ".processWatchPaths MODIFY\n\t" + target.toString());					
+					mBuffer.addOrUpdatePath(target,  SyncType.SYNC_MODIFY);
 				}
 			}
 
@@ -315,17 +294,18 @@ public final class LocalWatchService extends BaseTask {
 	protected Void call () throws IOException, InterruptedException {
 
     boolean interrupted = false;
-    
+  
     register (mRootPath);
+
+    try {
     initializeWatchPaths();
-    
+    } catch (Exception e) {
+    	e.printStackTrace();
+    }
     try {
 		// enter watch cycle
         while (!interrupted) {
-
-            // all directories are inaccessible
-            if (keys.isEmpty())
-                break;
+System.out.println(TAG + ".call() " + mRootPath);  
             
 			 //watch for a key change.  Thread blocks until a change occurs
 	    	WatchKey key = null;
@@ -336,11 +316,16 @@ public final class LocalWatchService extends BaseTask {
 
             try {
 
-            	if (mPublishBuffer.isEmpty() && mCacheBuffer.isEmpty())
+            	if (mBuffer.isEmpty()) {
+System.out.println(TAG + ".call() take\n\t" + mRootPath);              		
             		key = watcher.take();
-            	else
+            	}
+            	else {
+System.out.println(TAG + ".call() poll\n\t" + mRootPath);            		
+            		addPaths (mBuffer.getExpiredPaths (BUFFER_INTERVAL));            		
             		key = watcher.poll(BUFFER_INTERVAL, TimeUnit.MILLISECONDS);
-
+            	}
+            	
             } catch (InterruptedException e) {
                 interrupted = true;
                 try {
@@ -349,27 +334,28 @@ public final class LocalWatchService extends BaseTask {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
+                e.printStackTrace();
                 // fall through and retry
             }
                         
-            
+
+            //if the key is null and no watchpaths exist, quit
+            //otherwise, continue loop
+            if (key == null) {
+            	if (keys.isEmpty())
+            		break;
+            	continue;
+            }
+            		
             //process key change once it occurs
-            
             Path dir = keys.get (key);
-            
+System.out.println(".call() processing watch events") ;           
             if (dir != null)
                 processWatchEvent(key, dir);
 
-            processOutboundPaths();
-            processCachedPaths();
-
-			if (key == null)
-				continue;
-			
             // reset key and remove from set if directory no longer accessible
             if (!key.reset())
             	keys.remove(key);
-
         }
 	} finally {
         if (interrupted)
@@ -380,47 +366,4 @@ public final class LocalWatchService extends BaseTask {
     	
 		return null;
 	};
-	
-	private final synchronized void processOutboundPaths() {
-
-		if (mPublishBuffer.isEmpty())
-			return;
-		
-		addPaths (mPublishBuffer.getExpiredPaths (BUFFER_INTERVAL));
-
-	}
-	
-	private final synchronized void processCachedPaths() {
-		
-		if (mCacheBuffer.isEmpty())
-			return;
-		
-		List <SyncPath> paths = mCacheBuffer.getExpiredPaths (BUFFER_INTERVAL);
-		
-		if (paths == null)
-			return;
-					
-		if (paths.isEmpty())
-			return;
-		
-		for (SyncPath p:paths) {
-			
-			File f = p.getFile();
-			
-			if (f == null)
-				continue;
-			
-			try {
-				Files.move(	mCachePath.resolve (Integer.toString(p.hashCode())), 
-							mRootPath.resolve(p.getRelativePath()),
-							StandardCopyOption.REPLACE_EXISTING, 
-							StandardCopyOption.ATOMIC_MOVE);
-				
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-
-	}
 }

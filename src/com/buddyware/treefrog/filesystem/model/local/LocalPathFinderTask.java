@@ -8,33 +8,33 @@ import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.event.Event;
-import javafx.event.EventHandler;
 
 import com.buddyware.treefrog.BaseTask;
 import com.buddyware.treefrog.util.TaskMessage;
 import com.buddyware.treefrog.util.TaskMessage.TaskMessageType;
 import com.buddyware.treefrog.util.utils;
 
-public final class LocalPathFinder extends BaseTask {
+public final class LocalPathFinderTask extends BaseTask<List <Path>> {
 
-	private final static String TAG = "LocalPathFinder";
-	private final ArrayList <Path> finderPaths = new ArrayList <Path>();
+	private final static String TAG = "LocalPathFinderTask";
 	
-	private final ArrayList <Path> foundPaths = new ArrayList <Path> ();
+	private final List <Path> finderPaths;
 	
 	private final LocalFileVisitor visitor;
 	private final BooleanProperty isCancelled = new SimpleBooleanProperty (false);
 	
-    protected LocalPathFinder () {
+    protected LocalPathFinderTask (List <Path> paths) {
 
     	super();
 
+    	finderPaths = paths;
+    	
 		visitor = new LocalFileVisitor ();
 		visitor.getCancelledProperty().bind(isCancelled);
 
@@ -42,20 +42,13 @@ public final class LocalPathFinder extends BaseTask {
 		
 		visitor.setExclusionsMap (s.getStreamMap());
 		
-		setOnCancelled(new EventHandler() {
-
-			@Override
-			public void handle(Event arg0) {
-			isCancelled.setValue(true);
-	
-			}
-		});
+		setOnCancelled(arg0 -> isCancelled.setValue(true));
 	};
 
 	@Override
-    public final Void call() {
+    public final List <Path> call() {
 
-		foundPaths.clear();
+		List<Path> foundpaths = new ArrayList<Path> ();
 		
 		for (Path path: finderPaths) {
 System.out.println(TAG + ".call()\n\t" + "Finding on " + path);
@@ -71,23 +64,13 @@ System.out.println(TAG + ".call()\n\t" + "Finding on " + path);
 	    		
 	    		Files.walkFileTree(path,  visitor);
 	    		
+	    		foundpaths.addAll(visitor.getPaths());
+	    		
 	        } catch (IOException e) {
 	        	e.printStackTrace();
 	        }
-
-			foundPaths.addAll(visitor.getPaths());	    	
 		};
 
-		return null;
-    };
-    
-    public final ArrayList <Path> getPaths() {
-    	
-    	return foundPaths;
-    }
-    
-    public final void setPaths (ArrayList <Path> paths) {
-    	finderPaths.clear();
-    	finderPaths.addAll(paths);
+		return foundpaths;
     };
 }

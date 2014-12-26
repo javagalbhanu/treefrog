@@ -1,5 +1,6 @@
 package com.buddyware.treefrog.filesystem.model;
 
+import com.buddyware.treefrog.filesystem.model.local.BufferedFileSystem;
 import com.buddyware.treefrog.filesystem.model.local.LocalFileSystem;
 
 public class FileSystemFactory {
@@ -13,7 +14,7 @@ public class FileSystemFactory {
 		
 		case SOURCE_DISK:
 		case LOCAL_DISK:
-			fs = new LocalFileSystem(type, rootPath);
+			fs = new BufferedFileSystem(type, rootPath);
 			break;
 			
 		case AMAZON_S3:

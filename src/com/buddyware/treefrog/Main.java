@@ -2,14 +2,14 @@ package com.buddyware.treefrog;
 	
 import java.io.File;
 import java.io.IOException;
-import java.util.Hashtable;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
-import javafx.stage.FileChooser;
+
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
@@ -31,14 +31,14 @@ public class Main extends Application {
 												new ApplicationPreferences();
 
 	private final FileSystem mSourceModel = FileSystemFactory
-					.buildFileSystem(FileSystemType.SOURCE_DISK,
+					.buildFileSystem(FileSystemType.LOCAL_DISK,
 										mAppPrefs.get(PreferenceId.ROOT_PATH)
 									);
 
 	private final FileSystem mLocalDiskModel = FileSystemFactory
-			.buildFileSystem(FileSystemType.SOURCE_DISK, 
+			.buildFileSystem(FileSystemType.LOCAL_DISK, 
 								"/media/joel/New Volume/bucketsync"
-							);
+						);
 	
 	private final SyncBindingModel mBindingModel = new SyncBindingModel();
 	
@@ -51,7 +51,6 @@ public class Main extends Application {
 		utils.<BorderPane, BaseController> loadFxml ("RootLayout.fxml", primaryStage, null);
 		primaryStage.setTitle ("BucketSync");
 
-		File[] files = utils.getVolumes();
 		mBindingModel.bindFilesystems(mSourceModel, mLocalDiskModel, null);
 	}
 	

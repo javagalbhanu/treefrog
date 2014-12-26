@@ -1,14 +1,13 @@
 package com.buddyware.treefrog.syncbinding.model;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.List;
 
-import javafx.beans.property.SimpleListProperty;
 import javafx.collections.ListChangeListener;
 
 import com.buddyware.treefrog.filesystem.model.FileSystem;
 import com.buddyware.treefrog.filesystem.model.SyncPath;
-import com.buddyware.treefrog.filesystem.model.SyncType;
 
 public class SyncBinding {
 /*
@@ -60,15 +59,21 @@ public class SyncBinding {
 		
 				return new ListChangeListener<SyncPath>() {
 
+					private final List<SyncPath> mCacheFiles = new ArrayList <SyncPath> ();
+					private final List<SyncPath> mDeleteFiles = new ArrayList <SyncPath> ();
+					
 					@Override
 					public final synchronized void onChanged(javafx.collections.ListChangeListener
 						.Change<? extends SyncPath> arg0) {
 
 							//skip synchronizations that result from the initial
 							//pathfinding
-						
-							if (source.isStartingUp())
-								return;
+							
+							if (!mCacheFiles.isEmpty())
+								mCacheFiles.clear();
+							
+							if (!mDeleteFiles.isEmpty())
+								mDeleteFiles.clear();
 							
 							for (SyncPath filepath: arg0.getList()) {
 								
@@ -81,23 +86,33 @@ public class SyncBinding {
 								switch (filepath.getSyncType()) {
 								
 								case SYNC_CREATE:
-									System.out.println ("\n" + TAG + ".SYNC_CREATE\n\t" + target.getRootPath() + "\n\t\t" + filepath.getPath());									
-									target.cacheFile(filepath);										
+									System.out.println ("\n" + TAG + ".SYNC_CREATE\n\t" + target.getRootPath() + "\n\t\t" + filepath.getPath());
+									mCacheFiles.add(filepath);
 								break;
 									
 								case SYNC_MODIFY:
 									System.out.println ("\n" + TAG + ".SYNC_MODIFY\n\t" + target.getRootPath() + "\n\t\t" + filepath.getPath());
-									target.cacheFile(filepath);
+									mCacheFiles.add(filepath);
 								break;
 									
 								case SYNC_DELETE:
 									System.out.println ("\n" + TAG + ".SYNC_DELETE\n\t" + target.getRootPath() + "\n\t\t" + filepath.getPath());									
-									target.deleteFile(filepath);
+									mDeleteFiles.add(filepath);
 								break;
 									
 								default:
 								break;
 								}
+							}
+						
+							if (!mCacheFiles.isEmpty()) {
+								target.putFiles(mCacheFiles);
+								mCacheFiles.clear();
+							}
+							
+							if (!mDeleteFiles.isEmpty()) {
+								target.deleteFiles(mDeleteFiles);
+								mDeleteFiles.clear();
 							}
 					}
 				};

@@ -58,7 +58,7 @@ public class SyncBuffer {
 	}
 	
 	public synchronized void addOrUpdatePath (SyncPath path) {
-		
+System.out.println(TAG + ".addOrUpdatePath(): Executing on thread "+ Thread.currentThread().getName());		
 		//saves an existing SyncPath under it's hashcode
 		if (updatePath (path.getPath()))
 			return;
