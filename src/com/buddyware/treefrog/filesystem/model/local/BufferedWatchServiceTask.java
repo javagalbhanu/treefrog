@@ -331,10 +331,8 @@ System.out.println(TAG + ".call() poll\n\t" + mRootPath);
                 try {
 					watcher.close();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
-				}
-                e.printStackTrace();
+				}              
                 // fall through and retry
             }
                         

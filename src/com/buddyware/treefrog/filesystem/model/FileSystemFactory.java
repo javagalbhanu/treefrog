@@ -1,7 +1,6 @@
 package com.buddyware.treefrog.filesystem.model;
 
 import com.buddyware.treefrog.filesystem.model.local.BufferedFileSystem;
-import com.buddyware.treefrog.filesystem.model.local.LocalFileSystem;
 
 public class FileSystemFactory {
 

@@ -19,6 +19,10 @@ public class ThreadPool {
     	return mInstance;
     }
     
+    public static void shutdown() {
+    	mCACHED_EXECUTOR.shutdownNow();
+    }
+    
 	public <S> Future <S> executeCachedTask(Task <S> task) {
 		return (Future<S>) mCACHED_EXECUTOR.submit(task);
 	}

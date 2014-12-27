@@ -145,6 +145,9 @@ System.out.println (TAG + ".commitFiles() " + p.getPath());
 			//root path to make the final copy
 			Path target = getRootPath().resolve(cache_source.getRelativePath());
 
+			if (!Files.exists(target.getParent()))
+					target.getParent().toFile().mkdirs();
+			
 			moveFile (p.getPath(), target,
 						StandardCopyOption.REPLACE_EXISTING, 
 						StandardCopyOption.ATOMIC_MOVE);

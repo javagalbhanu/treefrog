@@ -1,6 +1,5 @@
 package com.buddyware.treefrog;
 	
-import java.io.File;
 import java.io.IOException;
 
 import java.util.concurrent.ExecutorService;
@@ -31,7 +30,7 @@ public class Main extends Application {
 												new ApplicationPreferences();
 
 	private final FileSystem mSourceModel = FileSystemFactory
-					.buildFileSystem(FileSystemType.LOCAL_DISK,
+					.buildFileSystem(FileSystemType.SOURCE_DISK,
 										mAppPrefs.get(PreferenceId.ROOT_PATH)
 									);
 
@@ -66,6 +65,7 @@ public class Main extends Application {
 	public void stop() {
 		mSourceModel.shutdown();
 		mLocalDiskModel.shutdown();
+		ThreadPool.shutdown();
 	}
 	
 	public FileSystem getLocalFileModel() {
