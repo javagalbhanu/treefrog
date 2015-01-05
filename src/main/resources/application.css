@@ -1,0 +1,52 @@
+.fs-scroll-label {
+	-fx-background-color: dodgerblue;
+}
+
+.filesystem {
+	-fx-background-radius: 30;
+	-fx-background-color: dodgerblue;
+	-fx-background-position: center;
+	-fx-background-repeat: no-repeat;
+	-fx-background-size: contain;
+}
+
+.filesystem-cloud {
+	-fx-background-image: url("fs-cloud.png");
+}
+
+.filesystem-disk {
+	-fx-background-image: url("fs-disk.png");
+}
+
+.filesystem-mobile {
+	-fx-background-image: url("fs-mobile.png");
+}
+
+.filesystem-amazon-s3 {
+	-fx-background-image: url("fs-cloud.png"), url("amazon-s3.png");
+	-fx-background-size: contain, 64;
+}
+
+.filesystem-local-disk {
+	-fx-background-image: url("fs-disk.png");
+	-fx-background-size: contain;
+}
+
+.filesystem-android {
+	-fx-background-image: url("fs-mobile.png"), url("android.png");
+	-fx-background-size: contain, 64;
+}
+
+.fs-scroll-label:hover{
+	-fx-background-color: #DFB951;
+}
+
+.fs-scroll-image-view {
+	
+}
+
+.button{
+	-fx-background-color: dodgerblue;
+	-fx-padding: 15;
+	-fx-margin: 5;
+}

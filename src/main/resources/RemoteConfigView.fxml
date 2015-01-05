@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.BorderPane?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buddyware.treefrog.filesystem.remote.view.RemoteConfigController">
+   <children>
+      <Label layoutX="30.0" layoutY="45.0" text="Remote Config view" />
+      <TextField layoutX="95.0" layoutY="93.0" prefHeight="25.0" prefWidth="234.0" />
+      <TextField layoutX="97.0" layoutY="150.0" prefHeight="25.0" prefWidth="234.0" />
+      <Label layoutX="96.0" layoutY="78.0" text="AWS ID" />
+      <Label layoutX="97.0" layoutY="127.0" text="AWS Secret ID" />
+      <Button layoutX="281.0" layoutY="320.0" mnemonicParsing="false" onAction="#UploadFile" text="Upload" />
+      <Button fx:id="connect_to_s3_button" layoutX="95.0" layoutY="188.0" mnemonicParsing="false" onAction="#on_click" text="Connect to S3" />
+      <ListView fx:id="BucketList" layoutX="342.0" layoutY="88.0" prefHeight="200.0" prefWidth="200.0" />
+      <Button layoutX="95.0" layoutY="320.0" mnemonicParsing="false" onAction="#ChooseSingleFile" text="Browse" />
+      <TextField fx:id="FileNameDialog" layoutX="95.0" layoutY="263.0" prefHeight="25.0" prefWidth="234.0" />
+   </children>
+</AnchorPane>

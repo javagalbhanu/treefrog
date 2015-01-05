@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.effect.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.canvas.*?>
+<?import javafx.scene.paint.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.BorderPane?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" stylesheets="@application.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buddyware.treefrog.help.HelpController">
+   <children>
+      <SplitPane maxHeight="128.0" maxWidth="128.0" minHeight="128.0" minWidth="128.0" prefHeight="128.0" prefWidth="128.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+      <HBox prefHeight="100.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <ScrollPane prefWidth="162.0">
+               <content>
+                  <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefWidth="144.0" spacing="15.0">
+                     <children>
+                        <Label fx:id="labelS3" alignment="CENTER" contentDisplay="GRAPHIC_ONLY" minHeight="128.0" prefWidth="144.0">
+                           <graphic>
+                              <Region>
+                                 <styleClass>
+                                    <String fx:value="filesystem" />
+                                    <String fx:value="filesystem-amazon-s3" />
+                                 </styleClass></Region>
+                           </graphic>
+                           <VBox.margin>
+                              <Insets />
+                           </VBox.margin>
+                        </Label>
+                        <Label alignment="CENTER" contentDisplay="GRAPHIC_ONLY" layoutX="20.0" layoutY="25.0" minHeight="128.0" prefWidth="144.0">
+                           <graphic>
+                              <Region styleClass="fs-rounded-rect" />
+                           </graphic>
+                        </Label>
+                        <Label alignment="CENTER" contentDisplay="GRAPHIC_ONLY" layoutX="20.0" layoutY="168.0" minHeight="128.0" prefWidth="144.0">
+                           <graphic>
+                              <Region styleClass="fs-rounded-rect" />
+                           </graphic>
+                        </Label>
+                         
+                           </children>
+                     <padding>
+                        <Insets bottom="15.0" left="10.0" right="10.0" top="15.0" />
+                     </padding>
+                  </VBox>
+               </content>
+            </ScrollPane>
+            <Pane prefHeight="200.0" prefWidth="200.0">
+               <children>
+                  <Group>
+                     <children>
+                        <Circle fx:id="curveStart" fill="#b5d1eb" onMouseDragged="#updateCurveStart" radius="8.0" stroke="BLACK" strokeType="INSIDE" />
+                        <Circle fx:id="curveC2" fill="#ff2121" onMouseDragged="#updateCurveC2" radius="8.0" stroke="BLACK" strokeType="INSIDE" />
+                        <Circle fx:id="curveEnd" fill="#f29f9f" onMouseDragged="#updateCurveEnd" radius="8.0" stroke="BLACK" strokeType="INSIDE" />
+                        <Line fx:id="mLt_c2_end" endX="100.0" fill="#eb5656" startX="-100.0" stroke="#d03333" />
+                        <Line fx:id="mLt_start_c1" endX="100.0" fill="#296ec9" startX="-100.0" stroke="#2967c3" />
+                        <Circle fx:id="curveC1" fill="#2197ff" onMouseDragged="#updateCurveC1" radius="8.0" stroke="BLACK" strokeType="INSIDE" />
+                        <CubicCurve fx:id="mCurve" controlX1="-50.0" controlX2="50.0" controlY1="-100.0" controlY2="100.0" endX="150.0" fill="#1f93ff00" startX="-150.0" stroke="BLACK" />
+                     </children>
+                  </Group>
+                  <Group layoutX="80.0" layoutY="130.0">
+                     <children>
+                        <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" prefHeight="102.0" prefWidth="99.0" text="Button">
+                           
+                                    <graphic>
+                              <ImageView blendMode="SRC_OVER" fitHeight="128.0" fitWidth="128.0" pickOnBounds="true" preserveRatio="true">
+                                 <image>
+                                    <Image url="@fs_source.png" />
+                                 </image>   
+                               <effect>
+                                    <InnerShadow blurType="GAUSSIAN" />
+      	                     </effect>  
+                              </ImageView>
+                              </graphic>
+                            
+                  
+                              </Button>
+                        <Circle fill="#fff021" layoutX="95.0" layoutY="133.0" radius="10.0" stroke="TRANSPARENT" strokeType="INSIDE">
+                           <effect>
+                              <InnerShadow />
+                           </effect>
+                        </Circle>
+                     </children>
+                  </Group>
+               </children>
+            </Pane>
+         </children>
+      </HBox>
+   </children>
+</AnchorPane>

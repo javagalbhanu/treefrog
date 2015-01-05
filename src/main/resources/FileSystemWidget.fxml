@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.effect.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.canvas.*?>
+<?import javafx.scene.paint.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.BorderPane?>
+
+<fx:root stylesheets="@application.css" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <AnchorPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <Label fx:id="fs_label" alignment="CENTER" contentDisplay="GRAPHIC_ONLY" layoutX="10.0" layoutY="10.0" minHeight="128.0" opacity="0.0" prefWidth="144.0" visible="false">
+               <graphic>
+                  <Region fx:id="fs_image" styleClass="filesystem" />
+               </graphic>
+            </Label>
+         </children>
+         <styleClass>
+            <String fx:value="filesystem" />
+            <String fx:value="filesystem-amazon-s3" />
+         </styleClass>
+      </AnchorPane>
+   </children>
+</fx:root>
