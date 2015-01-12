@@ -1,40 +1,70 @@
-.fs-scroll-label {
+.fs-widget-background {
 	-fx-background-color: dodgerblue;
+	-fx-background-radius: 25;
 }
 
-.filesystem {
-	-fx-background-radius: 30;
-	-fx-background-color: dodgerblue;
+.fs-widget-image {
 	-fx-background-position: center;
 	-fx-background-repeat: no-repeat;
-	-fx-background-size: contain;
+	-fx-background-size: contain;	
 }
 
-.filesystem-cloud {
+.rounded-widget {
+	-fx-background-radius: 10;
+}
+
+.fs-node-title-bar {
+	-fx-background-color:
+		linear-gradient(to bottom, rgba(255,255,255,0.5) 15%, rgba(50,100,150,0.25) 65%, rgba(255,255,255, 0.0) 100%);
+}
+
+.fs-node-body {
+	-fx-border-color: rgba(100, 150, 200, 1.0);
+}
+
+.transparent-widget .fs-node-body {
+	-fx-background-color: rgba(50,100,150,0.0);	
+}
+
+.top-rounded-widget {
+	-fx-background-radius: 15 15 0 0;
+}
+
+.bottom-rounded-widget {
+	-fx-background-radius: 0 0 15 15;
+}
+
+.semi-transparent-widget {
+	-fx-background-color: rgba(50, 100, 150, 0.5);
+}
+
+.fs-cloud {
 	-fx-background-image: url("fs-cloud.png");
 }
 
-.filesystem-disk {
-	-fx-background-image: url("fs-disk.png");
-}
-
-.filesystem-mobile {
+.fs-mobile {
 	-fx-background-image: url("fs-mobile.png");
 }
 
-.filesystem-amazon-s3 {
+.fs-amazon-s3 {
 	-fx-background-image: url("fs-cloud.png"), url("amazon-s3.png");
-	-fx-background-size: contain, 64;
+	-fx-background-position: center;
+	-fx-background-repeat: no-repeat;
+
+	-fx-background-size: contain, 32;
 }
 
-.filesystem-local-disk {
+.fs-source-disk {
+	-fx-background-image: url("fs_source.png");
+}
+
+.fs-local-disk {
 	-fx-background-image: url("fs-disk.png");
-	-fx-background-size: contain;
 }
 
-.filesystem-android {
+.fs-android {
 	-fx-background-image: url("fs-mobile.png"), url("android.png");
-	-fx-background-size: contain, 64;
+	-fx-background-size: contain, 32;
 }
 
 .fs-scroll-label:hover{
@@ -45,8 +75,10 @@
 	
 }
 
-.button{
-	-fx-background-color: dodgerblue;
-	-fx-padding: 15;
-	-fx-margin: 5;
+.top-left-button{
+	-fx-background-radius: 10 0 0 0;
+}
+
+.top-right-button{
+	-fx-background-radius: 0 10 0 0;
 }

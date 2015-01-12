@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.buddyware.treefrog.filesystem.view.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.layout.*?>
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?scenebuilder-classpath-element ../../target/classes?>
+
+
+<fx:root minHeight="106.0" minWidth="74.0" styleClass="rounded-widget" stylesheets="@application.css" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <StackPane layoutX="41.0" style="-fx-background-radius: 12;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <VBox fx:id="fs_node_root" minHeight="96.0" minWidth="64.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="41.0" AnchorPane.rightAnchor="101.0" AnchorPane.topAnchor="0.0">
+               <children>
+                  <HBox minHeight="96.0" minWidth="64.0" styleClass="transparent-widget">
+                     <children>
+                        <VBox fx:id="fs_left_link" alignment="CENTER" minWidth="32.0" nodeOrientation="LEFT_TO_RIGHT" spacing="10.0">
+                           <children>
+                              <Circle fx:id="left_link_handle" fill="#fff91f" radius="8.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="2.0" />
+                           </children>
+                        </VBox>
+                        <AnchorPane fx:id="fs_node_image" minWidth="92.0" styleClass="fs-widget-image" />
+                        <VBox fx:id="fs_right_link" alignment="CENTER" minWidth="32.0" nodeOrientation="RIGHT_TO_LEFT" spacing="10.0">
+                           <children>
+                              <Circle fx:id="right_link_handle" fill="#fff81e" layoutX="26.0" layoutY="89.0" radius="8.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="2.0" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+                  <HBox minHeight="15.0" minWidth="15.0" />
+               </children>
+            </VBox>
+         </children>
+      </StackPane>
+      <AnchorPane fx:id="node_background_pane" minHeight="96.0" minWidth="64.0">
+         <children>
+            <VBox>
+               <children>
+                  <Button mnemonicParsing="false" styleClass="top-rounded-widget" text="Button" />
+                  <Button mnemonicParsing="false" text="Button" />
+               </children>
+            </VBox>
+         </children>
+      </AnchorPane>
+   </children>
+</fx:root>

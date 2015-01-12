@@ -4,32 +4,14 @@ import java.io.IOException;
 
 import com.buddyware.treefrog.filesystem.FileSystemType;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.event.Event;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
-import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundImage;
-import javafx.scene.layout.BackgroundPosition;
-import javafx.scene.layout.BackgroundRepeat;
-import javafx.scene.layout.BackgroundSize;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
 
-public class FileSystemWidget extends AnchorPane {
+public class FileSystemWidget extends AnchorPane implements IFileSystemObject{
 	
 	@FXML
 	private AnchorPane root;
@@ -41,6 +23,13 @@ public class FileSystemWidget extends AnchorPane {
 	private Region fs_image;
 	
 	private FileSystemType mType;
+	private FileSystemWidget mDragWidget;
+	
+	public FileSystemWidget() {
+			
+	}
+	
+	public String getFileSystemObjectType() { return "FileSystemWidget"; }
 	
 	public FileSystemWidget(FileSystemType fs_type) {
 		
@@ -52,7 +41,7 @@ public class FileSystemWidget extends AnchorPane {
 		
 		fxmlLoader.setRoot(this); 
 		fxmlLoader.setController(this);
-		
+
 		try { 
 			fxmlLoader.load();
         
@@ -61,44 +50,64 @@ public class FileSystemWidget extends AnchorPane {
 		}
 	}
 	
-	public FileSystemType getFsType() { return mType; }
+	public IFileSystemObject getDragObject() {
+		
+		if (mDragWidget == null)
+			createDragWidget();
+		
+		return mDragWidget; 
+	}
+	
+	public FileSystemType getFileSystemType() { return mType; }
 	
 	@FXML
 	private void initialize() {
 
-		root.getStyleClass().add("filesystem-background");
+		root.getStyleClass().add("fs-widget-background");
 		
 		setId(mType.toString());
 		
 		switch (mType) {
 		
 		case AMAZON_S3:
-			root.getStyleClass().add("filesystem-amazon-s3");
+			root.getStyleClass().add("fs-widget-image");
+			root.getStyleClass().add("fs-amazon-s3");
 		break;
 		
 		case LOCAL_DISK:
-			root.getStyleClass().add("filesystem-local-disk");
+			root.getStyleClass().add("fs-widget-image");			
+			root.getStyleClass().add("fs-local-disk");
 		break;
 		
 		}
+	}
+	
+	public void initDrag(Point2D p) {
 		
-		System.out.println("widg.init()");
+		if (mDragWidget == null)
+			createDragWidget();
+		
+		mDragWidget.setVisible(true);
 	}
 	
 	public void relocateToPoint (Point2D p) {
+		
+		Point2D p2 = this.getParent().sceneToLocal(p);
+		
 		relocate (
-				(int) (p.getX() - getBoundsInLocal().getWidth() / 2),
-				(int) (p.getY() - getBoundsInLocal().getHeight() / 2)
+				(int) (p2.getX() - getBoundsInLocal().getWidth() / 2),
+				(int) (p2.getY() - getBoundsInLocal().getHeight() / 2)
 			);
 	}
 	
-	public void enableDragMode() {
+	private void createDragWidget() {
 		
-		setId(getId() + "_drag");
+		mDragWidget = new FileSystemWidget (mType);
 		
-    	setOpacity(0.5);
-        setVisible(false);
-        setMouseTransparent(true);
-    	toFront();		
+    	mDragWidget.setOpacity(0.5);
+        mDragWidget.setVisible(false);
+        mDragWidget.setMouseTransparent(true);
+    	mDragWidget.toFront();
+    	
 	}
 }

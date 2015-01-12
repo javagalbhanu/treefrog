@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?scenebuilder-classpath-element ../../../target/classes?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import com.buddyware.treefrog.filesystem.view.*?>
+
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1">
+	<children>
+		<FileSystemWidget layoutX="5.0" layoutY="5.0" />
+	</children>
+</AnchorPane>
+

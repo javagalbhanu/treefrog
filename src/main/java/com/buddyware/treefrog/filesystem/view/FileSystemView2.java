@@ -56,11 +56,12 @@ public class FileSystemView2 extends AnchorPane {
 	@FXML private SplitPane fs_split_pane;
 	@FXML private AnchorPane fs_root;
 	
-	@FXML private Pane fs_right_pane;
+	@FXML private AnchorPane fs_right_pane;
 	
-	private FileSystemWidget mDragWidget;
+	private IFileSystemObject mDragObject;
+	
 	private Parent mSceneRoot = null;
-	
+		
 	public FileSystemView2() {
 		
 		FXMLLoader fxmlLoader = new FXMLLoader(
@@ -85,16 +86,25 @@ public class FileSystemView2 extends AnchorPane {
 		addFileSystemWidget (FileSystemType.LOCAL_DISK);
 		addFileSystemWidget (FileSystemType.AMAZON_S3);
 
+		addFileSystemNode (FileSystemType.SOURCE_DISK);
+		
 		fs_split_pane.setOnDragOver((e) -> {
 			if (mSceneRoot == null)
 				mSceneRoot = fs_list.getScene().getRoot();
 			
-			mDragWidget.relocateToPoint(mSceneRoot.sceneToLocal(e.getSceneX(), e.getSceneY()));
-			e.consume();
+			if (mDragObject != null)
+				mDragObject.relocateToPoint(mSceneRoot.sceneToLocal(e.getSceneX(), e.getSceneY()));
+			
+			e.consume();			
 		});
 
 		fs_root.setOnDragDone((e) -> {
-			mDragWidget.setVisible(false);
+			
+			if (mDragObject.getFileSystemObjectType() == "FileSystemWidget")
+				((FileSystemWidget) mDragObject).setVisible(false);
+			
+			mDragObject = null;
+			
 			e.consume();
 		});
 		
@@ -105,63 +115,64 @@ public class FileSystemView2 extends AnchorPane {
 		fs_right_pane.setOnDragDropped((e) -> {
 		
 			Dragboard db = e.getDragboard();
-			JOptionPane.showMessageDialog(null, db.getString());
-			mDragWidget.setVisible(false);
+			
+			if (mDragObject.getFileSystemObjectType()=="FileSystemWidget") {
+				FileSystemNode fsn = addFileSystemNode(mDragObject.getFileSystemType());
+				fsn.relocate(e.getX(), e.getY());
+			}
+
 			e.setDropCompleted(true);
 		});
+	}
+	
+	private FileSystemNode addFileSystemNode (FileSystemType fs_type) {
+		
+		FileSystemNode fs_node = new FileSystemNode (fs_type);
+		
+		addDragHandler(fs_node);
+		
+		fs_right_pane.getChildren().add(fs_node);
+		
+		return fs_node;
 	}
 
 	private void addFileSystemWidget (FileSystemType fs_type) {
 
 		FileSystemWidget widg = new FileSystemWidget (fs_type);
-		FileSystemWidget drag_widg = new FileSystemWidget (fs_type);
 
-		drag_widg.enableDragMode();
-		
 		fs_list.getChildren().add(widg);
-        fs_root.getChildren().add(drag_widg);
+        fs_root.getChildren().add( ((FileSystemWidget) widg.getDragObject()));
 		
 		//add drag handling
-		addWidgetDragHandler (widg);
+		addDragHandler (widg);
 	}
 	
-	private void addWidgetDragHandler (FileSystemWidget widg) {
-		
-		widg.setOnDragDetected( 
-		new EventHandler <MouseEvent>() {
-	    	 
-			private final FileSystemType mType = widg.getFsType();
-			
-            @Override
-            public void handle(MouseEvent t) {
-                
-            	mDragWidget = null;
-            	String idMatch = mType.toString() + "_drag";
-            	
-            	//find the corresponding drag widget for the selected filesystemwidget
-                for (Node child: fs_root.getChildren()) {
-              	
-                	if (!child.getId().equals(idMatch))
-                		continue;
-                	
-                	mDragWidget = (FileSystemWidget) child;
-                	break;
-                }
+	private void addDragHandler (IFileSystemObject fsobj) {
 
-                if (mDragWidget == null)
-                	return;
+		fsobj.setOnDragDetected(
+			new EventHandler <MouseEvent> () {
 
-                //begin drag ops
-                ClipboardContent content = new ClipboardContent();
-                content.putString(widg.getFsType().toString());
+				@Override
+				public void handle(MouseEvent event) {
+					
+					IFileSystemObject fso = (IFileSystemObject) event.getSource();
+					
+					mDragObject = fso.getDragObject();
+					
+					if (mDragObject == null)
+						return;
+					
+	                //begin drag ops
+	                ClipboardContent content = new ClipboardContent();
+	                content.putString(fso.getId());
 
-                mDragWidget.relocateToPoint(new Point2D(t.getSceneX(), t.getSceneY()));
-                mDragWidget.startDragAndDrop(TransferMode.ANY).setContent(content);
-                mDragWidget.setVisible(true);
-                
-                t.consume();
-            }
-        });
+	                mDragObject.initDrag (new Point2D (event.getSceneX(), event.getSceneY()));
+	                mDragObject.startDragAndDrop (TransferMode.ANY).setContent(content);
+	                
+	                event.consume();					
+				}
+				
+			});
 	}
 	/*
 	private void initCurves() {
