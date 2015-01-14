@@ -58,8 +58,6 @@ public class FileSystemView2 extends AnchorPane {
 	
 	@FXML private AnchorPane fs_right_pane;
 	
-	private IFileSystemObject mDragObject;
-	
 	private Parent mSceneRoot = null;
 		
 	public FileSystemView2() {
@@ -87,49 +85,12 @@ public class FileSystemView2 extends AnchorPane {
 		addFileSystemWidget (FileSystemType.AMAZON_S3);
 
 		addFileSystemNode (FileSystemType.SOURCE_DISK);
-		
-		fs_split_pane.setOnDragOver((e) -> {
-			if (mSceneRoot == null)
-				mSceneRoot = fs_list.getScene().getRoot();
-			
-			if (mDragObject != null)
-				mDragObject.relocateToPoint(mSceneRoot.sceneToLocal(e.getSceneX(), e.getSceneY()));
-			
-			e.consume();			
-		});
 
-		fs_root.setOnDragDone((e) -> {
-			
-			if (mDragObject.getFileSystemObjectType() == "FileSystemWidget")
-				((FileSystemWidget) mDragObject).setVisible(false);
-			
-			mDragObject = null;
-			
-			e.consume();
-		});
-		
-		fs_right_pane.setOnDragOver ((e) -> {
-			e.acceptTransferModes(TransferMode.ANY);
-		});
-		
-		fs_right_pane.setOnDragDropped((e) -> {
-		
-			Dragboard db = e.getDragboard();
-			
-			if (mDragObject.getFileSystemObjectType()=="FileSystemWidget") {
-				FileSystemNode fsn = addFileSystemNode(mDragObject.getFileSystemType());
-				fsn.relocate(e.getX(), e.getY());
-			}
-
-			e.setDropCompleted(true);
-		});
 	}
 	
 	private FileSystemNode addFileSystemNode (FileSystemType fs_type) {
 		
-		FileSystemNode fs_node = new FileSystemNode (fs_type);
-		
-		addDragHandler(fs_node);
+		FileSystemNode fs_node = new FileSystemNode (fs_type, fs_right_pane);
 		
 		fs_right_pane.getChildren().add(fs_node);
 		
@@ -138,42 +99,13 @@ public class FileSystemView2 extends AnchorPane {
 
 	private void addFileSystemWidget (FileSystemType fs_type) {
 
-		FileSystemWidget widg = new FileSystemWidget (fs_type);
-
-		fs_list.getChildren().add(widg);
-        fs_root.getChildren().add( ((FileSystemWidget) widg.getDragObject()));
+		FileSystemWidget widg = 
+				new FileSystemWidget (fs_type, fs_root, fs_right_pane);
 		
-		//add drag handling
-		addDragHandler (widg);
+		fs_list.getChildren().add(widg);
+
 	}
 	
-	private void addDragHandler (IFileSystemObject fsobj) {
-
-		fsobj.setOnDragDetected(
-			new EventHandler <MouseEvent> () {
-
-				@Override
-				public void handle(MouseEvent event) {
-					
-					IFileSystemObject fso = (IFileSystemObject) event.getSource();
-					
-					mDragObject = fso.getDragObject();
-					
-					if (mDragObject == null)
-						return;
-					
-	                //begin drag ops
-	                ClipboardContent content = new ClipboardContent();
-	                content.putString(fso.getId());
-
-	                mDragObject.initDrag (new Point2D (event.getSceneX(), event.getSceneY()));
-	                mDragObject.startDragAndDrop (TransferMode.ANY).setContent(content);
-	                
-	                event.consume();					
-				}
-				
-			});
-	}
 	/*
 	private void initCurves() {
 		

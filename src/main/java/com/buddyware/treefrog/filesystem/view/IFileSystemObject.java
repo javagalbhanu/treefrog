@@ -8,6 +8,7 @@ import javafx.scene.Parent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.Pane;
 
 public interface IFileSystemObject {
 
@@ -17,8 +18,6 @@ public interface IFileSystemObject {
 		public Dragboard startDragAndDrop(TransferMode... transferModes);
 		public void setOnDragDetected(EventHandler <? super MouseEvent> value);
 		public Parent getParent();
-		public IFileSystemObject getDragObject();
 		public void setVisible (boolean visible);
 		public FileSystemType getFileSystemType();
-		public void initDrag(Point2D p);
 }

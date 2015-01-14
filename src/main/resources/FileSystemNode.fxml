@@ -42,7 +42,7 @@
             </VBox>
             <VBox fx:id="fs_node_left" alignment="CENTER_LEFT" maxWidth="-Infinity" minHeight="15.0" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefWidth="15.0" StackPane.alignment="CENTER_LEFT">
                <children>
-                  <Circle fill="DODGERBLUE" radius="7.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.5" />
+                  <Circle fx:id="left_link_handle" fill="DODGERBLUE" radius="7.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.5" />
                </children>
                <StackPane.margin>
                   <Insets bottom="10.0" top="25.0" />
@@ -50,7 +50,7 @@
             </VBox>
             <VBox fx:id="fs_node_right" alignment="CENTER_RIGHT" maxWidth="-Infinity" minHeight="15.0" minWidth="-Infinity" prefWidth="15.0" StackPane.alignment="CENTER_RIGHT">
                <children>
-                  <Circle fill="DODGERBLUE" radius="7.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.5" />
+                  <Circle fx:id="right_link_handle" fill="DODGERBLUE" radius="7.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.5" />
                </children>
                <StackPane.margin>
                   <Insets bottom="10.0" top="25.0" />

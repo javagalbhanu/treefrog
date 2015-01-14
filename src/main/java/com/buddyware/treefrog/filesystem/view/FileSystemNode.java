@@ -4,11 +4,19 @@ import java.io.IOException;
 
 import com.buddyware.treefrog.filesystem.FileSystemType;
 
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
-
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
 public class FileSystemNode extends AnchorPane implements IFileSystemObject{
@@ -20,8 +28,50 @@ public class FileSystemNode extends AnchorPane implements IFileSystemObject{
 	private FileSystemType mFsType;
 	private Point2D mDragPoint;
 	
-	public FileSystemNode(FileSystemType fs_type) {
+	private final Pane mDragContext;
+	
+	private EventHandler <DragEvent> mContextDragOver;
+	private EventHandler <DragEvent> mContextDragDropped;
+	private EventHandler <DragEvent> mContextDragDone;
 		
+	public FileSystemNode(FileSystemType fs_type, Pane drag_context) {
+		
+		mDragContext = drag_context;
+		mFsType = fs_type;
+		
+		loadFxml();
+
+		setId(fs_type.toString() + Double.toString(Math.random()));
+		setFileSystemNodeImage();
+		
+		buildDragHandlers();
+		
+		setOnDragDetected(
+			new EventHandler <MouseEvent> () {
+
+				@Override
+				public void handle(MouseEvent event) {
+				
+					mDragContext.setOnDragOver(mContextDragOver);
+					mDragContext.setOnDragDone(mContextDragDone);
+					mDragContext.setOnDragDropped(mContextDragDropped);
+					
+					mDragPoint = sceneToLocal(new Point2D(event.getX(), event.getY()));
+					
+	                //begin drag ops
+	                ClipboardContent content = new ClipboardContent();
+	                content.putString(getId());
+
+	                relocateToPoint(mDragPoint);
+	                startDragAndDrop (TransferMode.ANY).setContent(content);
+	                
+	                event.consume();					
+				}
+				
+			});		
+	}
+		
+	private void loadFxml() {
 		FXMLLoader fxmlLoader = new FXMLLoader(
 				getClass().getResource("/FileSystemNode.fxml")
 				);
@@ -34,20 +84,9 @@ public class FileSystemNode extends AnchorPane implements IFileSystemObject{
         
 		} catch (IOException exception) {
 		    throw new RuntimeException(exception);
-		}
-
-		mFsType = fs_type;
-		setId(fs_type.toString() + Double.toString(Math.random()));
-		setFileSystemNodeImage();
-	
-	}
-
-	public void initDrag(Point2D p) {
-		mDragPoint = this.sceneToLocal(p);
+		}		
 	}
 	
-	public IFileSystemObject getDragObject() { return this; }
-		
 	public String getFileSystemObjectType() { return "FileSystemNode"; }
 	
 	public FileSystemType getFileSystemType() { return mFsType; }
@@ -80,12 +119,45 @@ public class FileSystemNode extends AnchorPane implements IFileSystemObject{
 	}
 	
 	public void relocateToPoint (Point2D p) {
-		
 		Point2D p2 = this.getParent().sceneToLocal(p);
 
 		relocate (
 				(int) (p2.getX() - mDragPoint.getX()),
 				(int) (p2.getY() - mDragPoint.getY())
 			);
+	}
+	
+	public void buildDragHandlers() {
+
+		mContextDragOver = new EventHandler <DragEvent>() {
+
+			@Override
+			public void handle(DragEvent event) {	
+System.out.println("OnDragOver");				
+				event.acceptTransferModes(TransferMode.ANY);				
+				relocateToPoint(mDragContext.sceneToLocal( event.getSceneX(), event.getSceneY()));
+				event.consume();
+			}
+		};
+		
+		mContextDragDone = new EventHandler <DragEvent>() {
+
+			@Override
+			public void handle(DragEvent event) {				
+				event.consume();
+			}
+		};		
+	
+		
+		mContextDragDropped = new EventHandler <DragEvent> () {
+
+			@Override
+			public void handle(DragEvent event) {
+				Dragboard db = event.getDragboard();
+				event.setDropCompleted(true);
+			}
+//			FileSystemNode fsn = addFileSystemNode(mDragObject.getFileSystemType());
+//			fsn.relocate(e.getX(), e.getY());
+		};		
 	}	
 }

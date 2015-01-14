@@ -4,11 +4,20 @@ import java.io.IOException;
 
 import com.buddyware.treefrog.filesystem.FileSystemType;
 
+import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 
 public class FileSystemWidget extends AnchorPane implements IFileSystemObject{
@@ -22,18 +31,43 @@ public class FileSystemWidget extends AnchorPane implements IFileSystemObject{
 	@FXML
 	private Region fs_image;
 	
-	private FileSystemType mType;
-	private FileSystemWidget mDragWidget;
+	private final FileSystemType mType;
+	private final FileSystemWidget mDragWidget;
+	private final Pane mDragContext;
+	private final Pane mDragTarget;
 	
-	public FileSystemWidget() {
-			
-	}
+	private EventHandler <DragEvent> mContextDragOver;
+	private EventHandler <DragEvent> mTargetDragOver;
+	private EventHandler <DragEvent> mTargetDragDropped;
+	private EventHandler <DragEvent> mContextDragDone;
 	
 	public String getFileSystemObjectType() { return "FileSystemWidget"; }
 	
-	public FileSystemWidget(FileSystemType fs_type) {
+	private FileSystemWidget (Pane drag_context, Pane drag_target, FileSystemType fs_type) {
+		mDragContext = drag_context;
+		mDragTarget = drag_target;
+		mDragWidget = null;
+		mType = fs_type;
+		setVisible(false);
+		
+		loadWidget();
+	}
+	
+	public FileSystemWidget(FileSystemType fs_type, Pane drag_context, Pane drag_target) {
 		
 		mType = fs_type;
+
+		mDragContext = drag_context;
+		mDragTarget = drag_target;
+
+		mDragWidget = new FileSystemWidget (drag_context, drag_target, fs_type);
+		mDragContext.getChildren().add(mDragWidget);
+
+		buildDragHandlers();
+		loadWidget();	
+	}
+	
+	private void loadWidget() {
 		
 		FXMLLoader fxmlLoader = new FXMLLoader(
 				getClass().getResource("/FileSystemWidget.fxml")
@@ -47,15 +81,7 @@ public class FileSystemWidget extends AnchorPane implements IFileSystemObject{
         
 		} catch (IOException exception) {
 		    throw new RuntimeException(exception);
-		}
-	}
-	
-	public IFileSystemObject getDragObject() {
-		
-		if (mDragWidget == null)
-			createDragWidget();
-		
-		return mDragWidget; 
+		}		
 	}
 	
 	public FileSystemType getFileSystemType() { return mType; }
@@ -80,34 +106,80 @@ public class FileSystemWidget extends AnchorPane implements IFileSystemObject{
 		break;
 		
 		}
-	}
-	
-	public void initDrag(Point2D p) {
 		
-		if (mDragWidget == null)
-			createDragWidget();
+		if (mDragWidget==null)
+			return;
 		
-		mDragWidget.setVisible(true);
+		
+		setOnDragDetected( new EventHandler <MouseEvent> () {
+
+			@Override
+			public void handle(MouseEvent event) {
+
+				mDragContext.setOnDragOver(mContextDragOver);
+				mDragContext.setOnDragDone(mContextDragDone);
+				mDragTarget.setOnDragOver(mTargetDragOver);
+				mDragTarget.setOnDragDropped(mTargetDragDropped);
+				
+                //begin drag ops
+                ClipboardContent content = new ClipboardContent();
+                content.putString(getId());
+
+                mDragWidget.setVisible(true);
+                mDragWidget.relocateToPoint(new Point2D (event.getSceneX(), event.getSceneY()));
+                mDragWidget.startDragAndDrop (TransferMode.ANY).setContent(content);
+                
+                //NEED TO ASSIGN DRAG WIDGET TO COMMON CHILD PRE-ADED TO DRAG CONTEXT!                                         rf                                                                             ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg 
+                event.consume();					
+			}				
+		});
 	}
 	
 	public void relocateToPoint (Point2D p) {
-		
-		Point2D p2 = this.getParent().sceneToLocal(p);
-		
+
 		relocate (
-				(int) (p2.getX() - getBoundsInLocal().getWidth() / 2),
-				(int) (p2.getY() - getBoundsInLocal().getHeight() / 2)
+				(int) (p.getX() - (getBoundsInLocal().getWidth() / 2)),
+				(int) (p.getY() - (getBoundsInLocal().getHeight() / 2))
 			);
 	}
-	
-	private void createDragWidget() {
+
+	public void buildDragHandlers() {
+
+		mContextDragOver = new EventHandler <DragEvent>() {
+
+			@Override
+			public void handle(DragEvent event) {			
+				mDragWidget.relocateToPoint(mDragContext.sceneToLocal( event.getSceneX(), event.getSceneY()));
+				event.consume();
+			}
+		};
 		
-		mDragWidget = new FileSystemWidget (mType);
+		mContextDragDone = new EventHandler <DragEvent>() {
+
+			@Override
+			public void handle(DragEvent event) {				
+				mDragWidget.setVisible(false);
+				event.consume();
+			}
+		};		
 		
-    	mDragWidget.setOpacity(0.5);
-        mDragWidget.setVisible(false);
-        mDragWidget.setMouseTransparent(true);
-    	mDragWidget.toFront();
-    	
+		mTargetDragOver = new EventHandler <DragEvent> () {
+
+			@Override
+			public void handle(DragEvent event) {
+				event.acceptTransferModes(TransferMode.ANY);
+			}
+		};		
+		
+		mTargetDragDropped = new EventHandler <DragEvent> () {
+
+			@Override
+			public void handle(DragEvent event) {
+				Dragboard db = event.getDragboard();
+				event.setDropCompleted(true);
+			}
+//			FileSystemNode fsn = addFileSystemNode(mDragObject.getFileSystemType());
+//			fsn.relocate(e.getX(), e.getY());
+		};		
 	}
 }
