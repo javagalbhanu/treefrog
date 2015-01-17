@@ -7,6 +7,8 @@ import java.util.List;
 import javax.swing.JOptionPane;
 
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
@@ -41,24 +43,20 @@ public class FileSystemView2 extends AnchorPane {
 	/**
 	 * FXML initialization requirement
 	 */
-/*
-	@FXML private Circle curveEnd;
-	@FXML private Circle curveStart;
-	@FXML private Circle curveC1;
-	@FXML private Circle curveC2;
 
-	@FXML private Label cloudLabel;
-	@FXML private Line mLt_start_c1;
-	@FXML private Line mLt_c2_end;
-	@FXML private CubicCurve mCurve;
-	*/
 	@FXML private VBox fs_list;
 	@FXML private SplitPane fs_split_pane;
 	@FXML private AnchorPane fs_root;
 	
 	@FXML private AnchorPane fs_right_pane;
 	
-	private Parent mSceneRoot = null;
+	private EventHandler <DragEvent> mRootDragOver;
+	private EventHandler <DragEvent> mRightPaneDragOver;
+	private EventHandler <DragEvent> mRightPaneDragDropped;
+	private EventHandler <MouseEvent> mWidgetDragDetected;
+	
+	private IFileSystemObject mDragObject;
+	private FileSystemLink fs_link;
 		
 	public FileSystemView2() {
 		
@@ -80,19 +78,43 @@ public class FileSystemView2 extends AnchorPane {
 	@FXML
 	private void initialize() {
 
+		buildSplitPaneDragHandlers();
+		
 		//add source filesystem node to right pane
+		addFileSystemLink();
+		
 		addFileSystemWidget (FileSystemType.LOCAL_DISK);
 		addFileSystemWidget (FileSystemType.AMAZON_S3);
 
 		addFileSystemNode (FileSystemType.SOURCE_DISK);
+		
+		setOnDragDone (new EventHandler <DragEvent>() {
 
+			@Override
+			public void handle(DragEvent event) {				
+				Dragboard db = event.getDragboard();
+				System.out.println(db.getString());
+				event.consume();
+			}
+		});
+	}
+
+	private void addFileSystemLink() {
+		
+		fs_link = new FileSystemLink();
+		fs_link.setVisible(false);
+		
+		fs_right_pane.getChildren().add(fs_link);
 	}
 	
 	private FileSystemNode addFileSystemNode (FileSystemType fs_type) {
 		
-		FileSystemNode fs_node = new FileSystemNode (fs_type, fs_right_pane);
+		FileSystemNode fs_node = new FileSystemNode (fs_type, fs_right_pane, fs_link);
 		
 		fs_right_pane.getChildren().add(fs_node);
+		
+		fs_node.setLayoutX(200);
+		fs_node.setLayoutY(200);
 		
 		return fs_node;
 	}
@@ -100,81 +122,81 @@ public class FileSystemView2 extends AnchorPane {
 	private void addFileSystemWidget (FileSystemType fs_type) {
 
 		FileSystemWidget widg = 
-				new FileSystemWidget (fs_type, fs_root, fs_right_pane);
+				new FileSystemWidget (fs_type);
+
+		widg.setOnDragDetected(mWidgetDragDetected);
 		
 		fs_list.getChildren().add(widg);
 
 	}
 	
-	/*
-	private void initCurves() {
+	public void buildSplitPaneDragHandlers() {
 		
-		// bind control lines to circle centers
-		mLt_start_c1.startXProperty().bind(mCurve.startXProperty());
-		mLt_start_c1.startYProperty().bind(mCurve.startYProperty());
+		mWidgetDragDetected = new EventHandler <MouseEvent> () {
 
-		mLt_start_c1.endXProperty().bind(mCurve.controlX1Property());
-		mLt_start_c1.endYProperty().bind(mCurve.controlY1Property());
+			@Override
+			public void handle(MouseEvent event) {
 
-		mLt_c2_end.startXProperty().bind(mCurve.controlX2Property());
-		mLt_c2_end.startYProperty().bind(mCurve.controlY2Property());
+				fs_right_pane.setOnDragDropped(mRightPaneDragDropped);
+				fs_split_pane.setOnDragOver(mRootDragOver);
+				
+                //begin drag ops
+                ClipboardContent content = new ClipboardContent();
+                content.putString("add_node" + getId());
 
-		mLt_c2_end.endXProperty().bind(mCurve.endXProperty());
-		mLt_c2_end.endYProperty().bind(mCurve.endYProperty());
+                
+                mDragObject = ((IFileSystemObject) (event.getSource())).getDragObject();
+                
+                if (!fs_root.getChildren().contains((Node)mDragObject))
+                	fs_root.getChildren().add((Node)mDragObject);
+                
+                mDragObject.setVisible(true);
+                mDragObject.relocateToPoint(new Point2D (event.getSceneX(), event.getSceneY()));
+                mDragObject.startDragAndDrop (TransferMode.ANY).setContent(content);
+ 
+                event.consume();					
+			}					
+		};
+		
+		mRootDragOver = new EventHandler <DragEvent>() {
 
-		// bind curve to circle centers
-		mCurve.startXProperty().bind(curveStart.centerXProperty());
-		mCurve.startYProperty().bind(curveStart.centerYProperty());
+			@Override
+			public void handle(DragEvent event) {
+				
+				Point2D p = fs_right_pane.sceneToLocal(event.getSceneX(), event.getSceneY());
 
-		mCurve.controlX1Property().bind(curveC1.centerXProperty());
-		mCurve.controlY1Property().bind(curveC1.centerYProperty());
+				if (!fs_right_pane.boundsInLocalProperty().get().contains(p)) {
+					mDragObject.relocateToPoint(new Point2D(event.getX(), event.getY()));
+					return;
+				}
 
-		mCurve.controlX2Property().bind(curveC2.centerXProperty());
-		mCurve.controlY2Property().bind(curveC2.centerYProperty());
+				fs_root.removeEventHandler(DragEvent.DRAG_OVER, this);
+				fs_right_pane.setOnDragOver(mRightPaneDragOver);
+				event.consume();
 
-		mCurve.endXProperty().bind(curveEnd.centerXProperty());
-		mCurve.endYProperty().bind(curveEnd.centerYProperty());
+			}
+		};
+		
+		mRightPaneDragOver = new EventHandler <DragEvent> () {
 
-		curveStart.setCenterX(10.0f);
-		curveStart.setCenterY(10.0f);
+			@Override
+			public void handle(DragEvent event) {
 
-		curveC1.setCenterX(20.0f);
-		curveC1.centerXProperty().bind(Bindings.add(150.0f, curveStart.centerXProperty()));
-		curveC1.centerYProperty().bind(curveStart.centerYProperty());
+				event.acceptTransferModes(TransferMode.ANY);
+				mDragObject.relocateToPoint(fs_root.sceneToLocal(new Point2D(event.getSceneX(), event.getSceneY())));
+			}
+		};		
+		
+		mRightPaneDragDropped = new EventHandler <DragEvent> () {
 
-		curveC2.setCenterX(50.0f);
-		curveC2.centerXProperty().bind(Bindings.add(-150.0f, curveEnd.centerXProperty()));
-		curveC2.centerYProperty().bind(curveEnd.centerYProperty());
-
-		curveEnd.setCenterX(40.0f);
-		curveEnd.setCenterY(40.0f);		
-	}
-
-	@FXML
-	private void updateCurveStart(MouseEvent event) {
-
-		curveStart.setCenterX(event.getX());
-		curveStart.setCenterY(event.getY());
-	}
-
-	@FXML
-	private void updateCurveC1(MouseEvent event) {
-
-		curveC1.setCenterX(event.getX());
-		curveC1.setCenterY(event.getY());
-	}
-
-	@FXML
-	private void updateCurveC2(MouseEvent event) {
-
-		curveC2.setCenterX(event.getX());
-		curveC2.setCenterY(event.getY());
-	}
-
-	@FXML
-	private void updateCurveEnd(MouseEvent event) {
-
-		curveEnd.setCenterX(event.getX());
-		curveEnd.setCenterY(event.getY());
-	}*/
+			@Override
+			public void handle(DragEvent event) {
+				
+				mDragObject.setVisible (false);
+				mDragObject = null;
+				event.setDropCompleted(true);
+				event.consume();
+			}
+		};		
+	}	
 }

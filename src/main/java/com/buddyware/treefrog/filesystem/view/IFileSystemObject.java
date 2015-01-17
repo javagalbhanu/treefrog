@@ -2,6 +2,7 @@ package com.buddyware.treefrog.filesystem.view;
 
 import com.buddyware.treefrog.filesystem.FileSystemType;
 
+import javafx.beans.property.ObjectProperty;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Parent;
@@ -15,9 +16,10 @@ public interface IFileSystemObject {
 		public String getId();
 		public void relocateToPoint(Point2D point);
 		public String getFileSystemObjectType();
-		public Dragboard startDragAndDrop(TransferMode... transferModes);
-		public void setOnDragDetected(EventHandler <? super MouseEvent> value);
 		public Parent getParent();
 		public void setVisible (boolean visible);
 		public FileSystemType getFileSystemType();
+		public ObjectProperty<EventHandler<? super MouseEvent>> onDragDetectedProperty();
+		public Dragboard startDragAndDrop(TransferMode... transferModes);
+		public IFileSystemObject getDragObject();
 }
