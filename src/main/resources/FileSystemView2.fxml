@@ -17,7 +17,7 @@
    <children>
       <SplitPane fx:id="fs_split_pane" dividerPositions="0.5" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <items>
-            <ScrollPane fitToHeight="true" fitToWidth="true" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="80.0">
+            <ScrollPane fx:id="fs_left_pane" fitToHeight="true" fitToWidth="true" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="80.0">
                <content>
                   <VBox fx:id="fs_list" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" spacing="15.0">
                      <padding>

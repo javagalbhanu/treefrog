@@ -15,6 +15,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -49,6 +50,7 @@ public class FileSystemView2 extends AnchorPane {
 	@FXML private AnchorPane fs_root;
 	
 	@FXML private AnchorPane fs_right_pane;
+	@FXML private ScrollPane fs_left_pane;
 	
 	private EventHandler <DragEvent> mRootDragOver;
 	private EventHandler <DragEvent> mRightPaneDragOver;
@@ -94,6 +96,10 @@ public class FileSystemView2 extends AnchorPane {
 			public void handle(DragEvent event) {				
 				Dragboard db = event.getDragboard();
 				System.out.println(db.getString());
+				
+				if (mDragObject.isVisible())
+					mDragObject.setVisible(false);
+				
 				event.consume();
 			}
 		});
@@ -150,10 +156,11 @@ public class FileSystemView2 extends AnchorPane {
                 if (!fs_root.getChildren().contains((Node)mDragObject))
                 	fs_root.getChildren().add((Node)mDragObject);
                 
-                mDragObject.setVisible(true);
                 mDragObject.relocateToPoint(new Point2D (event.getSceneX(), event.getSceneY()));
                 mDragObject.startDragAndDrop (TransferMode.ANY).setContent(content);
- 
+                
+                mDragObject.setVisible(true);
+                
                 event.consume();					
 			}					
 		};
@@ -191,9 +198,6 @@ public class FileSystemView2 extends AnchorPane {
 
 			@Override
 			public void handle(DragEvent event) {
-				
-				mDragObject.setVisible (false);
-				mDragObject = null;
 				event.setDropCompleted(true);
 				event.consume();
 			}

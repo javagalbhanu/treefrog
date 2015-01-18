@@ -22,4 +22,5 @@ public interface IFileSystemObject {
 		public ObjectProperty<EventHandler<? super MouseEvent>> onDragDetectedProperty();
 		public Dragboard startDragAndDrop(TransferMode... transferModes);
 		public IFileSystemObject getDragObject();
+		public boolean isVisible();
 }
