@@ -22,6 +22,8 @@ import javafx.event.EventHandler;
 
 public abstract class BaseModel {
 
+	private String mName;
+	
 	protected final BlockingQueue<TaskMessage> taskMessages = new ArrayBlockingQueue(
 			1);
 
@@ -47,5 +49,16 @@ public abstract class BaseModel {
 		};
 
 		return Executors.newSingleThreadExecutor(factory);
+	}
+	
+	public String getName() { return mName; }
+	public void setName(String name) { mName = name; }
+	
+	public void serialize(String filepath) {
+		
+	}
+	
+	public void deserialize(String filepath) {
+		
 	}
 }

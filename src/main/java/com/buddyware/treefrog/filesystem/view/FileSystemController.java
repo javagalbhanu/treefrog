@@ -57,7 +57,7 @@ public class FileSystemController extends BaseController {
 		 * 
 		 * });
 		 */
-		mMain.startFileSystems();
+		//mMain.startFileSystems();
 		this.parentStage = mMain.getPrimaryStage();
 	}
 

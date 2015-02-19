@@ -22,7 +22,7 @@
                <children>
                   <AnchorPane fx:id="fs_node_title" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="25.0">
                      <children>
-                        <Label alignment="CENTER" minHeight="25.0" mouseTransparent="true" text="Label" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <Label alignment="CENTER" minHeight="25.0" text="Label" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <styleClass>
                               <String fx:value="top-rounded-widget" />
                               <String fx:value="fs-node-title-bar" />
@@ -40,20 +40,20 @@
                   </AnchorPane>
                </children>
             </VBox>
-            <VBox fx:id="fs_node_left" alignment="CENTER_LEFT" maxWidth="-Infinity" minHeight="15.0" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefWidth="15.0" StackPane.alignment="CENTER_LEFT">
+            <VBox fx:id="fs_node_left" alignment="CENTER_LEFT" maxWidth="-Infinity" minHeight="15.0" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefWidth="30.0" styleClass="fs-left-handle" StackPane.alignment="CENTER_LEFT">
                <children>
-                  <Circle fx:id="fs_left_link_handle" fill="DODGERBLUE" radius="7.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.5" />
+                  <Circle fx:id="fs_left_link_handle" fill="DODGERBLUE" radius="7.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.5" visible="false" />
                </children>
                <StackPane.margin>
-                  <Insets bottom="10.0" top="25.0" />
+                  <Insets />
                </StackPane.margin>
             </VBox>
-            <VBox fx:id="fs_node_right" alignment="CENTER_RIGHT" maxWidth="-Infinity" minHeight="15.0" minWidth="-Infinity" prefWidth="15.0" StackPane.alignment="CENTER_RIGHT">
+            <VBox fx:id="fs_node_right" alignment="CENTER_RIGHT" maxWidth="-Infinity" minHeight="15.0" minWidth="-Infinity" prefWidth="30.0" styleClass="fs-right-handle" StackPane.alignment="CENTER_RIGHT">
                <children>
-                  <Circle fx:id="fs_right_link_handle" fill="DODGERBLUE" radius="7.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.5" />
+                  <Circle fx:id="fs_right_link_handle" fill="DODGERBLUE" radius="7.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.5" visible="false" />
                </children>
                <StackPane.margin>
-                  <Insets bottom="10.0" top="25.0" />
+                  <Insets />
                </StackPane.margin>
             </VBox>
          </children>

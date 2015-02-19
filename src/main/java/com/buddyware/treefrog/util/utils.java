@@ -3,6 +3,8 @@ package com.buddyware.treefrog.util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -75,7 +77,7 @@ public class utils {
 			return null;
 		}
 	}
-
+ 
 	public static <S extends Pane> S loadFxml(String resource,
 			BaseController controller) {
 
@@ -88,7 +90,6 @@ public class utils {
 		try {
 			layout = (S) fxmlLoader.load();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -112,7 +113,6 @@ public class utils {
 		try {
 			layout = (S) fxmlLoader.load();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -135,12 +135,49 @@ public class utils {
 		return (T) controller;
 	};
 
+	public static String getHostName() {
+		
+		try {
+			return InetAddress.getLocalHost().getHostName();
+		} catch (UnknownHostException e) {
+			return null;
+		}
+	}
+	
 	public static String[] getRemoteProviders() {
 
 		String[] list = { "Amazon S3" };
 		return list;
 	}
 
+	public static String getApplicationDataPath() {
+		
+		String appPath = null;
+		
+		switch (OpSys.getType()) {
+		
+		case OS_LINUX:
+			appPath = System.getProperty("user.home");
+			
+		break;
+		
+		case OS_OSX:
+			appPath = System.getProperty("user.home") + "/Library/Application Support";
+			
+		break;
+		
+		case OS_WINDOWS:
+			appPath = System.getenv("AppData");
+			
+		break;
+		
+		default:
+		break;
+		}
+	
+		return appPath;
+	}
+	
 	public static File[] getVolumes() {
 
 		switch (OpSys.getType()) {

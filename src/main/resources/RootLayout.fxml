@@ -26,9 +26,6 @@
               </content>
             </Tab>
             <Tab fx:id="filesystem_tab" text="File Systems">
-            	<content>
-            		<FileSystemView2></FileSystemView2>
-            	</content>
             </Tab>
             <Tab fx:id="help_tab" text="Help">
               <content>

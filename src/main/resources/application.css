@@ -18,6 +18,14 @@
 		linear-gradient(to bottom, rgba(255,255,255,0.5) 15%, rgba(50,100,150,0.25) 65%, rgba(255,255,255, 0.0) 100%);
 }
 
+.fs-node-link-handle-drag-enter {
+	-fx-background-color: yellow;
+}
+
+.fs-node-link-handle-drag-exit {
+	-fx-background-color: dodgerblue;	
+}
+
 .fs-node-body {
 	-fx-border-color: rgba(100, 150, 200, 1.0);
 }
@@ -39,15 +47,15 @@
 }
 
 .fs-cloud {
-	-fx-background-image: url("fs-cloud.png");
+	-fx-background-image: url("images/fs-cloud.png");
 }
 
 .fs-mobile {
-	-fx-background-image: url("fs-mobile.png");
+	-fx-background-image: url("images/fs-mobile.png");
 }
 
 .fs-amazon-s3 {
-	-fx-background-image: url("fs-cloud.png"), url("amazon-s3.png");
+	-fx-background-image: url("images/fs-cloud.png"), url("images/amazon-s3.png");
 	-fx-background-position: center;
 	-fx-background-repeat: no-repeat;
 
@@ -55,15 +63,15 @@
 }
 
 .fs-source-disk {
-	-fx-background-image: url("fs_source.png");
+	-fx-background-image: url("images/fs_source.png");
 }
 
 .fs-local-disk {
-	-fx-background-image: url("fs-disk.png");
+	-fx-background-image: url("images/fs-disk.png");
 }
 
 .fs-android {
-	-fx-background-image: url("fs-mobile.png"), url("android.png");
+	-fx-background-image: url("images/fs-mobile.png"), url("images/android.png");
 	-fx-background-size: contain, 32;
 }
 
@@ -71,14 +79,38 @@
 	-fx-background-color: #DFB951;
 }
 
-.fs-scroll-image-view {
+.fs-left-handle:hover {
+	-fx-background-radius: 20 0 0 20;
+	-fx-background-color: linear-gradient( to right, rgba(50, 50, 50, 0.0) 20%, rgba(50, 50, 50, 0.45) 30%, rgba(50, 50, 50, 0.1) 85%, rgba(50, 50, 50, 0.0) 100%);
+}
+
+.fs-right-handle:hover {
+	-fx-background-radius: 0 20 20 0;
+	-fx-background-color: linear-gradient( to left, rgba(50, 50, 50, 0.0) 20%, rgba(50, 50, 50, 0.45) 30%, rgba(50, 50, 50, 0.1) 85%, rgba(50, 50, 50, 0.0) 100%);
 	
 }
 
-.top-left-button{
-	-fx-background-radius: 10 0 0 0;
+.fs-right-pane {
+	-fx-background-color: white;
 }
 
-.top-right-button{
-	-fx-background-radius: 0 10 0 0;
+.fs-link-node-background {
+	-fx-background-image: url("images/2-way-binding-arrow.png");
+	-fx-background-size: 64;
+	-fx-background-repeat: no-repeat;
+	-fx-background-position: center;
+}
+
+.fs-link-node {
+	-fx-fill: rgba(50, 100, 150, 0.5);
+}
+
+.fs-link-node:hover {
+	-fx-stroke: rgba(0, 50, 100, 0.85);
+	-fx-stroke-width: 4;	
+}
+
+.fs-link {
+	-fx-stroke: linear-gradient(rgba(50, 100, 150, 0.35),rgba(50, 100, 150, 0.85),rgba(50, 100, 150, 1.0), rgba(50, 100, 150, 1.0), rgba(50, 100, 150, 1.0), rgba(50, 100, 150, 1.0), rgba(50, 100, 150, 1.0), rgba(50, 100, 150, 1.0), rgba(50, 100, 150, 1.0), rgba(50, 100, 150, .85), rgba(50, 100, 150, .35));
+	-fx-stroke-width: 5;
 }

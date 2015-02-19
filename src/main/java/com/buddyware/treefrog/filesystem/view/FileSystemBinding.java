@@ -3,60 +3,66 @@ package com.buddyware.treefrog.filesystem.view;
 import java.io.IOException;
 
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.NumberBinding;
-import javafx.beans.property.DoubleProperty;
+import javafx.beans.binding.DoubleBinding;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
+import javafx.scene.Group;
+import javafx.scene.Scene;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Circle;
-import javafx.scene.shape.CubicCurve;
+import javafx.scene.shape.Ellipse;
 
 public class FileSystemBinding extends AnchorPane{
 
-	private final Pane mDragContext;
+	private final FileSystemLink mLeftLink;
+	private final FileSystemLink mRightLink;
+	private final Pane mContext;
 	
-	@FXML private CubicCurve left_link;
-	@FXML private CubicCurve right_link;
+	@FXML private Ellipse node_ellipse;
+	@FXML private AnchorPane node_background;
 	
-	@FXML private Circle fs_left_link_handle;
-	@FXML private Circle fs_right_link_handle;
+	private double mNodeWidth;
+	private double mNodeHeight;
 	
-	public FileSystemBinding(Pane drag_context) {
-		mDragContext = drag_context;
-/*
-		fs_left_link_handle.setOnDragDetected(new EventHandler <MouseEvent>() {
+	public FileSystemBinding(Pane context) {
+
+		mLeftLink = new FileSystemLink();
+		mRightLink = new FileSystemLink();
+		mContext = context;
 		
-			@Override
-			public void handle(MouseEvent event) {
-				
-			}
-		});
-	*/	
 		loadWidget();
 	}
 	
-	public void initialize() {
+	@FXML
+	private void initialize() {
+
+	   Group root = new Group();
+	   Scene scene = new Scene(root);
+	   
+	   root.getChildren().add(node_background);
+	   root.applyCss();
+	   root.layout();
 		
-		bindLinkEnds();
+		mContext.getChildren().add(0, mLeftLink);
+		mContext.getChildren().add(0, mRightLink);
 		
-	};
-	
-	public void relocateToPoint (Point2D p) {
-	
-		if (left_link.startXProperty().isBound()) {
-			right_link.startXProperty().set(p.getX());
-			right_link.startYProperty().set(p.getY());
-		}
-		else {
-			left_link.startXProperty().set(p.getX());
-			left_link.startYProperty().set(p.getY());
-		}
+		mNodeWidth = node_background.getLayoutBounds().getWidth();
+		mNodeHeight = node_background.getLayoutBounds().getHeight();
+		
+		DoubleBinding xBinding = Bindings.add(node_background.layoutXProperty(), mNodeWidth / 2.0 );
+		DoubleBinding yBinding = Bindings.add(node_background.layoutYProperty(), mNodeHeight / 2.0 );
+		
+		mLeftLink.bindEnd (xBinding, yBinding);
+		mRightLink.bindEnd (xBinding, yBinding);
+		
+		addNodePositionDragEvents();
 		
 	}
 	
@@ -77,37 +83,59 @@ public class FileSystemBinding extends AnchorPane{
 		}		
 	}
 	
-	public void bindLeftLink (DoubleProperty x_prop, DoubleProperty y_prop) {
+	public void addNodePositionDragEvents() {
 		
-		left_link.startXProperty().bind(x_prop);
-		left_link.startYProperty().bind(y_prop);
-		
-		left_link.controlX1Property().bind(Bindings.add(x_prop, 100));
-		left_link.controlY1Property().bind(y_prop);
-	}
-	
-	public void bindRightLink (DoubleProperty x_prop, DoubleProperty y_prop) {
-		right_link.startXProperty().bind(x_prop);
-		right_link.startYProperty().bind(y_prop);
+		node_background.setOnDragDetected(new EventHandler <MouseEvent>() {
 
-		right_link.controlX1Property().bind(Bindings.add(x_prop, -100));
-		right_link.controlY1Property().bind(y_prop);
+			@Override
+			public void handle(MouseEvent event) {
+				
+				node_background.getParent().setOnDragDropped(null);
+				node_background.getParent().setOnDragDone(null);
+				node_background.getParent().setOnDragOver(null);
+				
+				node_background.getParent().setOnDragOver( new EventHandler <DragEvent> () {
+
+					@Override
+					public void handle(DragEvent event) {
+						node_background.setLayoutX(event.getX() - (node_background.getWidth() / 2.0));
+						node_background.setLayoutY(event.getY() - (node_background.getHeight() / 2.0));
+					}
+					
+				});
+				
+                ClipboardContent content = new ClipboardContent();
+
+                content.putString("bindingnode");
+
+				node_background.startDragAndDrop (TransferMode.ANY).setContent(content);					
+			}
+			
+		});
 	}
 	
-	private void bindLinkEnds() {
+	public void bindLinkEnds() {
+		//method called externally to bind link ends to the binding node itself
+		//in lieu of an initialize() method
+	
+
+	}
+
+	public void bindLeftLinkToNode (FileSystemNode node) {
 		
-		//bind the ends of the cubic curve which attach to the link node box
-		//to the left and right handles.
-		left_link.endXProperty().bind(fs_left_link_handle.centerXProperty());
-		left_link.endYProperty().bind(fs_left_link_handle.centerYProperty());
-		right_link.endXProperty().bind(fs_right_link_handle.centerXProperty());
-		right_link.endYProperty().bind(fs_right_link_handle.centerYProperty());
+		node.bindLinkStartToLeftHandle(mLeftLink);
+		mLeftLink.setControlOffsets(new Point2D (5.0, 0.0));
+
+		node_background.setLayoutX(((mLeftLink.getStartX() + mRightLink.getStartX()) / 2.0));
+		node_background.setLayoutY(((mLeftLink.getStartY() + mRightLink.getStartY()) / 2.0));
+	}
+	
+	public void bindRightLinkToNode (FileSystemNode node) {
 		
-		left_link.controlX2Property().bind(Bindings.add(fs_left_link_handle.centerXProperty(), -100));
-		right_link.controlX2Property().bind(Bindings.add(fs_right_link_handle.centerXProperty(), 100));
-		
-		left_link.controlY2Property().bind(fs_left_link_handle.centerYProperty());
-		right_link.controlY2Property().bind(fs_right_link_handle.centerYProperty());
-		
+		node.bindLinkStartToRightHandle(mRightLink);
+		mRightLink.setControlOffsets(new Point2D (5.0, 0.0));
+
+		node_background.setLayoutX(((mLeftLink.getStartX()  + mRightLink.getStartX()) / 2.0));
+		node_background.setLayoutY(((mLeftLink.getStartY()  + mRightLink.getStartY()) / 2.0));
 	}
 }

@@ -13,9 +13,9 @@
 <?import javafx.scene.layout.*?>
 <?scenebuilder-classpath-element ../../../target/classes?>
 
-<fx:root fx:id="fs_root" stylesheets="@application.css" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+<fx:root fx:id="fs_root" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" stylesheets="@application.css" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <SplitPane fx:id="fs_split_pane" dividerPositions="0.5" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <SplitPane fx:id="fs_split_pane" dividerPositions="0.5" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <items>
             <ScrollPane fx:id="fs_left_pane" fitToHeight="true" fitToWidth="true" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="80.0">
                <content>
@@ -29,7 +29,7 @@
                   </VBox>
                </content>
             </ScrollPane>
-            <AnchorPane fx:id="fs_right_pane" />
+            <Pane fx:id="fs_right_pane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="fs-right-pane" />
          </items>
       </SplitPane>
    </children>

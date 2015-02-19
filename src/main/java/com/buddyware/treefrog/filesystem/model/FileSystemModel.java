@@ -15,12 +15,13 @@ import java.util.Map;
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.geometry.Point2D;
 
 import com.buddyware.treefrog.BaseModel;
 import com.buddyware.treefrog.ThreadPool;
 import com.buddyware.treefrog.filesystem.FileSystemType;
 
-public abstract class FileSystem extends BaseModel {
+public abstract class FileSystemModel extends BaseModel {
 	/*
 	 * Base class for FileSystem models
 	 */
@@ -30,11 +31,15 @@ public abstract class FileSystem extends BaseModel {
 
 	private final Path mRootPath;
 	private final FileSystemType mType;
-
+	private String mName;
+	
+	private Point2D mLayoutPoint;
+	private double mLayoutY;
+	
 	private final Path mCachePath;
 	private final Map<Integer, SyncPath> mCachedPaths = new HashMap<Integer, SyncPath>();
 
-	public FileSystem(FileSystemType type, String rootPath) {
+	public FileSystemModel(FileSystemType type, String rootPath) {
 
 		mType = type;
 		mRootPath = Paths.get(rootPath);
@@ -66,6 +71,12 @@ public abstract class FileSystem extends BaseModel {
 
 	public abstract boolean deleteFiles(List<SyncPath> paths);
 
+	public Point2D getLayoutPoint() { return mLayoutPoint; }
+	
+	public void setLayoutPosition(double x, double y) { 
+		mLayoutPoint = new Point2D(x, y); 
+	}
+	
 	public FileSystemType getType() {
 		return mType;
 	}
@@ -85,7 +96,11 @@ public abstract class FileSystem extends BaseModel {
 	public Path getCachePath() {
 		return mCachePath;
 	}
+	
+	public String getName() { return mName; }
 
+	public void setName(String name) { mName = name; }
+	
 	public synchronized void addOrUpdateCachedPath(SyncPath path) {
 
 		SyncPath p = mCachedPaths.get(path.hashCode());

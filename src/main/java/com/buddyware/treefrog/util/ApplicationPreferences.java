@@ -35,5 +35,5 @@ public class ApplicationPreferences {
 
 	public void set(PreferenceId prefId, String value) {
 		mPreferences.put(prefId.toString(), value);
-	}
+	}	
 }

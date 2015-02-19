@@ -25,11 +25,11 @@ import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.identitymanagement.*;
 import com.amazonaws.services.identitymanagement.model.*;
-import com.buddyware.treefrog.filesystem.model.FileSystem;
+import com.buddyware.treefrog.filesystem.model.FileSystemModel;
 import com.buddyware.treefrog.filesystem.FileSystemType;
 import com.buddyware.treefrog.filesystem.model.SyncPath;
 
-public class AmazonS3FileSystem extends FileSystem {
+public class AmazonS3FileSystem extends FileSystemModel {
 
 	private AWSCredentials credentials = null;
 	private TransferManager tx;

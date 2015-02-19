@@ -5,59 +5,14 @@
 <?import javafx.scene.control.*?>
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.AnchorPane?>
 
-<fx:root styleClass="rounded-widget" stylesheets="@application.css" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+<fx:root fx:id="node_background" maxHeight="40.0" maxWidth="80.0" minHeight="40.0" minWidth="80.0" styleClass="rounded-widget" stylesheets="@application.css" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <CubicCurve fx:id="left_link" controlX1="-20.0" controlX2="65.0" controlY1="15.0" controlY2="25.0" endX="25.0" endY="25.0" fill="DODGERBLUE" layoutX="10.0" layoutY="10.0" startX="15.0" startY="15.0" stroke="BLACK" />
-      <CubicCurve fx:id="right_link" controlX1="-20.0" controlX2="65.0" controlY1="15.0" controlY2="25.0" endX="25.0" endY="25.0" fill="DODGERBLUE" startX="15.0" startY="15.0" stroke="BLACK" />
       <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
-            <VBox>
-               <styleClass>
-                  <String fx:value="rounded-widget" />
-                  <String fx:value="semi-transparent-widget" />
-               </styleClass>
-               <StackPane.margin>
-                  <Insets left="6.0" right="6.0" />
-               </StackPane.margin>
-               <children>
-                  <AnchorPane maxHeight="-Infinity" minHeight="-Infinity" prefHeight="25.0">
-                     <children>
-                        <Label alignment="CENTER" minHeight="25.0" mouseTransparent="true" text="binding" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                           <styleClass>
-                              <String fx:value="top-rounded-widget" />
-                              <String fx:value="fs-node-title-bar" />
-                           </styleClass></Label>
-                     </children>
-                  </AnchorPane>
-                  <AnchorPane fx:id="fs_node_image" minHeight="64.0" minWidth="64.0" VBox.vgrow="ALWAYS">
-                     <VBox.margin>
-                        <Insets bottom="8.0" left="12.0" right="12.0" top="8.0" />
-                     </VBox.margin>
-                     <styleClass>
-                        <String fx:value="bottom-rounded-widget" />
-                        <String fx:value="fs-widget-image" />
-                     </styleClass>
-                  </AnchorPane>
-               </children>
-            </VBox>
-            <VBox fx:id="fs_node_left" alignment="CENTER_LEFT" maxWidth="-Infinity" minHeight="15.0" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefWidth="15.0" StackPane.alignment="CENTER_LEFT">
-               <children>
-                  <Circle fx:id="fs_left_link_handle" fill="DODGERBLUE" radius="7.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.5" visible="false" />
-               </children>
-               <StackPane.margin>
-                  <Insets bottom="10.0" top="25.0" />
-               </StackPane.margin>
-            </VBox>
-            <VBox fx:id="fs_node_right" alignment="CENTER_RIGHT" maxWidth="-Infinity" minHeight="15.0" minWidth="-Infinity" prefWidth="15.0" StackPane.alignment="CENTER_RIGHT">
-               <children>
-                  <Circle fx:id="fs_right_link_handle" fill="DODGERBLUE" radius="7.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.5" visible="false" />
-               </children>
-               <StackPane.margin>
-                  <Insets bottom="10.0" top="25.0" />
-               </StackPane.margin>
-            </VBox>
+            <Ellipse fx:id="node_ellipse" fill="DODGERBLUE" radiusX="40.0" radiusY="20.0" stroke="BLACK" strokeType="INSIDE" styleClass="fs-link-node" />
+            <AnchorPane prefHeight="200.0" prefWidth="200.0" styleClass="fs-link-node-background" />
          </children>
       </StackPane>
    </children>

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-import com.buddyware.treefrog.filesystem.model.FileSystem;
+import com.buddyware.treefrog.filesystem.model.FileSystemModel;
 import com.buddyware.treefrog.filesystem.FileSystemType;
 import com.buddyware.treefrog.filesystem.model.SyncPath;
 import com.buddyware.treefrog.util.utils;
@@ -21,7 +21,7 @@ import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.ListChangeListener;
 
-public class BufferedFileSystem extends FileSystem {
+public class BufferedFileSystem extends FileSystemModel {
 
 	private final static String TAG = "BufferedFileSystem";
 
