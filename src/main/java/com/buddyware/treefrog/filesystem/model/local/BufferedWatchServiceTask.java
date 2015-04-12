@@ -42,7 +42,7 @@ public final class BufferedWatchServiceTask extends BaseTask<Void> {
 	private final static String TAG = "\n\tLocalWatchService";
 	private final static int BUFFER_INTERVAL = 1000;
 
-	private final SyncBuffer mBuffer;
+	private SyncBuffer mBuffer;
 
 	// watch service task
 	private WatchService watcher;
@@ -51,7 +51,7 @@ public final class BufferedWatchServiceTask extends BaseTask<Void> {
 	private Future<List<Path>> mFinder;
 
 	// root path where the watch service begins
-	private final Path mRootPath;
+	private Path mRootPath;
 
 	// class hash map which keys watched paths to generated watch keys
 	private final Map<WatchKey, Path> keys = new HashMap<WatchKey, Path>();
@@ -64,8 +64,7 @@ public final class BufferedWatchServiceTask extends BaseTask<Void> {
 
 		super();
 
-		mRootPath = Paths.get(rootPath);
-		mBuffer = new SyncBuffer(mRootPath);
+		setRootPath (rootPath);
 
 		// create the watch service
 		try {
@@ -108,6 +107,16 @@ public final class BufferedWatchServiceTask extends BaseTask<Void> {
 		});
 	};
 
+	public final synchronized void setRootPath (String rootPath) {
+		
+		if (rootPath == null)
+			return;
+		
+		mRootPath = Paths.get(rootPath);
+		mBuffer = new SyncBuffer(mRootPath);
+		
+	}
+	
 	public final synchronized SimpleListProperty<SyncPath> changedPaths() {
 		return mChangedPaths;
 	}

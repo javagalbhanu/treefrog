@@ -2,6 +2,7 @@ package com.buddyware.treefrog;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -24,16 +25,7 @@ public abstract class BaseModel {
 
 	private String mName;
 	
-	protected final BlockingQueue<TaskMessage> taskMessages = new ArrayBlockingQueue(
-			1);
-
-	public ArrayList<TaskMessage> pollMessages() {
-
-		ArrayList<TaskMessage> messages = new ArrayList<TaskMessage>();
-		int messageCount = taskMessages.drainTo(messages);
-
-		return messages;
-	};
+	private String mId = UUID.randomUUID().toString();
 
 	protected ExecutorService createExecutor(final String name, boolean isDaemon) {
 
@@ -50,6 +42,9 @@ public abstract class BaseModel {
 
 		return Executors.newSingleThreadExecutor(factory);
 	}
+	
+	public void setId (String id) { mId = id; }
+	public String getId() { return mId; }
 	
 	public String getName() { return mName; }
 	public void setName(String name) { mName = name; }

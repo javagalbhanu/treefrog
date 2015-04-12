@@ -37,9 +37,6 @@ public class HelpController extends BaseController {
 	private Circle curveC1;
 	@FXML
 	private Circle curveC2;
-
-	@FXML
-	private Label cloudLabel;
 	
 	@FXML
 	private Line mLt_start_c1;
@@ -49,9 +46,6 @@ public class HelpController extends BaseController {
 	@FXML
 	private CubicCurve mCurve;
 
-	@FXML Label labelS3;
-	
-	private ImageView dragImageView;
 	
 	@FXML
 	private void initialize() {
@@ -139,54 +133,4 @@ public class HelpController extends BaseController {
 		curveEnd.setCenterY(event.getY());
 
 	}
-	/*
-	private void registerDragEvent() {
-
-    Image image = new Image(getClass().getResourceAsStream("/fs-cloud.png"));
-    dragImageView = new ImageView(image);
-    dragImageView.setFitHeight(100);
-    dragImageView.setFitWidth(100);
-
-    labelS3.setOnDragDetected(new EventHandler<MouseEvent>() {
-
-		@Override
-		public void handle(MouseEvent event) {
-			
-            BorderPane borderPane = (BorderPane) labelS3.getScene().getRoot();
-
-            if (!borderPane.getChildren().contains(dragImageView)) {
-                borderPane.getChildren().add(dragImageView);
-            }
-
-            dragImageView.setOpacity(0.5);
-            dragImageView.toFront();
-            dragImageView.setMouseTransparent(true);
-            dragImageView.setVisible(true);
-            dragImageView.relocate(
-                    (int) (event.getSceneX() - dragImageView.getBoundsInLocal().getWidth() / 2),
-                    (int) (event.getSceneY() - dragImageView.getBoundsInLocal().getHeight() / 2));
-
-            Dragboard db = labelS3.startDragAndDrop(TransferMode.ANY);
-            ClipboardContent content = new ClipboardContent();
-
-            content.putString(labelS3.getText());
-            db.setContent(content);
-
-            event.consume();
-		}
-    });
-    
-	  //Add the drag over listener to this component's PARENT, so that the drag over events will be processed even
-	  //after the cursor leaves the bounds of this component.
-  labelS3.getScene().getRoot().setOnDragOver(new EventHandler<DragEvent>() {
-	      public void handle(DragEvent e) {
-	  	Point2D localPoint = labelS3.getScene().getRoot().sceneToLocal(new Point2D(e.getSceneX(), e.getSceneY()));
-	  	dragImageView.relocate(
-	  		(int) (localPoint.getX() - dragImageView.getBoundsInLocal().getWidth() / 2),
-	  		(int) (localPoint.getY() - dragImageView.getBoundsInLocal().getHeight() / 2));
-	  	e.consume();
-	      }
-	  });
-	 */      
-	//}
 }

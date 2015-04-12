@@ -64,30 +64,7 @@
                         <CubicCurve fx:id="mCurve" controlX1="-50.0" controlX2="50.0" controlY1="-100.0" controlY2="100.0" endX="150.0" fill="#1f93ff00" startX="-150.0" stroke="BLACK" />
                      </children>
                   </Group>
-                  <Group layoutX="80.0" layoutY="130.0">
-                     <children>
-                        <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" prefHeight="102.0" prefWidth="99.0" text="Button">
-                           
-                                    <graphic>
-                              <ImageView blendMode="SRC_OVER" fitHeight="128.0" fitWidth="128.0" pickOnBounds="true" preserveRatio="true">
-                                 <image>
-                                    <Image url="@fs_source.png" />
-                                 </image>   
-                               <effect>
-                                    <InnerShadow blurType="GAUSSIAN" />
-      	                     </effect>  
-                              </ImageView>
-                              </graphic>
-                            
-                  
-                              </Button>
-                        <Circle fill="#fff021" layoutX="95.0" layoutY="133.0" radius="10.0" stroke="TRANSPARENT" strokeType="INSIDE">
-                           <effect>
-                              <InnerShadow />
-                           </effect>
-                        </Circle>
-                     </children>
-                  </Group>
+                  <Group layoutX="80.0" layoutY="130.0" />
                </children>
             </Pane>
          </children>

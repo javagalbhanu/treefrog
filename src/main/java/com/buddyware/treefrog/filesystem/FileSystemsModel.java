@@ -1,15 +1,16 @@
 package com.buddyware.treefrog.filesystem;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Point2D;
+import javafx.util.Pair;
 
-import com.buddyware.treefrog.BaseController;
 import com.buddyware.treefrog.BaseModel;
 import com.buddyware.treefrog.filesystem.model.FileSystemModel;
+import com.buddyware.treefrog.filesystem.model.FileSystemModelProperty;
 import com.buddyware.treefrog.filesystem.model.local.BufferedFileSystem;
 import com.buddyware.treefrog.util.IniFile;
 import com.buddyware.treefrog.util.utils;
@@ -24,40 +25,114 @@ public class FileSystemsModel extends BaseModel {
 	
 	public FileSystemsModel() {}
 	
+	public void updateModel (List <Pair <String, String>> props) {
+				
+		String id = null;
+		
+		//get the name of the model that was updated
+		for (Pair <String, String> prop: props) {
+
+			if (prop.getKey().equals( 
+					FileSystemModelProperty.ID.toString())) {
+				
+				System.out.println(prop.getKey());			
+				id = prop.getValue();
+				break;
+			}
+		}
+	
+		//if not found, abort.  Invalid update
+		if (id == null)
+			return;
+		
+		FileSystemModel model = null;
+
+		for (FileSystemModel m: mModels) {
+
+			if (m.getId().equals(id)) {
+				model = m;
+				break;
+			}
+		}
+	
+		//no model?  no update
+		if (model == null)
+			return;
+				
+		//parse the remaining properties
+		for (Pair <String, String> prop: props) {
+			model.setProperty(
+					FileSystemModelProperty.valueOf(prop.getKey()),
+					prop.getValue());
+		}	
+	}
+
+	public FileSystemModel addModel (List <Pair<String, String>> props) {
+		
+		FileSystemType fs_type = null;
+
+		for (Pair <String, String> prop: props) {
+			
+			if (prop.getKey().equals(FileSystemModelProperty.TYPE.toString()))
+				fs_type = FileSystemType.valueOf(prop.getValue());
+		}
+
+		//no type?  no model
+		if (fs_type == null)
+			return null;
+		
+		FileSystemModel model = buildFileSystem(fs_type, null);
+				
+		for (Pair <String, String> prop: props) {
+		
+			FileSystemModelProperty propKey = 
+					FileSystemModelProperty.valueOf(prop.getKey());
+			
+			model.setProperty(propKey, prop.getValue());
+		}
+		
+		mModels.add(model);
+		
+		return model;
+	}	
+	
 	public void deserialize(IniFile iniFile) {
 		
 		/*
 		 * Loads the filesystems.cfg file (creating if it does not exist)
 		 * and them populates the model with the defined filesystems
 		 */
-		
-		//get the key name (filesystem name), and retrieve the corresponding map
-		//of key-value property pairs.  Then create file systems based on 
-		//the data in the config file
-		for (String fs_name: iniFile.getEntries().keySet()) {
 
-			if (fs_name.startsWith("binding"))
-					continue;
-			
-			Map <String, String> fs_props = iniFile.getEntries().get(fs_name);
-			
+		for (String fs_id: iniFile.getEntries().keySet()) {
+
+			Map <String, String> fs_props = iniFile.getEntries().get(fs_id);
+
 			if (fs_props == null)
 				continue;
-				
-			FileSystemType fs_type = FileSystemType.valueOf(fs_props.get("type"));
-			String fs_path = fs_props.get("path");
 
+			if (!fs_props.get("OBJECT").equals("FILESYSTEM"))
+				continue;
+			
+			FileSystemType fs_type = 
+					FileSystemType.valueOf(fs_props.get(FileSystemModelProperty.TYPE.toString()));
+			
 			if (fs_type == null)
 				continue;
 			
-			if (fs_path == null)
-				continue;
+			String fs_path =
+					fs_props.get(FileSystemModelProperty.PATH.toString());
+						
+			FileSystemModel model = buildFileSystem(fs_type, fs_path);
+					
+			for (String propName: fs_props.keySet()) {
 			
-			if (fs_name == null)
-				continue;
+				FileSystemModelProperty prop = 
+						FileSystemModelProperty.valueOf(propName);
+				
+				model.setProperty(prop, fs_props.get(propName));
+			}
 			
-			//build the model defined in the config file
-			createModel(fs_type, fs_path, fs_name.substring(fs_name.indexOf(".")+1));
+			mModels.add(model);
 		}
 	}	
 	
@@ -72,43 +147,31 @@ public class FileSystemsModel extends BaseModel {
 		return models;
 	}
 	
-	public FileSystemModel getFileSystem(String name) {
+	public List <FileSystemModel> fileSystems () { return mModels; }
+	
+	public FileSystemModel getFileSystem(String id) {
 	
 		for (FileSystemModel model: mModels)
-			if (model.getName().equals(name))
+			if (model.getId().equals(id))
 				return model;
 		
 		return null;
 	}
 	
-	public FileSystemModel createModel (FileSystemType fs_type, String root_path, String name) {
-		
-		FileSystemModel model = buildFileSystem(fs_type, root_path);
-		
-		if (name != null)
-			model.setName(name);
-		
-		mModels.add(model);
-		
-		model.start();
-		
-		return model;
-	}
-	
 	public void serialize(IniFile iniFile) {
 		
 		for (FileSystemModel model: mModels) {
+
+			iniFile.putData(model.getId(), "OBJECT", "FILESYSTEM");
 		
-			String fs_name = "node." + model.getName();
-			Point2D fs_layout = model.getLayoutPoint();
-			
-			iniFile.putData(fs_name, "type", model.getType().toString());
-			iniFile.putData(fs_name, "path", model.getRootPath().toString());
-			iniFile.putData(fs_name, "layoutX", Double.toString(fs_layout.getX()));
-			iniFile.putData(fs_name, "layoutY", Double.toString(fs_layout.getY()));
-			
+			for (int i = 0; i < FileSystemModelProperty.values().length; i++) {
+
+				FileSystemModelProperty prop = FileSystemModelProperty.values()[i];
+				
+				iniFile.putData (model.getId(), prop.toString(), model.getProperty(prop));
+			}
 		}
-		
+	
 		iniFile.write();
 	}
 	
@@ -128,7 +191,7 @@ public class FileSystemsModel extends BaseModel {
 			String rootPath) {
 
 		FileSystemModel fs = null;
-		String name = "untitled_"; // + BaseController.mMain.fileSystems().count();
+		String name = type.toString();
 		
 		switch (type) {
 

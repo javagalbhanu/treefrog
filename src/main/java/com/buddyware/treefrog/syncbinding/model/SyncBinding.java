@@ -6,15 +6,19 @@ import java.util.List;
 
 import javafx.collections.ListChangeListener;
 
+import com.buddyware.treefrog.BaseModel;
 import com.buddyware.treefrog.filesystem.model.FileSystemModel;
+import com.buddyware.treefrog.filesystem.model.FileSystemModelProperty;
 import com.buddyware.treefrog.filesystem.model.SyncPath;
 
-public class SyncBinding {
+public class SyncBinding extends BaseModel {
 	/*
 	 * Provides active synchronization between a source and target file model
 	 */
 
 	private final static String TAG = "SyncBinding";
+	private String mBindSourceId;
+	private String mBindTargetId;
 
 	/*
 	 * SyncFlags provide fine-grained control over synchronization by direction
@@ -34,18 +38,23 @@ public class SyncBinding {
 	// active sync flags for the binding
 	private EnumSet<SyncFlag> mSyncFlags;
 
+	public String getBindSourceId() { return mBindSourceId; }
+	public String getBindTargetId() { return mBindTargetId; }
+	
 	public SyncBinding(FileSystemModel bindSource, FileSystemModel bindTarget,
 			EnumSet<SyncFlag> syncFlags) {
 
 		// create listeners which correspond to a default synchronization of
 		// full mirror (two-way add/change/remove updates)
 
+		mBindSourceId = bindSource.getId();
+		mBindTargetId = bindTarget.getId();
+System.out.println("Binding source / target: "  + mBindSourceId + ", " + mBindTargetId);		
 		bindTarget.pathsChanged().addListener(
 				createFileSystemChangeListener(bindSource, bindTarget));
 
 		bindSource.pathsChanged().addListener(
 				createFileSystemChangeListener(bindTarget, bindSource));
-
 	}
 
 	private final ListChangeListener<SyncPath> createFileSystemChangeListener(
@@ -123,4 +132,73 @@ public class SyncBinding {
 	public void setSyncFlags(EnumSet<SyncFlag> syncflags) {
 		mSyncFlags = syncflags;
 	}
+	
+	public void setProperty (SyncBindingProperty propName, String value) {
+		
+		switch(propName) {
+
+		case ID:
+			setId (value);
+		break;
+		
+		case SOURCE:
+		break;
+		
+		case TARGET:
+		break;
+		/*
+		case LAYOUT_X:
+			setLayoutPosition (Double.valueOf(value), mLayoutPoint.getY());
+		break;
+		
+		case LAYOUT_Y:
+			setLayoutPosition (mLayoutPoint.getX(), Double.valueOf(value));
+		break;
+			*/	
+		default:
+		break;
+		}
+	}	
+	
+	public String getProperty (SyncBindingProperty propName) {
+		
+		switch (propName) {
+			
+		case ID:
+			return getId();
+			
+		case SOURCE:
+			return getBindSourceId();
+		
+		case TARGET:
+			return getBindTargetId();
+/* 
+		case NAME:
+			return getName();
+			
+		case LAYOUT_X:
+			return Double.toString(getLayoutPoint().getX());
+			
+		case LAYOUT_Y:
+			return Double.toString(getLayoutPoint().getY());
+			
+		case TYPE:
+			return getType().toString();
+
+		case PATH:
+			
+			Path p = getRootPath();
+			
+			if (p == null)
+				return "";
+
+			return p.toString();
+		*/
+		default:
+			break;
+		}
+		
+		return null;
+	}
+		
 }

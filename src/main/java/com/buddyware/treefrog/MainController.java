@@ -3,17 +3,24 @@ package com.buddyware.treefrog;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
+import java.util.UUID;
 
 import com.buddyware.treefrog.filesystem.FileSystemsModel;
+import com.buddyware.treefrog.filesystem.model.FileSystemModel;
+import com.buddyware.treefrog.filesystem.model.FileSystemModelProperty;
 import com.buddyware.treefrog.filesystem.view.FileSystemNodeView;
 import com.buddyware.treefrog.syncbinding.model.SyncBindingModel;
 import com.buddyware.treefrog.util.ApplicationPreferences;
 import com.buddyware.treefrog.util.IniFile;
 import com.buddyware.treefrog.util.utils;
 
+import javafx.collections.ListChangeListener;
+import javafx.collections.ListChangeListener.Change;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;
 import javafx.stage.Stage;
+import javafx.util.Pair;
 
 public class MainController extends BaseController {
 
@@ -28,8 +35,8 @@ public class MainController extends BaseController {
 	//collection of bindings between filesystems
 	private final SyncBindingModel mBindings = new SyncBindingModel();
 	
-	private IniFile mIniFile = null;
-		
+	private FileSystemNodeView mFileSystemView;
+	
 	public MainController() {
 		
 		try {
@@ -37,28 +44,19 @@ public class MainController extends BaseController {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		try {
-			mIniFile = openIniFile();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 
-		mFileSystems.deserialize(mIniFile);
-		mBindings.deserialize(mIniFile, mFileSystems);		
 	}
 
 	@FXML
 	public void initialize() {
-		filesystem_tab.setContent(new FileSystemNodeView());
-	}
-
-	private IniFile openIniFile() throws IOException {
 		
-		return new IniFile
-				(utils.getApplicationDataPath() + "/filesystems.ini");
-	}	
+		mFileSystemView = new FileSystemNodeView();
+		
+		mFileSystemView.setFileSystemsModel (mFileSystems);
+		mFileSystemView.setBindingsModel (mBindings);
+		
+		filesystem_tab.setContent(mFileSystemView);	
+	}
 	
 	private void validateAppDataPath() throws IOException {
 	

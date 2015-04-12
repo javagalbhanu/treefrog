@@ -15,6 +15,7 @@ public class IniFile {
    private final Map< String, Map <String, String > >  mEntries  = new HashMap <> ();
 
    private final String mPath;
+   private BufferedWriter mBufferWriter;
    
    public IniFile( String path ) throws IOException {
 	   
@@ -51,7 +52,7 @@ public class IniFile {
 		   path = mPath;
 	   
 	   File fil = new File (path);
-	   
+  
 	   //if the file does not exist, create a new one
 	   if (!fil.exists()) {
 		   fil.getParentFile().mkdirs(); 
@@ -63,10 +64,10 @@ public class IniFile {
 		   
 		   String line;
 		   String section = null;
-		   Map <String, String> pairs = null;
+		   Map <String, String> pairs = new HashMap <String, String> ();
 		   
 		   while ((line = br.readLine()) != null) {
-			   
+
 			   //skip comment lines
 			   if (line.startsWith("#"))
 				   continue;
@@ -76,25 +77,26 @@ public class IniFile {
 				  
 				  //if this is a section header, get the header text and start a new pairs map
 				  if (line.startsWith("[")) {
+
+					  String new_section = line.substring(line.indexOf("[") + 1, line.indexOf("]")).trim();
 					  
-					  	String new_section = line.substring(line.indexOf("["), line.indexOf("]")).trim();
-				  		pairs = new HashMap <String, String> ();
+					  if (new_section == null)
+						  continue;
 					  
-				  		//if the header text is valid, write the previous pairs map to the entries map
-				  		//under the previous section
-					  if (new_section != null) {
-						  if (!new_section.isEmpty()) {
-							  
-							  //save only non-empty pairs
-							  if (pairs != null)
-								  if (!pairs.isEmpty())
-									  mEntries.put(section, pairs);
-							  
-							  section = new_section;
-						  }
+					  if (new_section.isEmpty())
+						  continue;
+					  
+					  //if the header text is valid, write the previous pairs map to the entries map
+					  //under the previous section
+					  
+					  if (!pairs.isEmpty()) {
+						  mEntries.put(section, pairs);
+						  pairs = new HashMap <String, String> ();
 					  }
+					  
+					  section = new_section;
 				  }
-				continue;
+				  continue;
 			  }
 			  
 			  int eqIdx = line.indexOf("=");
@@ -107,11 +109,39 @@ public class IniFile {
 				  if (!key.isEmpty())
 					  pairs.put(key, value);			  
 		   }
+		   
+		   //write the last occurring entry
+		   if (pairs != null)
+			   if (!pairs.isEmpty())
+				   mEntries.put(section, pairs);
 	   }
+		   
+	   System.out.println(mEntries);
    }
    
    public void write() {
+System.out.println(mPath);
+System.out.println(mEntries.toString());
 	   write (mPath);
+   }
+   
+   public void open() {
+	   try {
+		   mBufferWriter = new BufferedWriter( new FileWriter( mPath ));
+	   } catch (IOException e) {
+		   // TODO Auto-generated catch block
+		   e.printStackTrace();
+	   }
+   }
+   
+   public void close() {
+	   try {
+		   mBufferWriter.close();
+	   } catch (IOException e) {
+		   // TODO Auto-generated catch block
+		   e.printStackTrace();
+	   }
+	   mBufferWriter = null;
    }
    
    public void write (String path) {
@@ -121,6 +151,12 @@ public class IniFile {
 	   
 	   if (mEntries.size() == 0)
 		   return;
+	   
+	   //open / close the file with the write, or leave it open?
+	   boolean leaveOpen = !(mBufferWriter == null);
+	   
+	   if (!leaveOpen)
+		   open();
 	   
 	   try (BufferedWriter br = 
 			   new BufferedWriter( new FileWriter( path ))) {
@@ -137,7 +173,8 @@ public class IniFile {
 			   br.newLine();
 		   }
 
-		   br.close();
+		   if (!leaveOpen)
+			   close();
 		   
 	   } catch (IOException e) {
 		e.printStackTrace();

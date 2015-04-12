@@ -11,7 +11,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;;
 
-public class FileSystemWidget extends AnchorPane implements IFileSystemObject{
+public class FileSystemWidget extends AnchorPane {
 	
 	@FXML
 	private AnchorPane root;
@@ -24,9 +24,7 @@ public class FileSystemWidget extends AnchorPane implements IFileSystemObject{
 	
 	private final FileSystemType mType;
 	private final FileSystemWidget mDragWidget;
-	
-	public String getFileSystemObjectType() { return "FileSystemWidget"; }
-	
+
 	private FileSystemWidget (FileSystemType fs_type, boolean flag) {
 
 		mDragWidget = null;
@@ -90,6 +88,8 @@ public class FileSystemWidget extends AnchorPane implements IFileSystemObject{
 
 	}
 	
+	public FileSystemWidget getDragWidget () { return mDragWidget; }
+
 	public void relocateToPoint (Point2D p) {
 
 		relocate (
@@ -97,7 +97,4 @@ public class FileSystemWidget extends AnchorPane implements IFileSystemObject{
 				(int) (p.getY() - (getBoundsInLocal().getHeight() / 2))
 			);
 	}
-
-	@Override
-	public IFileSystemObject getDragObject() { return mDragWidget; }
 }

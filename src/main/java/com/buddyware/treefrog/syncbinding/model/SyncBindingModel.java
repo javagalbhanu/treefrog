@@ -1,14 +1,21 @@
 package com.buddyware.treefrog.syncbinding.model;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
+
+import javafx.collections.ListChangeListener;
+import javafx.collections.ListChangeListener.Change;
+import javafx.util.Pair;
 
 import com.buddyware.treefrog.BaseModel;
 import com.buddyware.treefrog.filesystem.FileSystemType;
 import com.buddyware.treefrog.filesystem.FileSystemsModel;
 import com.buddyware.treefrog.filesystem.model.FileSystemModel;
+import com.buddyware.treefrog.filesystem.model.FileSystemModelProperty;
 import com.buddyware.treefrog.syncbinding.model.SyncBinding.SyncFlag;
 import com.buddyware.treefrog.util.IniFile;
 import com.buddyware.treefrog.util.utils;
@@ -16,7 +23,7 @@ import com.buddyware.treefrog.util.utils;
 public class SyncBindingModel extends BaseModel {
 
 	// hashtable containing bindings
-	private final Hashtable<String, SyncBinding> mBindingTable = new Hashtable<String, SyncBinding>();
+	private final List<SyncBinding> mBindings = new ArrayList<SyncBinding>();
 
 	private final EnumSet<SyncFlag> mFullSync = 
 			EnumSet.of(	SyncFlag.SYNC_ADD_FILES,
@@ -31,61 +38,155 @@ public class SyncBindingModel extends BaseModel {
 
 	};
 	
-	public void serialize(IniFile iniFile) {
+	public void addBinding (List <Pair <String, String>> props,
+							FileSystemModel source,
+							FileSystemModel target) {
+		
+		if (source == null || target == null)
+			return;
+		
+		createBinding(source, target, mFullSync);
+	}
+	
+	public void updateBinding (List <Pair <String, String>> props) {
+	
+		String id = null;
+		
+		//get the name of the binding that was updated
+		for (Pair <String, String> prop: props) {
+
+			if (prop.getKey().equals( 
+					SyncBindingProperty.ID.toString())) {
 				
+System.out.println(prop.getKey());			
+				id = prop.getValue();
+				break;
+			}
+		}
+	
+		//if not found, abort.  Invalid update
+		if (id == null)
+			return;
+		
+		SyncBinding binding = null;
+
+		for (SyncBinding b: mBindings) {
+
+			if (b.getId().equals(id)) {
+				binding = b;
+				break;
+			}
+		}
+	
+		//no binding?  no update
+		if (binding == null)
+			return;
+				
+		//parse the remaining properties
+		for (Pair <String, String> prop: props) {
+			binding.setProperty(
+					SyncBindingProperty.valueOf(prop.getKey()),
+					prop.getValue());
+		}			
+		
+	}
+	
+	public void serialize(IniFile iniFile) {
+System.out.println("Serializing " + mBindings.size());		
+		for (SyncBinding binding: mBindings) {
+
+			iniFile.putData(binding.getId(), "OBJECT", "SYNCBINDING");
+		
+			for (int i = 0; i < FileSystemModelProperty.values().length; i++) {
+
+				SyncBindingProperty prop = SyncBindingProperty.values()[i];
+				
+				iniFile.putData (binding.getId(), prop.toString(), binding.getProperty(prop));
+
+				System.out.println("id:" + binding.getId());
+				System.out.println("prop:" + prop.toString());
+				System.out.println("value:" + binding.getProperty(prop));
+				
+			}
+		}
+	
+		iniFile.write();
+	}
+	
+	public List<SyncBinding> values() { return mBindings; }
+	
+	public ListChangeListener <Pair <String, String> > getUpdateListener () {
+		return new ListChangeListener <Pair <String, String> > () {
+
+			@Override
+			public void onChanged(Change c) {
+				System.out.println ("Syncbinding Model received change " + c.toString());
+			}
+		};
 	}
 	
 	public void deserialize(IniFile iniFile, FileSystemsModel filesystems) {
 				
-		//get the key name (filesystem name), and retrieve the corresponding map
-		//of key-value property pairs.  Then create file systems based on 
-		//the data in the config file
-		for (String bnd_name: iniFile.getEntries().keySet()) {
 
-			if (bnd_name.startsWith("node"))
-					continue;
-			
-			Map <String, String> bnd_props = iniFile.getEntries().get(bnd_name);
-			
-			if (bnd_props == null)
+		/*
+		 * Loads the filesystems.cfg file (creating if it does not exist)
+		 * and them populates the model with the defined bindings
+		 */
+
+		for (String id: iniFile.getEntries().keySet()) {
+
+			Map <String, String> props = iniFile.getEntries().get(id);
+
+			if (props == null)
 				continue;
+
+			if (!props.get("OBJECT").equals("SYNCBINDING"))
+				continue;
+			
+			String sourceId = null;
+			String targetId = null;
+			
+			for (String propName: props.keySet()) {
 				
-			String[] bnd_targets = bnd_name.split("\\.");
+				SyncBindingProperty prop =
+						SyncBindingProperty.valueOf(propName);
+				
+				if (prop == SyncBindingProperty.SOURCE)
+					sourceId = props.get(propName);
+				
+				if (prop == SyncBindingProperty.TARGET)
+					targetId = props.get(propName);
+				
+			}
 			
-			if (bnd_targets.length != 3)
+			if (sourceId == null || targetId == null)
 				continue;
 			
-			 
-			//build the model defined in the config file
-			bindFileSystems(filesystems.getFileSystem(bnd_targets[1]),
-							filesystems.getFileSystem(bnd_targets[2]), 
+			
+			createBinding (filesystems.getFileSystem(sourceId),
+							filesystems.getFileSystem(targetId), 
 							mFullSync
 							);
 		}		
 	}
+	
 	public SyncBinding createBinding (FileSystemModel source, FileSystemModel target,
 			EnumSet<SyncFlag> syncFlags) {
-		
-		SyncBinding binding = bindFileSystems(source, target, syncFlags);
-		
-		//TODO: replace with notification to property that a binding has been created 
-		//serialize();
+	
+		// do not add if a binding for this source / target pair already exists
+		for (SyncBinding sb: mBindings) {
+			
+			if (sb.getBindSourceId().equals(source.getId()) && 
+				sb.getBindTargetId().equals(target.getId()))
+					return sb;
+		}	
+	
+		SyncBinding binding = new SyncBinding(source, target, syncFlags);
+		mBindings.add(binding);
+
 		return binding;
 	}
 	
-	private SyncBinding bindFileSystems(FileSystemModel source, FileSystemModel target,
-			EnumSet<SyncFlag> syncFlags) {
-
-		String bindingKey = source.toString() + "." + target.toString();
-
-		// do not add if a binding for this source / target pair already exists
-		if (mBindingTable.containsKey(bindingKey))
-			return null;
-
-		SyncBinding binding = new SyncBinding(source, target, syncFlags);
-		mBindingTable.put(bindingKey, binding);
-
-		return binding;
-	}
+	public List <SyncBinding> bindings() { return mBindings; }
 
 }

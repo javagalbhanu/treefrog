@@ -9,14 +9,12 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
-import javafx.scene.Scene;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Ellipse;
 
 public class FileSystemBinding extends AnchorPane{
@@ -44,8 +42,7 @@ public class FileSystemBinding extends AnchorPane{
 	private void initialize() {
 
 	   Group root = new Group();
-	   Scene scene = new Scene(root);
-	   
+
 	   root.getChildren().add(node_background);
 	   root.applyCss();
 	   root.layout();
@@ -91,7 +88,6 @@ public class FileSystemBinding extends AnchorPane{
 			public void handle(MouseEvent event) {
 				
 				node_background.getParent().setOnDragDropped(null);
-				node_background.getParent().setOnDragDone(null);
 				node_background.getParent().setOnDragOver(null);
 				
 				node_background.getParent().setOnDragOver( new EventHandler <DragEvent> () {
@@ -113,29 +109,17 @@ public class FileSystemBinding extends AnchorPane{
 			
 		});
 	}
-	
-	public void bindLinkEnds() {
-		//method called externally to bind link ends to the binding node itself
-		//in lieu of an initialize() method
-	
 
-	}
-
-	public void bindLeftLinkToNode (FileSystemNode node) {
+	public void bindLinksToNodes (FileSystemNode source, FileSystemNode target) {
 		
-		node.bindLinkStartToLeftHandle(mLeftLink);
+		source.bindLinkToLeftHandle(mLeftLink);
 		mLeftLink.setControlOffsets(new Point2D (5.0, 0.0));
 
+		target.bindLinkToRightHandle(mRightLink);
+		mRightLink.setControlOffsets(new Point2D (5.0, 0.0));
+		
 		node_background.setLayoutX(((mLeftLink.getStartX() + mRightLink.getStartX()) / 2.0));
 		node_background.setLayoutY(((mLeftLink.getStartY() + mRightLink.getStartY()) / 2.0));
 	}
-	
-	public void bindRightLinkToNode (FileSystemNode node) {
-		
-		node.bindLinkStartToRightHandle(mRightLink);
-		mRightLink.setControlOffsets(new Point2D (5.0, 0.0));
 
-		node_background.setLayoutX(((mLeftLink.getStartX()  + mRightLink.getStartX()) / 2.0));
-		node_background.setLayoutY(((mLeftLink.getStartY()  + mRightLink.getStartY()) / 2.0));
-	}
 }

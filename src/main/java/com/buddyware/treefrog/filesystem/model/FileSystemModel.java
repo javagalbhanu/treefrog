@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,40 +24,36 @@ public abstract class FileSystemModel extends BaseModel {
 	/*
 	 * Base class for FileSystem models
 	 */
-	protected final SimpleListProperty<SyncPath> mChangedPaths;
+	protected final SimpleListProperty<SyncPath> mChangedPaths = 
+			new SimpleListProperty<SyncPath>(
+					FXCollections.observableArrayList()
+					);
+
+	private final Map<Integer, SyncPath> mCachedPaths = 
+			new HashMap<Integer, SyncPath>();
 
 	protected boolean mStartup = true;
 
-	private final Path mRootPath;
-	private final FileSystemType mType;
-	private String mName;
+	private Path mRootPath = null;
 	
-	private Point2D mLayoutPoint;
-	private double mLayoutY;
+	private FileSystemType mType;
 	
-	private final Path mCachePath;
-	private final Map<Integer, SyncPath> mCachedPaths = new HashMap<Integer, SyncPath>();
+	private Point2D mLayoutPoint = new Point2D(-1.0, -1.0);
 
+	private Path mCachePath = null;
+
+	
+	public FileSystemModel () {
+		
+	}
+	
 	public FileSystemModel(FileSystemType type, String rootPath) {
 
 		mType = type;
-		mRootPath = Paths.get(rootPath);
-		mCachePath = mRootPath.resolve(".cache");
-		mChangedPaths = new SimpleListProperty<SyncPath>(
-				FXCollections.observableArrayList());
-
-		// create the .cache path if it does not exist,
-		// otherwise, ensure it is empty
-		if (!Files.exists(mCachePath))
-			try {
-				Files.createDirectory(mCachePath);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		else {
-			for (File file : mCachePath.toFile().listFiles())
-				file.delete();
-		}
+		
+		if (rootPath == null)
+    		return;
+		
 	}
 
 	public abstract void start();
@@ -88,19 +83,101 @@ public abstract class FileSystemModel extends BaseModel {
 	public void setOnPathsChanged(ListChangeListener<SyncPath> changeListener) {
 		mChangedPaths.addListener(changeListener);
 	}
+	
+	public void setRootPath (String path) {
+		
+		mRootPath = Paths.get(path);
+		mCachePath = mRootPath.resolve(".cache");
 
-	public Path getRootPath() {
-		return mRootPath;
-	}
-
-	public Path getCachePath() {
-		return mCachePath;
+		// create the .cache path if it does not exist,
+		// otherwise, ensure it is empty
+		if (!Files.exists(mCachePath))
+			try {
+				Files.createDirectory(mCachePath);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		else {
+			for (File file : mCachePath.toFile().listFiles())
+				file.delete();
+		}
+		
 	}
 	
-	public String getName() { return mName; }
+	public Path getRootPath() { return mRootPath; }
 
-	public void setName(String name) { mName = name; }
+	public Path getCachePath() { return mCachePath;	}
 	
+	public String getProperty (FileSystemModelProperty propName) {
+	
+		switch (propName) {
+			
+		case ID:
+			return getId();
+			
+		case NAME:
+			return getName();
+			
+		case LAYOUT_X:
+			return Double.toString(getLayoutPoint().getX());
+			
+		case LAYOUT_Y:
+			return Double.toString(getLayoutPoint().getY());
+			
+		case TYPE:
+			return getType().toString();
+
+		case PATH:
+			
+			Path p = getRootPath();
+			
+			if (p == null)
+				return "";
+
+			return p.toString();
+		
+		default:
+			break;
+		}
+		
+		return null;
+	}
+	
+	public void setProperty (FileSystemModelProperty propName, String value) {
+		
+		switch(propName) {
+
+		case ID:
+			setId (value);
+		break;
+		
+		case NAME:
+			setName (value);
+		break;
+		
+		case LAYOUT_X:
+			setLayoutPosition (Double.valueOf(value), mLayoutPoint.getY());
+		break;
+		
+		case LAYOUT_Y:
+			setLayoutPosition (mLayoutPoint.getX(), Double.valueOf(value));
+		break;
+				
+		case PATH:
+			setRootPath(value);
+		break;
+
+		case TYPE:
+			
+			if (mType == null)
+				mType = FileSystemType.valueOf(value);
+		break;
+		
+		default:
+		break;
+		}
+	}
+
 	public synchronized void addOrUpdateCachedPath(SyncPath path) {
 
 		SyncPath p = mCachedPaths.get(path.hashCode());

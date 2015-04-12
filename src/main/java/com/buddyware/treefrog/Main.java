@@ -1,27 +1,17 @@
 package com.buddyware.treefrog;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Map;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
+
 import javafx.stage.Stage;
-import javafx.scene.Scene;
+
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
 
 import com.buddyware.treefrog.BaseController;
-import com.buddyware.treefrog.filesystem.FileSystemType;
-import com.buddyware.treefrog.filesystem.FileSystemsModel;
-import com.buddyware.treefrog.filesystem.model.FileSystemModel;
-import com.buddyware.treefrog.syncbinding.model.SyncBindingModel;
-import com.buddyware.treefrog.util.ApplicationPreferences;
-import com.buddyware.treefrog.util.IniFile;
 import com.buddyware.treefrog.util.utils;
 
 public class Main extends Application {
