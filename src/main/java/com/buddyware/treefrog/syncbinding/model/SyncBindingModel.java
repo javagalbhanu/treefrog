@@ -13,9 +13,9 @@ import javafx.util.Pair;
 
 import com.buddyware.treefrog.BaseModel;
 import com.buddyware.treefrog.filesystem.FileSystemType;
-import com.buddyware.treefrog.filesystem.FileSystemsModel;
+import com.buddyware.treefrog.filesystem.model.FileSystem;
 import com.buddyware.treefrog.filesystem.model.FileSystemModel;
-import com.buddyware.treefrog.filesystem.model.FileSystemModelProperty;
+import com.buddyware.treefrog.filesystem.model.FileSystemProperty;
 import com.buddyware.treefrog.syncbinding.model.SyncBinding.SyncFlag;
 import com.buddyware.treefrog.util.IniFile;
 import com.buddyware.treefrog.util.utils;
@@ -39,8 +39,8 @@ public class SyncBindingModel extends BaseModel {
 	};
 	
 	public void addBinding (List <Pair <String, String>> props,
-							FileSystemModel source,
-							FileSystemModel target) {
+							FileSystem source,
+							FileSystem target) {
 		
 		if (source == null || target == null)
 			return;
@@ -97,7 +97,7 @@ System.out.println("Serializing " + mBindings.size());
 
 			iniFile.putData(binding.getId(), "OBJECT", "SYNCBINDING");
 		
-			for (int i = 0; i < FileSystemModelProperty.values().length; i++) {
+			for (int i = 0; i < FileSystemProperty.values().length; i++) {
 
 				SyncBindingProperty prop = SyncBindingProperty.values()[i];
 				
@@ -125,7 +125,7 @@ System.out.println("Serializing " + mBindings.size());
 		};
 	}
 	
-	public void deserialize(IniFile iniFile, FileSystemsModel filesystems) {
+	public void deserialize(IniFile iniFile, FileSystemModel filesystems) {
 				
 
 		/*
@@ -170,7 +170,7 @@ System.out.println("Serializing " + mBindings.size());
 		}		
 	}
 	
-	public SyncBinding createBinding (FileSystemModel source, FileSystemModel target,
+	public SyncBinding createBinding (FileSystem source, FileSystem target,
 			EnumSet<SyncFlag> syncFlags) {
 	
 		// do not add if a binding for this source / target pair already exists

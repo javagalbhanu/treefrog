@@ -4,16 +4,23 @@ import java.io.IOException;
 
 import com.buddyware.treefrog.BaseController;
 import com.buddyware.treefrog.filesystem.FileSystemType;
-import com.buddyware.treefrog.filesystem.model.FileSystemModelProperty;
+import com.buddyware.treefrog.filesystem.model.FileSystem;
+import com.buddyware.treefrog.filesystem.model.FileSystemProperty;
 import com.buddyware.treefrog.syncbinding.model.SyncBindingProperty;
 import com.buddyware.treefrog.util.utils;
 
+import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
@@ -35,12 +42,16 @@ public class FileSystemNode extends AnchorPane {
 	@FXML private VBox fs_node_left;
 	@FXML private VBox fs_node_right;
 	
+	private InvalidationListener mModelUpdateListener = null;
+	
 	private FileSystemType mFsType;
 	private Point2D mDragPoint;
 	
 	private final Pane mDragContext;
 	
 	private FileSystemLink mDragLink;
+	
+	private FileSystem mModel;
 	
 	private EventHandler <MouseEvent> mNodeDragDetected;
 	private EventHandler <MouseEvent> mLinkHandleDragDetected;
@@ -54,7 +65,7 @@ public class FileSystemNode extends AnchorPane {
 	
 	private final FileSystemNode mSelf;
 	
-	public FileSystemNode(FileSystemType fs_type, FileSystemLink drag_link) {
+	public FileSystemNode(FileSystemType fs_type, FileSystemLink drag_link, FileSystem fs) {
 
 		if (drag_link == null)
 			mDragContext = null;
@@ -63,6 +74,7 @@ public class FileSystemNode extends AnchorPane {
 		
 		mFsType = fs_type;
 		mDragLink = drag_link;
+		mModel = fs;
 		
 		loadFxml();
 
@@ -97,29 +109,8 @@ public class FileSystemNode extends AnchorPane {
 									("/FileSystemConfig.fxml", stage , null);
 				
 				controller.setType(mFsType);
-				
-				/*
-					BorderPane layout;
-					FXMLLoader fxmlLoader = new FXMLLoader(
-							getClass().getResource("/FileSystemConfig.fxml")
-							);
-					
-					//fxmlLoader.setRoot(this); 
-					//fxmlLoader.setController(this);
-
-					try { 
-						layout = fxmlLoader.load();
-			        
-					} catch (IOException exception) {
-					    throw new RuntimeException(exception);
-					}
-					
-					final Stage dialog = new Stage();
-					dialog.initModality(Modality.WINDOW_MODAL);
-					dialog.initOwner(BaseController.mMain.getPrimaryStage());
-					Scene scene = new Scene (layout);
-					dialog.setScene(scene);
-					dialog.show();*/
+				controller.setModel (mModel);
+				controller.addModelUpdateListener(mModelUpdateListener);
 			}
 			
 		});
@@ -132,6 +123,10 @@ public class FileSystemNode extends AnchorPane {
 	private void initialize() {
 
 	
+	}
+
+	public void addModelUpdateListener (InvalidationListener listener) {
+		mModelUpdateListener = listener;
 	}
 	
 	public void setTitle(String text) { fs_node_title_bar.setText(text); }
@@ -232,10 +227,10 @@ public class FileSystemNode extends AnchorPane {
 					
 				ClipboardContent content = new ClipboardContent();
 									
-				container.addData(  FileSystemModelProperty.LAYOUT_X.toString(),
+				container.addData(  FileSystemProperty.LAYOUT_X.toString(),
 									Double.toString(mSelf.getLayoutX()));
 
-				container.addData(  FileSystemModelProperty.LAYOUT_Y.toString(),
+				container.addData(  FileSystemProperty.LAYOUT_Y.toString(),
 									Double.toString(mSelf.getLayoutY()));
 
 				content.put(DragDropContainer.MoveNode, container);
@@ -276,7 +271,7 @@ public class FileSystemNode extends AnchorPane {
 				FileSystemNode fsNode = 
 						(FileSystemNode) evtSource.getParent().getParent().getParent();
 				
-				container.addData(  FileSystemModelProperty.ID.toString(),
+				container.addData(  FileSystemProperty.ID.toString(),
 									fsNode.getId());
 				
                 content.put(DragDropContainer.MoveNode, container);

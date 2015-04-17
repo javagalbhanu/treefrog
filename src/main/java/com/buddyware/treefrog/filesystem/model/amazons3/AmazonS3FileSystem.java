@@ -1,35 +1,20 @@
 package com.buddyware.treefrog.filesystem.model.amazons3;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
+
 import java.util.List;
-import java.util.UUID;
 
-import javafx.collections.ObservableList;
-
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.event.ProgressListener;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
+
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.Bucket;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
+
 import com.amazonaws.services.s3.transfer.TransferManager;
-import com.amazonaws.services.s3.transfer.Upload;
-import com.amazonaws.services.identitymanagement.*;
-import com.amazonaws.services.identitymanagement.model.*;
-import com.buddyware.treefrog.filesystem.model.FileSystemModel;
+
+import com.buddyware.treefrog.filesystem.model.FileSystem;
 import com.buddyware.treefrog.filesystem.FileSystemType;
 import com.buddyware.treefrog.filesystem.model.SyncPath;
 
-public class AmazonS3FileSystem extends FileSystemModel {
+public class AmazonS3FileSystem extends FileSystem {
 
 	private AWSCredentials credentials = null;
 	private TransferManager tx;

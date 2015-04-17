@@ -7,8 +7,8 @@ import java.util.List;
 import javafx.collections.ListChangeListener;
 
 import com.buddyware.treefrog.BaseModel;
-import com.buddyware.treefrog.filesystem.model.FileSystemModel;
-import com.buddyware.treefrog.filesystem.model.FileSystemModelProperty;
+import com.buddyware.treefrog.filesystem.model.FileSystem;
+import com.buddyware.treefrog.filesystem.model.FileSystemProperty;
 import com.buddyware.treefrog.filesystem.model.SyncPath;
 
 public class SyncBinding extends BaseModel {
@@ -41,7 +41,7 @@ public class SyncBinding extends BaseModel {
 	public String getBindSourceId() { return mBindSourceId; }
 	public String getBindTargetId() { return mBindTargetId; }
 	
-	public SyncBinding(FileSystemModel bindSource, FileSystemModel bindTarget,
+	public SyncBinding(FileSystem bindSource, FileSystem bindTarget,
 			EnumSet<SyncFlag> syncFlags) {
 
 		// create listeners which correspond to a default synchronization of
@@ -58,7 +58,7 @@ System.out.println("Binding source / target: "  + mBindSourceId + ", " + mBindTa
 	}
 
 	private final ListChangeListener<SyncPath> createFileSystemChangeListener(
-			FileSystemModel target, FileSystemModel source) {
+			FileSystem target, FileSystem source) {
 
 		return new ListChangeListener<SyncPath>() {
 

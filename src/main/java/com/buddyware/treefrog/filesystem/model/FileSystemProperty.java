@@ -1,6 +1,6 @@
 package com.buddyware.treefrog.filesystem.model;
 
-public enum FileSystemModelProperty {
+public enum FileSystemProperty {
 	ID, 
 	NAME, 
 	TYPE, 

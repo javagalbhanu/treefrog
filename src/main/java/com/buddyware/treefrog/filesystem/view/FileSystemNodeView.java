@@ -18,12 +18,17 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.Pair;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 
 import com.buddyware.treefrog.filesystem.FileSystemType;
-import com.buddyware.treefrog.filesystem.FileSystemsModel;
+import com.buddyware.treefrog.filesystem.model.FileSystem;
 import com.buddyware.treefrog.filesystem.model.FileSystemModel;
-import com.buddyware.treefrog.filesystem.model.FileSystemModelProperty;
+import com.buddyware.treefrog.filesystem.model.FileSystemProperty;
 import com.buddyware.treefrog.syncbinding.model.SyncBinding;
 import com.buddyware.treefrog.syncbinding.model.SyncBindingModel;
 import com.buddyware.treefrog.syncbinding.model.SyncBindingProperty;
@@ -55,7 +60,7 @@ public class FileSystemNodeView extends AnchorPane {
 	
 	private IniFile mIniFile;
 	
-	private FileSystemsModel mFileSystems = null;
+	private FileSystemModel mFileSystems = null;
 	private SyncBindingModel mBindings = null;
 	
 	public FileSystemNodeView() {
@@ -119,13 +124,13 @@ public class FileSystemNodeView extends AnchorPane {
 						if (mDragWidget.isVisible())
 							mDragWidget.setVisible(false);
 					
-					FileSystemModel fs = addFileSystem (container.getData());	
+					FileSystem fs = addFileSystem (container.getData());	
 					
 					Double xCoord = Double.valueOf(
-							container.getValue(FileSystemModelProperty.LAYOUT_X.toString()));
+							container.getValue(FileSystemProperty.LAYOUT_X.toString()));
 					
 					Double yCoord = Double.valueOf(
-						    container.getValue(FileSystemModelProperty.LAYOUT_Y.toString()));
+						    container.getValue(FileSystemProperty.LAYOUT_Y.toString()));
 							
 					Point2D p = new Point2D( xCoord, yCoord);
 					
@@ -159,9 +164,9 @@ public class FileSystemNodeView extends AnchorPane {
 		});
 	}
 	
-	private FileSystemModel addFileSystem (List <Pair <String, String>> props) {
+	private FileSystem addFileSystem (List <Pair <String, String>> props) {
 	
-		FileSystemModel model = mFileSystems.addModel(props);
+		FileSystem model = mFileSystems.addModel(props);
 		
 		mIniFile.open();
 		mFileSystems.serialize(mIniFile);
@@ -180,7 +185,7 @@ public class FileSystemNodeView extends AnchorPane {
 		
 	}
 	
-	public void setFileSystemsModel (FileSystemsModel model) {
+	public void setFileSystemsModel (FileSystemModel model) {
 
 		mFileSystems = model;
 
@@ -202,7 +207,7 @@ public class FileSystemNodeView extends AnchorPane {
 	private void refresh() {
 
 		//iterate the models and bindings, adding any that are missing
-		for (FileSystemModel model: mFileSystems.fileSystems()) {
+		for (FileSystem model: mFileSystems.fileSystems()) {
 
 			boolean foundNode = false;
 			
@@ -276,6 +281,19 @@ System.out.println("Binding " + node_one + " to " + node_two);
 
 		FileSystemBinding fsb = new FileSystemBinding(fs_right_pane);
 
+		/*
+		fsb.setUpdateHandler(new EventHandler <ActionEvent> () {
+
+			@Override
+			public void handle(ActionEvent event) {
+				mIniFile.open();
+				mFileSystems.serialize(mIniFile);
+				mIniFile.close();				
+			}
+			
+		});
+		*/
+		
 		fs_right_pane.getChildren().add(fsb);
 
 		fsb.bindLinksToNodes(sourceNode, targetNode);
@@ -304,10 +322,10 @@ System.out.println("Binding " + node_one + " to " + node_two);
 		fs_right_pane.getChildren().add(fs_link);
 	}
 	
-	public final FileSystemNode addFileSystemNode (FileSystemModel fs) {
+	public final FileSystemNode addFileSystemNode (FileSystem fs) {
 		
 		FileSystemNode fs_node = 
-				new FileSystemNode (fs.getType(), fs_link);
+				new FileSystemNode (fs.getType(), fs_link, fs);
 		
 		fs_right_pane.getChildren().add(fs_node);
 		
@@ -315,7 +333,18 @@ System.out.println("Binding " + node_one + " to " + node_two);
 		fs_node.setLayoutY(fs.getLayoutPoint().getY());
 		fs_node.setId(fs.getId());
 		fs_node.setTitle(fs.getName());
-	
+		fs_node.addModelUpdateListener(new InvalidationListener () {
+
+			@Override
+			public void invalidated(Observable observable) {
+				System.out.println("listener update");				
+				mIniFile.open();
+				mFileSystems.serialize(mIniFile);
+				mIniFile.close();
+			}
+			
+		});
+		
 		return fs_node;
 	}
 
@@ -358,7 +387,7 @@ System.out.println("Binding " + node_one + " to " + node_two);
                 
                 DragDropContainer container = new DragDropContainer();
                 
-                container.addData(FileSystemModelProperty.TYPE.toString(),
+                container.addData(FileSystemProperty.TYPE.toString(),
                 		mDragWidget.getFileSystemType().toString());
                 
                 content.put(DragDropContainer.AddNode, container);
@@ -413,10 +442,10 @@ System.out.println("Binding " + node_one + " to " + node_two);
 				DragDropContainer container = 
 						(DragDropContainer) event.getDragboard().getContent(DragDropContainer.AddNode);
 				
-				container.addData(FileSystemModelProperty.LAYOUT_X.toString(),
+				container.addData(FileSystemProperty.LAYOUT_X.toString(),
 									Double.toString(event.getX()));
 				
-				container.addData(FileSystemModelProperty.LAYOUT_Y.toString(),
+				container.addData(FileSystemProperty.LAYOUT_Y.toString(),
 									Double.toString(event.getY()));
 				
 	            ClipboardContent content = new ClipboardContent();

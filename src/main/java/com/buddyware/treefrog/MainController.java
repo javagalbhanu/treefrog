@@ -6,9 +6,9 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
 
-import com.buddyware.treefrog.filesystem.FileSystemsModel;
+import com.buddyware.treefrog.filesystem.model.FileSystem;
 import com.buddyware.treefrog.filesystem.model.FileSystemModel;
-import com.buddyware.treefrog.filesystem.model.FileSystemModelProperty;
+import com.buddyware.treefrog.filesystem.model.FileSystemProperty;
 import com.buddyware.treefrog.filesystem.view.FileSystemNodeView;
 import com.buddyware.treefrog.syncbinding.model.SyncBindingModel;
 import com.buddyware.treefrog.util.ApplicationPreferences;
@@ -30,7 +30,7 @@ public class MainController extends BaseController {
 	private final ApplicationPreferences mAppPrefs = new ApplicationPreferences();
 
 	//collection of existing filesystems
-	private final FileSystemsModel mFileSystems = new FileSystemsModel();
+	private final FileSystemModel mFileSystems = new FileSystemModel();
 
 	//collection of bindings between filesystems
 	private final SyncBindingModel mBindings = new SyncBindingModel();
