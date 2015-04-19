@@ -6,14 +6,13 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
 
-import com.buddyware.treefrog.filesystem.model.FileSystem;
-import com.buddyware.treefrog.filesystem.model.FileSystemModel;
-import com.buddyware.treefrog.filesystem.model.FileSystemProperty;
-import com.buddyware.treefrog.filesystem.view.FileSystemNodeView;
-import com.buddyware.treefrog.syncbinding.model.SyncBindingModel;
-import com.buddyware.treefrog.util.ApplicationPreferences;
-import com.buddyware.treefrog.util.IniFile;
-import com.buddyware.treefrog.util.utils;
+import com.buddyware.treefrog.model.ApplicationPreferences;
+import com.buddyware.treefrog.model.IniFile;
+import com.buddyware.treefrog.model.filesystem.FileSystem;
+import com.buddyware.treefrog.model.filesystem.FileSystemModel;
+import com.buddyware.treefrog.model.filesystem.FileSystemProperty;
+import com.buddyware.treefrog.model.syncbinding.SyncBindingModel;
+import com.buddyware.treefrog.view.filesystem.SyncView;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ListChangeListener.Change;
@@ -35,7 +34,7 @@ public class MainController extends BaseController {
 	//collection of bindings between filesystems
 	private final SyncBindingModel mBindings = new SyncBindingModel();
 	
-	private FileSystemNodeView mFileSystemView;
+	private SyncView mFileSystemView;
 	
 	public MainController() {
 		
@@ -50,7 +49,7 @@ public class MainController extends BaseController {
 	@FXML
 	public void initialize() {
 		
-		mFileSystemView = new FileSystemNodeView();
+		mFileSystemView = new SyncView();
 		
 		mFileSystemView.setFileSystemsModel (mFileSystems);
 		mFileSystemView.setBindingsModel (mBindings);

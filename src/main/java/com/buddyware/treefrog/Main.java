@@ -6,13 +6,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 import javafx.application.Application;
-
 import javafx.stage.Stage;
-
 import javafx.scene.layout.BorderPane;
 
 import com.buddyware.treefrog.BaseController;
-import com.buddyware.treefrog.util.utils;
 
 public class Main extends Application {
 

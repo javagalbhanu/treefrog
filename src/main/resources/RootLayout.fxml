@@ -12,24 +12,24 @@
         <tabs>
           <Tab fx:id="stats_tab" text="Stats">
             <content>
-              <fx:include fx:id="stats_tab_view" source="StatsView.fxml" />
+              <!--fx:include fx:id="stats_tab_view" source="StatsView.fxml" /-->
             </content>
           </Tab>
           <Tab fx:id="remote_tab" text="Remote">
             <content>
-			  <fx:include fx:id="remote_tab_view" source="RemoteConfigView.fxml" />            
+			  <!--  fx:include fx:id="remote_tab_view" source="RemoteConfigView.fxml" /-->           
             </content>
           </Tab>
             <Tab fx:id="local_tab" text="Local">
               <content>
-                <fx:include fx:id="local_tab_view" source="FileSystemView.fxml" />
+                <!-- fx:include fx:id="local_tab_view" source="DirectoryView.fxml" /-->
               </content>
             </Tab>
             <Tab fx:id="filesystem_tab" text="File Systems">
             </Tab>
             <Tab fx:id="help_tab" text="Help">
               <content>
-                <fx:include fx:id="help_view" source="HelpView.fxml" />
+                <!-- fx:include fx:id="help_view" source="HelpView.fxml" /-->
               </content>
             </Tab>
             <Tab fx:id="about_view" text="About">
