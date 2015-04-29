@@ -43,4 +43,11 @@ public final class DragContent {
 		
 		return content;		
 	}
+	
+	public static final DragContainer get(DragEvent e, DataFormat dataformat) {
+		
+		ClipboardContent content = new ClipboardContent();
+		
+		return (DragContainer) e.getDragboard().getContent(dataformat);
+	}
 }

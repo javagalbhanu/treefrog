@@ -4,12 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javafx.collections.ListChangeListener;
-import javafx.geometry.Point2D;
 import javafx.util.Pair;
 
 import com.buddyware.treefrog.BaseModel;
-import com.buddyware.treefrog.utils;
 import com.buddyware.treefrog.model.IniFile;
 import com.buddyware.treefrog.model.filesystem.amazons3.AmazonS3FileSystem;
 import com.buddyware.treefrog.model.filesystem.local.BufferedFileSystem;

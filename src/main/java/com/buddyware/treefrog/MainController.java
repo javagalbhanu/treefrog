@@ -53,7 +53,6 @@ public class MainController extends BaseController {
 		
 		mFileSystemView.setFileSystemsModel (mFileSystems);
 		mFileSystemView.setBindingsModel (mBindings);
-		
 		filesystem_tab.setContent(mFileSystemView);	
 	}
 	

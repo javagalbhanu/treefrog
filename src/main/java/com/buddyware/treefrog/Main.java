@@ -29,13 +29,6 @@ public class Main extends Application {
 		
 		primaryStage.setTitle("BucketSync");
 
-		/*
-		FileSystemModel sourcefs = mFileSystems.createModel(
-				FileSystemType.SOURCE_DISK,
-				mAppPrefs.get(PreferenceId.ROOT_PATH),
-				"source");
-		*/
-
 	}
 	
 	public Stage getPrimaryStage() { return this.primaryStage; }

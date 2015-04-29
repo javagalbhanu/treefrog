@@ -2,18 +2,23 @@
 <classpath>
 	<classpathentry kind="src" path="lib"/>
 	<classpathentry kind="src" path="src/main/java"/>
-	<classpathentry kind="src" path="src/test/java"/>
 	<classpathentry kind="src" path="src/main/resources"/>
+	<classpathentry kind="src" path="src/test/java"/>
 	<classpathentry kind="con" path="org.eclipse.fx.ide.jdt.core.JAVAFX_CONTAINER"/>
-	<classpathentry exported="true" kind="con" path="com.amazonaws.eclipse.sdk.AWS_JAVA_SDK">
-		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="/home/joel/aws-java-sdk/1.8.10.1"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
 		<attributes>
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="/home/joel/javafx/jemmy/tests/tools/Jemmy/JemmyFX/dist/JemmyFX.jar"/>
+	<classpathentry kind="lib" path="/home/joel/javafx/jemmy/tests/tools/Jemmy/JemmyFXBrowser/dist/JemmyFXBrowser.jar"/>
+	<classpathentry kind="lib" path="/home/joel/javafx/jemmy/tests/tools/Jemmy/jemmy_core/JemmyAWTInput.jar"/>
+	<classpathentry kind="lib" path="/home/joel/javafx/jemmy/tests/tools/Jemmy/jemmy_core/JemmyBrowser.jar"/>
+	<classpathentry kind="lib" path="/home/joel/javafx/jemmy/tests/tools/Jemmy/jemmy_core/JemmyCore.jar"/>
+	<classpathentry kind="lib" path="/home/joel/javafx/jemmy/tests/tools/Jemmy/jemmy_core/JemmySupport.jar"/>
+	<classpathentry kind="lib" path="/home/joel/javafx/jemmy/tests/tools/Jemmy/GlassRobot/dist/GlassRobot.jar"/>
+	<classpathentry kind="lib" path="/home/joel/javafx/jemmy/tests/tools/Jemmy/GlassImage/dist/GlassImage.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="con" path="com.amazonaws.eclipse.sdk.AWS_JAVA_SDK"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

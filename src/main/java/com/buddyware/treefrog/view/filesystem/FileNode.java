@@ -8,6 +8,7 @@ import com.buddyware.treefrog.model.filesystem.FileSystemProperty;
 import com.buddyware.treefrog.model.filesystem.FileSystemType;
 import com.buddyware.treefrog.model.syncbinding.SyncBindingProperty;
 import com.buddyware.treefrog.view.CustomFxml;
+import com.buddyware.treefrog.view.ViewComponentType;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
@@ -34,7 +35,9 @@ public class FileNode extends AnchorPane {
 	@FXML private VBox fs_node_left;
 	@FXML private VBox fs_node_right;
 	
-	private static final URL mFileNodePath = 
+	public static final ViewComponentType ComponentType = ViewComponentType.FileNode; 
+	
+	public static final URL mFileNodePath = 
 			FileNode.class.getResource("/FileNode.fxml"); 
 	
 	private InvalidationListener mModelUpdateListener = null;
@@ -60,7 +63,6 @@ public class FileNode extends AnchorPane {
 		mModel = fs;
 		
 		CustomFxml.load(mFileNodePath, this);
-		CustomFxml.getInstance().setStyle(fs_node_image, mFsType);
 		
 		setId(mFsType.toString());
 		setTitle(mFsType.toString());
@@ -72,6 +74,24 @@ public class FileNode extends AnchorPane {
 		
 	}
 
+	@FXML
+	private void initialize() {
+		
+		switch (mFsType) {
+		
+		case AMAZON_S3:
+			fs_node_image.getStyleClass().add("fs-amazon-s3");
+		break;
+			
+		case LOCAL_DISK:
+			fs_node_image.getStyleClass().add("fs-local-disk");
+		break;
+		
+		default:
+		break;
+		}
+	}
+	
 	public void addModelUpdateListener (InvalidationListener listener) {
 		mModelUpdateListener = listener;
 	}
@@ -160,7 +180,7 @@ public class FileNode extends AnchorPane {
 			e.consume();
 		};
 
-		//beings node dragging
+		//begin node dragging
 		fs_node_title.setOnDragDetected(
 			(MouseEvent e) -> {
 
@@ -193,11 +213,11 @@ public class FileNode extends AnchorPane {
 			final Stage stage = new Stage();
 			
 			FileNodeConfig controller = utils.<BorderPane, FileNodeConfig>loadFxml
-								("/FileSystemConfig.fxml", stage , null);
+								("/FileNodeConfig.fxml", stage , null);
 			
-			controller.setType(mFsType);
-			controller.setModel (mModel);
-			controller.addModelUpdateListener(mModelUpdateListener);
+			controller.setModel (mModel);			
+			controller.setType (mFsType);
+			controller.addModelUpdateListener (mModelUpdateListener);
 		});		
 	}
 	

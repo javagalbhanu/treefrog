@@ -2,22 +2,19 @@ package com.buddyware.treefrog.view.filesystem;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
-import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
-import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.util.Pair;
+
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.event.EventHandler;
@@ -34,10 +31,6 @@ import com.buddyware.treefrog.model.syncbinding.SyncBindingProperty;
 import com.buddyware.treefrog.view.CustomFxml;
 
 public class SyncView extends AnchorPane {
-
-	/**
-	 * FXML initialization requirement
-	 */
 
 	@FXML private VBox fs_list;
 	@FXML private SplitPane fs_split_pane;
@@ -91,81 +84,50 @@ public class SyncView extends AnchorPane {
 
 			@Override
 			public void handle(DragEvent event) {
+				
+				fs_right_pane.setOnDragOver(null);
+				fs_right_pane.setOnDragDropped(null);
+				fs_root.setOnDragOver(null);
 
-				Dragboard db = event.getDragboard();
-					
-				DragContainer container = null;
+				if (mDragWidget != null)
+					mDragWidget.setVisible(false);
 				
-				//check for node drag/drop
-				container = (DragContainer) db.getContent(DragContainer.AddNode);
+				DragContainer container = DragContent.get(event,  DragContent.AddNode);
 				
-				if (container != null) {
-					
-					fs_right_pane.setOnDragOver(null);
-					fs_right_pane.setOnDragDropped(null);
-					fs_root.setOnDragOver(null);
+				if (container != null)
+					addFileSystem (container);
+				
+				container = DragContent.get(event, DragContent.AddBinding);
 
-					if (mDragWidget != null)
-						if (mDragWidget.isVisible())
-							mDragWidget.setVisible(false);
-					
-					FileSystem fs = addFileSystem (container.getData());	
-					
-					Double xCoord = Double.valueOf(
-							container.getValue(FileSystemProperty.LAYOUT_X.toString()));
-					
-					Double yCoord = Double.valueOf(
-						    container.getValue(FileSystemProperty.LAYOUT_Y.toString()));
-							
-					Point2D p = new Point2D( xCoord, yCoord);
-					
-					FileNode node = mSelf.addFileSystemNode(fs);
-					
-					node.setLayoutX(p.getX());
-					node.setLayoutY(p.getY());
-					node.setTitle(mDragWidget.getFileSystemType().toString());
-				}
-				
-				//check for binding drag/drop
-				container = (DragContainer) db.getContent(DragContainer.AddBinding);
+				if (container != null)
+					addBinding(container);
 
-				if (container != null) {
-
-					String sourceId = container.getValue(SyncBindingProperty.SOURCE.toString());
-					String targetId = container.getValue(SyncBindingProperty.TARGET.toString());
-				
-					if (sourceId != null && targetId != null) {
-					
-						addBindingNode (sourceId, targetId);
-						addBinding(container);
-					}
-				}
-				
-				//check for node move
-				container = (DragContainer) db.getContent(DragContent.MoveNode);
+				container = DragContent.get (event, DragContent.MoveNode);
 			
 				if (container != null)
-					updateFileSystem(container.getData());
+					updateFileSystem(container);
 				
 				event.consume();
 			}
 		});
 	}
 	
-	private FileSystem addFileSystem (List <Pair <String, String>> props) {
+	private FileSystem addFileSystem (DragContainer container) {
 	
-		FileSystem model = mFileSystems.addModel(props);
+		FileSystem model = mFileSystems.addModel(container.getData());
 		
 		mIniFile.open();
 		mFileSystems.serialize(mIniFile);
 		mIniFile.close();
 		
+		addFileSystemNode (model);
+		
 		return model;
 	}
 	
-	private void updateFileSystem (List <Pair <String, String>> props) {
+	private void updateFileSystem (DragContainer container) {
 		
-		mFileSystems.updateModel (props);
+		mFileSystems.updateModel (container.getData());
 		
 		mIniFile.open();
 		mFileSystems.serialize(mIniFile);
@@ -176,18 +138,14 @@ public class SyncView extends AnchorPane {
 	public void setFileSystemsModel (FileSystemModel model) {
 
 		mFileSystems = model;
-
 		mFileSystems.deserialize(mIniFile);
-
 		refresh();
 	}
 	
 	public void setBindingsModel (SyncBindingModel model) {
 
 		mBindings = model;
-		
 		mBindings.deserialize(mIniFile, mFileSystems);
-		
 		refresh();
 		
 	}
@@ -201,20 +159,17 @@ public class SyncView extends AnchorPane {
 			
 			for (Node n:fs_right_pane.getChildrenUnmodifiable()) {
 			
-				String id = n.getId();
-				if (id == null)
+				if (n.getId() == null)
 					continue;	
 				
-				if (id.equals(model.getId())) {
-					foundNode = true;
+				foundNode = n.getId().equals(model.getId());
+					
+				if (foundNode)
 					break;
-				}
 			}
 			
-			if (foundNode)
-				continue;
-
-			addFileSystemNode(model);
+			if (!foundNode)
+				addFileSystemNode(model);
 		}
 		
 		if (mBindings == null)
@@ -226,29 +181,46 @@ public class SyncView extends AnchorPane {
 			
 			for (Node n:fs_right_pane.getChildrenUnmodifiable()) {
 				
-				String id = n.getId();
-				
-				if (id == null)
+				if (n.getId() == null)
 					continue;
 				
-				if (id.equals(sb.getId())) {
-					foundBinding = true;
+				foundBinding = n.getId().equals(sb.getId());
+
+				if (foundBinding)
 					break;
-				}
 			}
 			
-			if (foundBinding)
-				continue;
-
-			addBindingNode(sb.getBindSourceId(), sb.getBindTargetId());
+			if (!foundBinding)
+				addBindingNode(sb.getBindSourceId(), sb.getBindTargetId());
 		}
+	}
+
+	private void addBinding (DragContainer container) {
+		
+		String source = container.getValue(SyncBindingProperty.SOURCE.toString());
+		String target = container.getValue(SyncBindingProperty.TARGET.toString());
+		
+		if (source == null || target == null)
+			return;
+		
+		mBindings.addBinding (container.getData(),
+				mFileSystems.getFileSystem(source),
+				mFileSystems.getFileSystem(target)
+				);
+
+		mIniFile.open();
+		mBindings.serialize(mIniFile);
+		mIniFile.close();
+		
+		addBindingNode (source, target);
 	}
 	
 	private void addBindingNode (String node_one, String node_two) {
 		
 		FileNode sourceNode = null;
 		FileNode targetNode = null;
-	
+		boolean foundNodes = false;
+		
 		for (Node n: fs_right_pane.getChildren()) {
 
 			if (n.getId() == null)
@@ -260,38 +232,25 @@ public class SyncView extends AnchorPane {
 			else if (n.getId().equals(node_two))
 				targetNode = (FileNode) n;
 
-			if (sourceNode != null && targetNode != null)
+			foundNodes = (sourceNode != null && targetNode != null);
+					
+			if (foundNodes)
 				break;
 		}
 
-		if (sourceNode == null || targetNode == null)
+		if (!foundNodes)
 			return;
 
 		BindingNode fsb = new BindingNode(fs_right_pane);
 		
 		fs_right_pane.getChildren().add(fsb);
-System.out.println(sourceNode.getId() + " <--> " + targetNode.getId());
+
 		sourceNode.bindToLink(fsb.leftStartXProperty(), fsb.leftStartYProperty());
 		targetNode.bindToLink(fsb.rightStartXProperty(), fsb.rightStartYProperty());
 		
 		fsb.bindToNodes(sourceNode,  targetNode);
 		
-	}	
-
-	private void addBinding (DragContainer container) {
-		
-		String source = container.getValue(SyncBindingProperty.SOURCE.toString());
-		String target = container.getValue(SyncBindingProperty.TARGET.toString());
-		
-		mBindings.addBinding (container.getData(),
-				mFileSystems.getFileSystem(source),
-				mFileSystems.getFileSystem(target)
-				);
-
-		mIniFile.open();
-		mBindings.serialize(mIniFile);
-		mIniFile.close();		
-	}
+	}		
 	
 	public final FileNode addFileSystemNode (FileSystem fs) {
 		
@@ -332,103 +291,81 @@ System.out.println(sourceNode.getId() + " <--> " + targetNode.getId());
 	public void buildSplitPaneDragHandlers() {
 		
 		//drag detection for widget in the left-hand scroll pane to create a node in the right pane 
-		mWidgetDragDetected = new EventHandler <MouseEvent> () {
+		mWidgetDragDetected = (MouseEvent e) -> {
 
-			@Override
-			public void handle(MouseEvent event) {
+			fs_right_pane.setOnDragDropped(null);
+			fs_root.setOnDragOver(null);
+			fs_right_pane.setOnDragOver(null);
+			
+			fs_right_pane.setOnDragDropped(mRightPaneDragDropped);
+			fs_root.setOnDragOver(mRootDragOver);
+			
+            //begin drag ops
 
-				fs_right_pane.setOnDragDropped(null);
-				fs_root.setOnDragOver(null);
-				fs_right_pane.setOnDragOver(null);
-				
-				fs_right_pane.setOnDragDropped(mRightPaneDragDropped);
-				fs_root.setOnDragOver(mRootDragOver);
-				
-                //begin drag ops
-
-                mDragWidget = ((FileNodeIcon) (event.getSource())).getDragWidget();
-                
-                if (!fs_root.getChildren().contains((Node)mDragWidget))
-                	fs_root.getChildren().add((Node)mDragWidget);
-                
-                mDragWidget.relocateToPoint(new Point2D (event.getSceneX(), event.getSceneY()));
-                
-                ClipboardContent content = new ClipboardContent();
-                
-                DragContainer container = new DragContainer();
-                
-                container.addData(FileSystemProperty.TYPE.toString(),
-                		mDragWidget.getFileSystemType().toString());
-                
-                content.put(DragContainer.AddNode, container);
-                
-                mDragWidget.startDragAndDrop (TransferMode.ANY).setContent(content);
-                mDragWidget.setVisible(true);
-                
-                event.consume();					
-			}					
+            mDragWidget = ((FileNodeIcon) (e.getSource())).getDragWidget();
+            
+            if (!fs_root.getChildren().contains((Node) mDragWidget))
+            	fs_root.getChildren().add((Node)mDragWidget);
+            
+            mDragWidget.relocateToPoint(new Point2D (e.getSceneX(), e.getSceneY()));
+            
+            mDragWidget.startDragAndDrop (TransferMode.ANY).setContent(
+                    DragContent.create (DragContent.AddNode, 
+            				FileSystemProperty.TYPE.toString(),
+            				mDragWidget.getFileSystemType().toString()
+            		)
+            );
+                        
+            mDragWidget.setVisible(true);
+            
+            e.consume();					
 		};
 		
 		//drag over transition to move widget form left pane to right pane
-		mRootDragOver = new EventHandler <DragEvent>() {
+		mRootDragOver = (DragEvent e) -> {
 
-			@Override
-			public void handle(DragEvent event) {
-				
-				Point2D p = fs_right_pane.sceneToLocal(event.getSceneX(), event.getSceneY());
+			Point2D p = fs_right_pane.sceneToLocal(e.getSceneX(), e.getSceneY());
 
-				if (!fs_right_pane.boundsInLocalProperty().get().contains(p)) {
-					mDragWidget.relocateToPoint(new Point2D(event.getX(), event.getY()));
-					return;
-				}
-
-				fs_root.removeEventHandler(DragEvent.DRAG_OVER, this);
-				fs_right_pane.setOnDragOver(mRightPaneDragOver);
-				event.consume();
-
+			if (!fs_right_pane.boundsInLocalProperty().get().contains(p)) {
+				mDragWidget.relocateToPoint(new Point2D(e.getX(), e.getY()));
+				return;
 			}
+
+			fs_root.removeEventHandler(DragEvent.DRAG_OVER, mRootDragOver);
+			fs_right_pane.setOnDragOver(mRightPaneDragOver);
+			e.consume();
 		};
 		
 		//drag over in the right pane
-		mRightPaneDragOver = new EventHandler <DragEvent> () {
-
-			@Override
-			public void handle(DragEvent event) {
-
-				event.acceptTransferModes(TransferMode.ANY);
-				mDragWidget.relocateToPoint(mDragWidget.getParent().sceneToLocal(new Point2D(event.getSceneX(), event.getSceneY())));
-				
-				event.consume();
-			}
+		mRightPaneDragOver = (DragEvent e) -> {
+			
+			e.acceptTransferModes(TransferMode.ANY);
+			mDragWidget.relocateToPoint(
+					mDragWidget.getParent().sceneToLocal(
+							new Point2D(e.getSceneX(), e.getSceneY())
+					)
+			);
+			
+			e.consume();
 		};		
 		
 		//drop action in the right pane to create a new node
-		mRightPaneDragDropped = new EventHandler <DragEvent> () {
+		mRightPaneDragDropped = (DragEvent e) -> {
 
-			@Override
-			public void handle(DragEvent event) {
-
-				//update the drag drop content to include the new node's location
-				DragContainer container = 
-						(DragContainer) event.getDragboard().getContent(DragContainer.AddNode);
-				
-				container.addData(FileSystemProperty.LAYOUT_X.toString(),
-									Double.toString(event.getX()));
-				
-				container.addData(FileSystemProperty.LAYOUT_Y.toString(),
-									Double.toString(event.getY()));
-				
-	            ClipboardContent content = new ClipboardContent();
-
-	            content.put(DragContainer.AddNode, container);
-	            
-				event.getDragboard().setContent(content);
-				
-				//complete the drop operation and cleanup.
-				event.setDropCompleted(true);
-				
-				event.consume();
-			}
+			//update the drag drop content to include the new node's location
+			DragContent.add(e, DragContent.AddNode,
+							FileSystemProperty.LAYOUT_X.toString(),
+							Double.toString(e.getX())
+							);
+			
+			DragContent.add(e, DragContent.AddNode,
+					FileSystemProperty.LAYOUT_Y.toString(),
+					Double.toString(e.getY())
+					);
+			
+			//complete the drop operation and cleanup.
+			e.setDropCompleted(true);
+			e.consume();
 		};		
 	}	
 }

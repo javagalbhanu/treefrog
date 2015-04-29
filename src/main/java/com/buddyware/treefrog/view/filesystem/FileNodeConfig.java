@@ -42,54 +42,32 @@ public class FileNodeConfig extends BaseController {
 	@FXML
 	private void initialize() {
 
-		button_apply.setDisable(true);
-		button_done.setDisable(true);
+		button_apply.setDisable (true);
+		button_done.setDisable (true);
 
-		button_done.setOnAction(new EventHandler <ActionEvent>() {
-
-			@Override
-			public void handle(ActionEvent event) {
-				closeDialog();
-			}
-			
-		});
+		button_done.setOnAction ((ActionEvent e) -> closeDialog());
+		button_cancel.setOnAction ((ActionEvent e) -> closeDialog());
 		
-		button_cancel.setOnAction(new EventHandler <ActionEvent> () {
+		button_apply.setOnAction ((ActionEvent e) -> {
 
-			@Override
-			public void handle(ActionEvent event) {
-				closeDialog();
-			}
+			mModel.setProperty (FileSystemProperty.NAME, node_name.getText());
+			button_apply.setDisable (true);
+			mModelWasUpdated.set (true);
+		});
+
+		node_name.textProperty().addListener (
+				(observable, oldValue, newValue) -> {
+				
+					if (mModel.getName().equals(node_name.getText()))
+						return;
+				
+					button_apply.setDisable (false);				
+				});
 		
-		});
+		//Alert alert = new Alert (AlertType.CONFIRMATION);
 		
-		button_apply.setOnAction(new EventHandler <ActionEvent> () {
-
-			@Override
-			public void handle(ActionEvent event) {
-				mModel.setProperty(FileSystemProperty.NAME, node_name.getText());
-				
-				button_apply.setDisable(true);
-				mModelWasUpdated.set(true);
-			}
-			
-		});
-
-		node_name.textProperty().addListener(new ChangeListener () {
-
-			@Override
-			public void changed(ObservableValue observable, Object oldValue,
-					Object newValue) {
-				
-				if (mModel.getName().equals(node_name.getText()))
-					return;
-				
-				button_apply.setDisable(false);				
-				
-			}
-			
-		});
-	}
+		
+		}
 	
 	private void closeDialog() {
 		Stage stage = (Stage) button_done.getScene().getWindow();
@@ -107,7 +85,7 @@ public class FileNodeConfig extends BaseController {
 		switch (fs_type) {
 		
 		case AMAZON_S3:
-			root.setCenter(new AmazonS3Config());
+			root.setCenter(new AmazonS3Config(mModel));
 		break;
 
 		case LOCAL_DISK:
@@ -119,14 +97,10 @@ public class FileNodeConfig extends BaseController {
 	}
 	
 	public void addModelUpdateListener (InvalidationListener listener) {
-	
 		mModelWasUpdated.addListener(listener);
-		
 	}
 	
 	public void refresh () {
-		
 		node_name.setText(mModel.getName());
-		
 	}
 }

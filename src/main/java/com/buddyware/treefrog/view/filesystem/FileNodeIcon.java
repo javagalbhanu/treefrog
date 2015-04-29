@@ -13,14 +13,9 @@ import javafx.scene.layout.Pane;;
 
 public class FileNodeIcon extends AnchorPane {
 	
-	@FXML
-	private AnchorPane root;
-	
-	@FXML
-	private Label fs_container;
-	
-	@FXML
-	private Pane fs_image;
+	@FXML private AnchorPane root;
+	@FXML private Label fs_container;
+	@FXML private Pane fs_image;
 	
 	private final static URL mFileNodeIconPath = 
 			FileNode.class.getResource("/FileNodeIcon.fxml"); 
@@ -33,6 +28,7 @@ public class FileNodeIcon extends AnchorPane {
 		mDragWidget = null;
 		mType = fs_type;
 		setVisible(false);
+		
 		this.setMouseTransparent(true);
 		
 		CustomFxml.load(mFileNodeIconPath, this);
@@ -51,22 +47,23 @@ public class FileNodeIcon extends AnchorPane {
 	@FXML
 	private void initialize() {
 
-		root.getStyleClass().add("fs-widget-background");
-		
 		setId(mType.toString());
+		
+		root.getStyleClass().add("fs-widget-background");
+		root.getStyleClass().add("fs-widget-image");
 		
 		switch (mType) {
 		
 		case AMAZON_S3:
-			root.getStyleClass().add("fs-widget-image");
 			root.getStyleClass().add("fs-amazon-s3");
 		break;
 		
 		case LOCAL_DISK:
-			root.getStyleClass().add("fs-widget-image");			
 			root.getStyleClass().add("fs-local-disk");
 		break;
-		
+
+		default:
+		break;
 		}
 	}
 	

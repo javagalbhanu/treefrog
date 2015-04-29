@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
@@ -15,7 +16,7 @@ import com.amazonaws.auth.profile.ProfilesConfigFile;
 import com.amazonaws.auth.profile.internal.Profile;
 import com.buddyware.treefrog.utils;
 
-public class AmazonS3CredentialsModel {
+public class AmazonS3CredentialProvider {
 /*
  * Provides data for the available access keys on a user's system across multiple sources:
  *  - Java Application Preferences
@@ -27,7 +28,7 @@ public class AmazonS3CredentialsModel {
 	private final Map <String, AWSCredentials> mAwsCredentials = 
 									new HashMap <String, AWSCredentials> ();
 	
-	public AmazonS3CredentialsModel () {
+	public AmazonS3CredentialProvider () {
 		discoverCredentials();
 	}
 	
@@ -77,15 +78,19 @@ public class AmazonS3CredentialsModel {
 		return mAwsCredentials;
 	}
 	
+	public Set<String> getCredentialProfiles() {
+		return mAwsCredentials.keySet();
+	}
+	
 	public Map <String, AWSCredentials> getConfigFileCredentials(String filepath) {
 		
 		Map <String, Profile> profiles = null;
 		
 		ProfilesConfigFile provider;
 		
-		//if (filepath == null)
-	//		provider = new ProfilesConfigFile();
-	//	else
+		if (filepath == null)
+			provider = new ProfilesConfigFile();
+		else
 			provider = new ProfilesConfigFile(filepath);
 		
 		try {

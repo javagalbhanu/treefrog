@@ -32,15 +32,11 @@ public abstract class FileSystem extends BaseModel {
 			new HashMap<Integer, SyncPath>();
 
 	protected boolean mStartup = true;
-
 	private Path mRootPath = null;
-	
 	private FileSystemType mType;
-	
 	private Point2D mLayoutPoint = new Point2D(-1.0, -1.0);
-
 	private Path mCachePath = null;
-
+	private String mCredentialId = null;
 	
 	public FileSystem () {
 		
@@ -104,8 +100,9 @@ public abstract class FileSystem extends BaseModel {
 	}
 	
 	public Path getRootPath() { return mRootPath; }
-
 	public Path getCachePath() { return mCachePath;	}
+	public String getCredentialId() { return mCredentialId; }
+	public void setCredentialId( String credId ) { mCredentialId = credId; }
 	
 	public String getProperty (FileSystemProperty propName) {
 	
@@ -135,6 +132,9 @@ public abstract class FileSystem extends BaseModel {
 
 			return p.toString();
 		
+		case CREDENTIAL_ID:
+			return mCredentialId;
+			
 		default:
 			break;
 		}
@@ -170,6 +170,10 @@ public abstract class FileSystem extends BaseModel {
 			
 			if (mType == null)
 				mType = FileSystemType.valueOf(value);
+		break;
+		
+		case CREDENTIAL_ID:
+			mCredentialId = value;
 		break;
 		
 		default:
