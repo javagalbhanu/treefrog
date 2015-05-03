@@ -1,4 +1,4 @@
-package com.buddyware.treefrog.model.syncbinding;
+package com.buddyware.treefrog.model.binding;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,16 +14,16 @@ import javafx.util.Pair;
 import com.buddyware.treefrog.BaseModel;
 import com.buddyware.treefrog.utils;
 import com.buddyware.treefrog.model.IniFile;
-import com.buddyware.treefrog.model.filesystem.FileSystem;
+import com.buddyware.treefrog.model.binding.BindingModel.SyncFlag;
 import com.buddyware.treefrog.model.filesystem.FileSystemModel;
+import com.buddyware.treefrog.model.filesystem.FileSystemCollection;
 import com.buddyware.treefrog.model.filesystem.FileSystemProperty;
 import com.buddyware.treefrog.model.filesystem.FileSystemType;
-import com.buddyware.treefrog.model.syncbinding.SyncBinding.SyncFlag;
 
-public class SyncBindingModel extends BaseModel {
+public class BindingCollection extends BaseModel {
 
 	// hashtable containing bindings
-	private final List<SyncBinding> mBindings = new ArrayList<SyncBinding>();
+	private final List<BindingModel> mBindings = new ArrayList<BindingModel>();
 
 	private final EnumSet<SyncFlag> mFullSync = 
 			EnumSet.of(	SyncFlag.SYNC_ADD_FILES,
@@ -34,18 +34,15 @@ public class SyncBindingModel extends BaseModel {
 	/*
 	 * Class constructor
 	 */
-	public SyncBindingModel() {
-
-	};
+	public BindingCollection() {};
 	
-	public void addBinding (List <Pair <String, String>> props,
-							FileSystem source,
-							FileSystem target) {
+	public BindingModel addBinding (List <Pair <String, String>> props,
+							FileSystemModel source, FileSystemModel target) {
 		
 		if (source == null || target == null)
-			return;
+			return null;
 		
-		createBinding(source, target, mFullSync);
+		return createBinding(source, target, mFullSync);
 	}
 	
 	public void updateBinding (List <Pair <String, String>> props) {
@@ -55,26 +52,26 @@ public class SyncBindingModel extends BaseModel {
 		//get the name of the binding that was updated
 		for (Pair <String, String> prop: props) {
 
-			if (prop.getKey().equals( 
-					SyncBindingProperty.ID.toString())) {
-		
-				id = prop.getValue();
-				break;
-			}
+			if (!prop.getKey().equals(BindingView.ID.toString()))
+				continue;
+			
+			id = prop.getValue();
+			break;
 		}
 	
 		//if not found, abort.  Invalid update
 		if (id == null)
 			return;
 		
-		SyncBinding binding = null;
+		BindingModel binding = null;
 
-		for (SyncBinding b: mBindings) {
+		for (BindingModel b: mBindings) {
 
-			if (b.getId().equals(id)) {
+			if (!b.getId().equals(id))
+				continue;
+			
 				binding = b;
 				break;
-			}
 		}
 	
 		//no binding?  no update
@@ -84,31 +81,19 @@ public class SyncBindingModel extends BaseModel {
 		//parse the remaining properties
 		for (Pair <String, String> prop: props) {
 			binding.setProperty(
-					SyncBindingProperty.valueOf(prop.getKey()),
+					BindingView.valueOf(prop.getKey()),
 					prop.getValue());
 		}			
 		
 	}
 	
-	public void serialize(IniFile iniFile) {
+	public void serialize(IniFile iniFile) throws IOException {
 		
-		for (SyncBinding binding: mBindings) {
-
-			iniFile.putData(binding.getId(), "OBJECT", "SYNCBINDING");
-		
-			for (int i = 0; i < FileSystemProperty.values().length; i++) {
-
-				SyncBindingProperty prop = SyncBindingProperty.values()[i];
-				
-				iniFile.putData (binding.getId(), prop.toString(), binding.getProperty(prop));
-			
-			}
-		}
-	
-		iniFile.write();
+		for (BindingModel binding: mBindings)
+			binding.serialize(iniFile);
 	}
 	
-	public List<SyncBinding> values() { return mBindings; }
+	public List<BindingModel> values() { return mBindings; }
 	
 	public ListChangeListener <Pair <String, String> > getUpdateListener () {
 		return new ListChangeListener <Pair <String, String> > () {
@@ -120,14 +105,23 @@ public class SyncBindingModel extends BaseModel {
 		};
 	}
 	
-	public void deserialize(IniFile iniFile, FileSystemModel filesystems) {
+	public void deserialize(FileSystemCollection filesystems) {
 				
 
 		/*
 		 * Loads the filesystems.cfg file (creating if it does not exist)
 		 * and them populates the model with the defined bindings
 		 */
-
+		
+		IniFile iniFile = null;
+		
+		try {
+			iniFile = new IniFile(utils.getFileSystemConfigPath());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		for (String id: iniFile.getEntries().keySet()) {
 
 			Map <String, String> props = iniFile.getEntries().get(id);
@@ -143,13 +137,13 @@ public class SyncBindingModel extends BaseModel {
 			
 			for (String propName: props.keySet()) {
 				
-				SyncBindingProperty prop =
-						SyncBindingProperty.valueOf(propName);
+				BindingView prop =
+						BindingView.valueOf(propName);
 				
-				if (prop == SyncBindingProperty.SOURCE)
+				if (prop == BindingView.SOURCE)
 					sourceId = props.get(propName);
 				
-				if (prop == SyncBindingProperty.TARGET)
+				if (prop == BindingView.TARGET)
 					targetId = props.get(propName);
 				
 			}
@@ -165,23 +159,23 @@ public class SyncBindingModel extends BaseModel {
 		}		
 	}
 	
-	public SyncBinding createBinding (FileSystem source, FileSystem target,
+	public BindingModel createBinding (FileSystemModel source, FileSystemModel target,
 			EnumSet<SyncFlag> syncFlags) {
 	
 		// do not add if a binding for this source / target pair already exists
-		for (SyncBinding sb: mBindings) {
+		for (BindingModel sb: mBindings) {
 			
 			if (sb.getBindSourceId().equals(source.getId()) && 
 				sb.getBindTargetId().equals(target.getId()))
 					return sb;
 		}	
 	
-		SyncBinding binding = new SyncBinding(source, target, syncFlags);
+		BindingModel binding = new BindingModel(source, target, syncFlags);
 		mBindings.add(binding);
 
 		return binding;
 	}
 	
-	public List <SyncBinding> bindings() { return mBindings; }
+	public List <BindingModel> bindings() { return mBindings; }
 
 }

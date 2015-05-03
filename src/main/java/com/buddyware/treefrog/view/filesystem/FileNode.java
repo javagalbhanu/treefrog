@@ -3,10 +3,10 @@ package com.buddyware.treefrog.view.filesystem;
 import java.net.URL;
 
 import com.buddyware.treefrog.utils;
-import com.buddyware.treefrog.model.filesystem.FileSystem;
+import com.buddyware.treefrog.model.binding.BindingView;
+import com.buddyware.treefrog.model.filesystem.FileSystemModel;
 import com.buddyware.treefrog.model.filesystem.FileSystemProperty;
 import com.buddyware.treefrog.model.filesystem.FileSystemType;
-import com.buddyware.treefrog.model.syncbinding.SyncBindingProperty;
 import com.buddyware.treefrog.view.CustomFxml;
 import com.buddyware.treefrog.view.ViewComponentType;
 
@@ -40,14 +40,14 @@ public class FileNode extends AnchorPane {
 	public static final URL mFileNodePath = 
 			FileNode.class.getResource("/FileNode.fxml"); 
 	
-	private InvalidationListener mModelUpdateListener = null;
+	//private InvalidationListener mModelUpdateListener = null;
 	
 	private FileSystemType mFsType;
 	private Point2D mDragPoint;
 
 	private BindingLink mDragLink;
 	
-	private FileSystem mModel;
+	private FileSystemModel mModel;
 	
 	private EventHandler <DragEvent> mContextDragOver;
 	private EventHandler <DragEvent> mContextDragDropped;
@@ -57,7 +57,7 @@ public class FileNode extends AnchorPane {
 	
 	private final FileNode mSelf;
 	
-	public FileNode(FileSystemType fs_type, FileSystem fs) {
+	public FileNode(FileSystemType fs_type, FileSystemModel fs) {
 		
 		mFsType = fs_type;
 		mModel = fs;
@@ -91,11 +91,11 @@ public class FileNode extends AnchorPane {
 		break;
 		}
 	}
-	
+	/*
 	public void addModelUpdateListener (InvalidationListener listener) {
 		mModelUpdateListener = listener;
 	}
-	
+	*/
 	public void setTitle (String text) { fs_node_title_bar.setText(text); }
 	
 	public String getTitle() { return fs_node_title_bar.getText(); }
@@ -217,7 +217,7 @@ public class FileNode extends AnchorPane {
 			
 			controller.setModel (mModel);			
 			controller.setType (mFsType);
-			controller.addModelUpdateListener (mModelUpdateListener);
+			//controller.addModelUpdateListener (mModelUpdateListener);
 		});		
 	}
 	
@@ -269,7 +269,7 @@ public class FileNode extends AnchorPane {
 			
 			handle.startDragAndDrop (TransferMode.ANY).setContent(
 					DragContent.create (DragContent.AddBinding,
-							SyncBindingProperty.SOURCE.toString(), mSelf.getId()));	
+							BindingView.SOURCE.toString(), mSelf.getId()));	
 			
 			e.consume();
 		};
@@ -278,7 +278,7 @@ public class FileNode extends AnchorPane {
 		EventHandler <DragEvent> dragDropped = (DragEvent e) -> {
 
 			DragContent.add (e, DragContent.AddBinding,
-					SyncBindingProperty.TARGET.toString(), mSelf.getId());
+					BindingView.TARGET.toString(), mSelf.getId());
 			
 			mSelf.destroyDragLink();
 			

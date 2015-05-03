@@ -6,9 +6,10 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.services.identitymanagement.model.AccessKey;
 import com.buddyware.treefrog.utils;
 import com.buddyware.treefrog.model.IniFile;
-import com.buddyware.treefrog.model.filesystem.FileSystem;
+import com.buddyware.treefrog.model.filesystem.FileSystemModel;
 import com.buddyware.treefrog.model.filesystem.amazons3.AmazonS3CredentialProvider;
 
 import javafx.fxml.FXML;
@@ -31,14 +32,14 @@ public class AmazonS3Config extends AnchorPane{
 	@FXML private TextField txtCredRotation;
 	
 	private IniFile mCredFile = null;
-	private FileSystem mFileSystem = null;
+	private FileSystemModel mFileSystem = null;
 	private CredentialWizard mWizard = new CredentialWizard();
 	
 	private final Map <String, AWSCredentials> mCreds = new HashMap <String, AWSCredentials> ();
 	
 	private final AmazonS3CredentialProvider mProvider = new AmazonS3CredentialProvider();
 	
-	public AmazonS3Config(FileSystem fs) {
+	public AmazonS3Config(FileSystemModel fs) {
 		
 		mFileSystem = fs;
 		loadWidget();
@@ -63,11 +64,15 @@ public class AmazonS3Config extends AnchorPane{
 		if (!validAccessCreds)
 			mWizard.alertMissingCredentials();
 		
-		if (!hasRootCreds)
-			if (mWizard.chooseAutoSetup())
-				mWizard.chooseRootCredentialProfile(mProvider.getCredentialProfiles());
-			
-		populate();
+		if (!hasAccessCreds)
+			if (mWizard.chooseAutoSetup()) {
+				String result = 
+						mWizard.chooseRootCredentialProfile(mProvider.getCredentialProfiles());
+				
+				AccessKey key = mProvider.testCreateUser(result);
+				
+			}
+		
 			
 	}
 	

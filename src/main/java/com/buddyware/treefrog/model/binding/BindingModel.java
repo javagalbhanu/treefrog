@@ -1,5 +1,6 @@
-package com.buddyware.treefrog.model.syncbinding;
+package com.buddyware.treefrog.model.binding;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -7,15 +8,17 @@ import java.util.List;
 import javafx.collections.ListChangeListener;
 
 import com.buddyware.treefrog.BaseModel;
-import com.buddyware.treefrog.model.filesystem.FileSystem;
+import com.buddyware.treefrog.utils;
+import com.buddyware.treefrog.model.IniFile;
+import com.buddyware.treefrog.model.filesystem.FileSystemModel;
 import com.buddyware.treefrog.model.filesystem.FileSystemProperty;
 import com.buddyware.treefrog.model.filesystem.SyncPath;
 
-public class SyncBinding extends BaseModel {
+public class BindingModel extends BaseModel {
 	/*
 	 * Provides active synchronization between a source and target file model
 	 */
-
+	
 	private final static String TAG = "SyncBinding";
 	private String mBindSourceId;
 	private String mBindTargetId;
@@ -41,12 +44,11 @@ public class SyncBinding extends BaseModel {
 	public String getBindSourceId() { return mBindSourceId; }
 	public String getBindTargetId() { return mBindTargetId; }
 	
-	public SyncBinding(FileSystem bindSource, FileSystem bindTarget,
+	public BindingModel(FileSystemModel bindSource, FileSystemModel bindTarget,
 			EnumSet<SyncFlag> syncFlags) {
 
 		// create listeners which correspond to a default synchronization of
 		// full mirror (two-way add/change/remove updates)
-
 		mBindSourceId = bindSource.getId();
 		mBindTargetId = bindTarget.getId();
 	
@@ -55,10 +57,11 @@ public class SyncBinding extends BaseModel {
 
 		bindSource.pathsChanged().addListener(
 				createFileSystemChangeListener(bindTarget, bindSource));
+	
 	}
 
 	private final ListChangeListener<SyncPath> createFileSystemChangeListener(
-			FileSystem target, FileSystem source) {
+			FileSystemModel target, FileSystemModel source) {
 
 		return new ListChangeListener<SyncPath>() {
 
@@ -133,7 +136,7 @@ public class SyncBinding extends BaseModel {
 		mSyncFlags = syncflags;
 	}
 	
-	public void setProperty (SyncBindingProperty propName, String value) {
+	public void setProperty (BindingView propName, String value) {
 		
 		switch(propName) {
 
@@ -160,7 +163,7 @@ public class SyncBinding extends BaseModel {
 		}
 	}	
 	
-	public String getProperty (SyncBindingProperty propName) {
+	public String getProperty (BindingView propName) {
 		
 		switch (propName) {
 			
@@ -200,5 +203,28 @@ public class SyncBinding extends BaseModel {
 		
 		return null;
 	}
+	
+	public void serialize() throws IOException {
+		
+		IniFile iniFile = new IniFile (utils.getFileSystemConfigPath());
+		serialize (iniFile); 
+	}
+	
+	public void serialize(IniFile iniFile) throws IOException {
+
+		iniFile.load();
+
+		iniFile.putData(getId(), "OBJECT", "SYNCBINDING");
+		
+		for (int i = 0; i < BindingView.values().length; i++) {
+
+			BindingView prop = BindingView.values()[i];
+			
+			iniFile.putData (getId(), prop.toString(), getProperty(prop));
+		}
+
+		iniFile.write();		
+		
+	}	
 		
 }

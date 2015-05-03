@@ -1,7 +1,7 @@
 package com.buddyware.treefrog.view.filesystem;
 
 import com.buddyware.treefrog.BaseController;
-import com.buddyware.treefrog.model.filesystem.FileSystem;
+import com.buddyware.treefrog.model.filesystem.FileSystemModel;
 import com.buddyware.treefrog.model.filesystem.FileSystemProperty;
 import com.buddyware.treefrog.model.filesystem.FileSystemType;
 import com.buddyware.treefrog.view.filesystem.amazons3.AmazonS3Config;
@@ -28,11 +28,11 @@ public class FileNodeConfig extends BaseController {
 	@FXML private Button button_done;
 	@FXML private Button button_cancel;
 	
-	private FileSystem mModel = null;
+	private FileSystemModel mModel = null;
 	
 	private BooleanProperty mModelWasUpdated = new SimpleBooleanProperty();
 	
-	public void setModel(FileSystem model) {
+	public void setModel(FileSystemModel model) {
 		
 		mModel = model;
 		

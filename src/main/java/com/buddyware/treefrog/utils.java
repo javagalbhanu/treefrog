@@ -145,6 +145,14 @@ public class utils {
 		return list;
 	}
 
+	public static String getFileSystemConfigPath() {
+		return getApplicationDataPath() + "/filesystems.cfg";
+	}
+	
+	public static String getCredentialConfigPath() {
+		return getApplicationDataPath() + "/credentials.cfg";
+	}
+	
 	public static String getApplicationDataPath() {
 		
 		String appPath = null;
@@ -152,17 +160,17 @@ public class utils {
 		switch (OpSys.getType()) {
 		
 		case OS_LINUX:
-			appPath = System.getProperty("user.home");
+			appPath = System.getProperty("user.home") + "/.bucketsync";
 			
 		break;
 		
 		case OS_OSX:
-			appPath = System.getProperty("user.home") + "/Library/Application Support";
+			appPath = System.getProperty("user.home") + "/Library/Application Support/bucketsync";
 			
 		break;
 		
 		case OS_WINDOWS:
-			appPath = System.getenv("AppData");
+			appPath = System.getenv("AppData") + "/bucketsync";
 			
 		break;
 		

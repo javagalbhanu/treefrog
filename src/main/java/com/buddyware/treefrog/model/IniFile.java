@@ -21,7 +21,7 @@ public class IniFile {
 	   
 	   mPath = path;
 	   
-	   load( null );
+	   load();
    }
 
    public Map< String, Map <String, String> > getEntries() { return mEntries; }
@@ -46,12 +46,9 @@ public class IniFile {
 	   pairs.put(key, value);
    }
    
-   public void load (String path) throws IOException {
-	
-	   if (path == null)
-		   path = mPath;
+   public void load() throws IOException {
 	   
-	   File fil = new File (path);
+	   File fil = new File (mPath);
   
 	   //if the file does not exist, create a new one
 	   if (!fil.exists()) {
@@ -60,7 +57,7 @@ public class IniFile {
 	   }
 	   
 	   try (BufferedReader br = 
-	    		  new BufferedReader( new FileReader( path ))) {
+	    		  new BufferedReader( new FileReader( mPath ))) {
 		   
 		   String line;
 		   String section = null;
@@ -117,8 +114,6 @@ public class IniFile {
 	   }
    }
    
-   public void write() { write (mPath); }
-   
    public void open() {
 	   try {
 		   mBufferWriter = new BufferedWriter( new FileWriter( mPath ));
@@ -138,22 +133,21 @@ public class IniFile {
 	   mBufferWriter = null;
    }
    
-   public void write (String path) {
-	   
-	   if (path == null)
-		   path = mPath;
+   public void write() {
 	   
 	   if (mEntries.size() == 0)
 		   return;
 	   
 	   //open / close the file with the write, or leave it open?
+	   //if the bufferwriter is valid (file is already open)
+	   //then don't close it when finished
 	   boolean leaveOpen = !(mBufferWriter == null);
 	   
 	   if (!leaveOpen)
 		   open();
 	   
 	   try (BufferedWriter br = 
-			   new BufferedWriter( new FileWriter( path ))) {
+			   new BufferedWriter( new FileWriter( mPath ))) {
 		   
 		   for (String section: mEntries.keySet()) {
 			   

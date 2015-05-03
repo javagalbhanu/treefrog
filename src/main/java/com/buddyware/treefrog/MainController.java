@@ -8,10 +8,10 @@ import java.util.UUID;
 
 import com.buddyware.treefrog.model.ApplicationPreferences;
 import com.buddyware.treefrog.model.IniFile;
-import com.buddyware.treefrog.model.filesystem.FileSystem;
+import com.buddyware.treefrog.model.binding.BindingCollection;
 import com.buddyware.treefrog.model.filesystem.FileSystemModel;
+import com.buddyware.treefrog.model.filesystem.FileSystemCollection;
 import com.buddyware.treefrog.model.filesystem.FileSystemProperty;
-import com.buddyware.treefrog.model.syncbinding.SyncBindingModel;
 import com.buddyware.treefrog.view.filesystem.SyncView;
 
 import javafx.collections.ListChangeListener;
@@ -29,10 +29,10 @@ public class MainController extends BaseController {
 	private final ApplicationPreferences mAppPrefs = new ApplicationPreferences();
 
 	//collection of existing filesystems
-	private final FileSystemModel mFileSystems = new FileSystemModel();
+	private final FileSystemCollection mFileSystems = new FileSystemCollection();
 
 	//collection of bindings between filesystems
-	private final SyncBindingModel mBindings = new SyncBindingModel();
+	private final BindingCollection mBindings = new BindingCollection();
 	
 	private SyncView mFileSystemView;
 	

@@ -14,6 +14,10 @@ import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.auth.SystemPropertiesCredentialsProvider;
 import com.amazonaws.auth.profile.ProfilesConfigFile;
 import com.amazonaws.auth.profile.internal.Profile;
+import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
+import com.amazonaws.services.identitymanagement.model.AccessKey;
+import com.amazonaws.services.identitymanagement.model.CreateAccessKeyRequest;
+import com.amazonaws.services.identitymanagement.model.CreateAccessKeyResult;
 import com.buddyware.treefrog.utils;
 
 public class AmazonS3CredentialProvider {
@@ -140,7 +144,13 @@ public class AmazonS3CredentialProvider {
 		return result;
 	}
 	
-	public void addCredentialsPath(String path) {
+	public AccessKey testCreateUser (String profileName) {
 		
+		AmazonIdentityManagementClient aimc = 
+				new AmazonIdentityManagementClient(mAwsCredentials.get(profileName));
+		
+		CreateAccessKeyRequest keyRequest = new CreateAccessKeyRequest("bucketsync");
+		
+		return aimc.createAccessKey(keyRequest).getAccessKey();		
 	}
 }

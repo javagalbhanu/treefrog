@@ -6,11 +6,11 @@ import java.util.List;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.transfer.TransferManager;
-import com.buddyware.treefrog.model.filesystem.FileSystem;
+import com.buddyware.treefrog.model.filesystem.FileSystemModel;
 import com.buddyware.treefrog.model.filesystem.FileSystemType;
 import com.buddyware.treefrog.model.filesystem.SyncPath;
 
-public class AmazonS3FileSystem extends FileSystem {
+public class AmazonS3FileSystem extends FileSystemModel {
 
 	private AWSCredentials credentials = null;
 	private TransferManager tx;

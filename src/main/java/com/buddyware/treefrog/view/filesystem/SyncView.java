@@ -14,20 +14,19 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.event.EventHandler;
 
 import com.buddyware.treefrog.utils;
 import com.buddyware.treefrog.model.IniFile;
-import com.buddyware.treefrog.model.filesystem.FileSystem;
+import com.buddyware.treefrog.model.binding.BindingCollection;
+import com.buddyware.treefrog.model.binding.BindingModel;
+import com.buddyware.treefrog.model.binding.BindingView;
 import com.buddyware.treefrog.model.filesystem.FileSystemModel;
+import com.buddyware.treefrog.model.filesystem.FileSystemCollection;
 import com.buddyware.treefrog.model.filesystem.FileSystemProperty;
 import com.buddyware.treefrog.model.filesystem.FileSystemType;
-import com.buddyware.treefrog.model.syncbinding.SyncBinding;
-import com.buddyware.treefrog.model.syncbinding.SyncBindingModel;
-import com.buddyware.treefrog.model.syncbinding.SyncBindingProperty;
 import com.buddyware.treefrog.view.CustomFxml;
 
 public class SyncView extends AnchorPane {
@@ -49,27 +48,11 @@ public class SyncView extends AnchorPane {
 	
 	private FileNodeIcon mDragWidget;
 	
-	private final SyncView mSelf;
-	
-	private IniFile mIniFile;
-	
-	private FileSystemModel mFileSystems = null;
-	private SyncBindingModel mBindings = null;
+	private FileSystemCollection mFileSystems = null;
+	private BindingCollection mBindings = null;
 	
 	public SyncView() {
-		
-		mSelf = this;
-	    
 		CustomFxml.load (mSyncViewPath, this);
-		
-		try {
-			mIniFile = 	new IniFile
-					(utils.getApplicationDataPath() + "/filesystems.ini");		
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}	
 	}
 	
 	@FXML
@@ -112,14 +95,16 @@ public class SyncView extends AnchorPane {
 		});
 	}
 	
-	private FileSystem addFileSystem (DragContainer container) {
+	private FileSystemModel addFileSystem (DragContainer container) {
 	
-		FileSystem model = mFileSystems.addModel(container.getData());
+		FileSystemModel model = mFileSystems.addModel(container.getData());
 		
-		mIniFile.open();
-		mFileSystems.serialize(mIniFile);
-		mIniFile.close();
-		
+		try {
+			model.serialize();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		addFileSystemNode (model);
 		
 		return model;
@@ -127,25 +112,30 @@ public class SyncView extends AnchorPane {
 	
 	private void updateFileSystem (DragContainer container) {
 		
-		mFileSystems.updateModel (container.getData());
-		
-		mIniFile.open();
-		mFileSystems.serialize(mIniFile);
-		mIniFile.close();
-		
+		try {
+			mFileSystems.updateModel (container.getData()).serialize();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
-	public void setFileSystemsModel (FileSystemModel model) {
-
+	public void setFileSystemsModel (FileSystemCollection model) {
 		mFileSystems = model;
-		mFileSystems.deserialize(mIniFile);
+		
+		try {
+			mFileSystems.deserialize();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		refresh();
 	}
 	
-	public void setBindingsModel (SyncBindingModel model) {
-
+	public void setBindingsModel (BindingCollection model) {
 		mBindings = model;
-		mBindings.deserialize(mIniFile, mFileSystems);
+		mBindings.deserialize(mFileSystems);
 		refresh();
 		
 	}
@@ -153,7 +143,7 @@ public class SyncView extends AnchorPane {
 	private void refresh() {
 
 		//iterate the models and bindings, adding any that are missing
-		for (FileSystem model: mFileSystems.fileSystems()) {
+		for (FileSystemModel model: mFileSystems.fileSystems()) {
 
 			boolean foundNode = false;
 			
@@ -175,7 +165,7 @@ public class SyncView extends AnchorPane {
 		if (mBindings == null)
 			return;
 		
-		for (SyncBinding sb: mBindings.bindings()) {
+		for (BindingModel sb: mBindings.bindings()) {
 			
 			boolean foundBinding = false;
 			
@@ -197,20 +187,21 @@ public class SyncView extends AnchorPane {
 
 	private void addBinding (DragContainer container) {
 		
-		String source = container.getValue(SyncBindingProperty.SOURCE.toString());
-		String target = container.getValue(SyncBindingProperty.TARGET.toString());
+		String source = container.getValue(BindingView.SOURCE.toString());
+		String target = container.getValue(BindingView.TARGET.toString());
 		
 		if (source == null || target == null)
 			return;
 		
-		mBindings.addBinding (container.getData(),
-				mFileSystems.getFileSystem(source),
-				mFileSystems.getFileSystem(target)
-				);
-
-		mIniFile.open();
-		mBindings.serialize(mIniFile);
-		mIniFile.close();
+		try {
+			mBindings.addBinding (container.getData(),
+					mFileSystems.getFileSystem(source),
+					mFileSystems.getFileSystem(target)
+					).serialize();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		addBindingNode (source, target);
 	}
@@ -252,7 +243,7 @@ public class SyncView extends AnchorPane {
 		
 	}		
 	
-	public final FileNode addFileSystemNode (FileSystem fs) {
+	public final FileNode addFileSystemNode (FileSystemModel fs) {
 		
 		FileNode fs_node = 
 				new FileNode (fs.getType(), fs);
@@ -263,16 +254,6 @@ public class SyncView extends AnchorPane {
 		fs_node.setLayoutY(fs.getLayoutPoint().getY());
 		fs_node.setId(fs.getId());
 		fs_node.setTitle(fs.getName());
-		fs_node.addModelUpdateListener(new InvalidationListener () {
-
-			@Override
-			public void invalidated(Observable observable) {;				
-				mIniFile.open();
-				mFileSystems.serialize(mIniFile);
-				mIniFile.close();
-			}
-			
-		});
 		
 		return fs_node;
 	}
