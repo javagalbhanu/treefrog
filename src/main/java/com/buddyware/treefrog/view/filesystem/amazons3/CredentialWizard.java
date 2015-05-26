@@ -17,22 +17,15 @@ public class CredentialWizard {
 		Alert alert = new Alert(AlertType.CONFIRMATION);
 		alert.setTitle("Amazon S3 Credential Wizard");
 		alert.setHeaderText("IAM User Access credentials must be provided before continuing.");
-		alert.setContentText("Bucketsync can do this, using your root credentials for your Amazon S3 account."
-				+ "\n\nTypically, these credentials are stored on your local system in a file called credentials.txt."
-				+ "\nIf you prefer to provide IAM User Access credentials yourself, you must log in to your Amazon AWS console,"
-				+ "\ngo to Services -> Administration & Security -> IAM to create a new user access key."
-				+"\n\nDo you wish to let Bucketsync automatically create it's own access key?");
+		alert.setContentText("\n\nDo you wish to let Bucketsync automatically create it's own access key?");
+
+		ButtonType buttonAuto = new ButtonType("Yes, let Bucketsync do it.");
+		ButtonType buttonManual = new ButtonType("Thanks, but I'll do it myself.");
 		
-		ButtonType buttonHuh = new ButtonType("What are root credentials and access keys?");
-		ButtonType buttonAuto = new ButtonType("Yes, let Bucketsync do the hard part.");
-		ButtonType buttonManual = new ButtonType("Thanks, but I'd rather do it myself.");
-		
-		alert.getButtonTypes().setAll(buttonHuh, buttonAuto, buttonManual);
+		alert.getButtonTypes().setAll(buttonAuto, buttonManual);
 		
 		Optional <ButtonType> result = alert.showAndWait();
-		
-		if (result.get() == buttonHuh)
-			showCredentialHelp();
+
 	
 		return (result.get() == buttonAuto);
 	}
@@ -42,23 +35,48 @@ public class CredentialWizard {
 		
 		alert.setTitle("Bucketsync Help:  Amzaon S3");
 		alert.setHeaderText("Root Credentials and User Access Keys");
-		alert.setContentText("Credentials are simply passwords Amazon S3 uses to protect your data."
-				+ "\nRoot Credentials are credentials that give the owner complete control of the account."
-				+ "\nLog in to your Amazon AWS console and visit Services -> Administration & Security to learn more."
-				+ "\n\nIAM User Access Keys are keys which grant acess to your account.  However, unlike your"
-				+ "\nroot credentials, user access keys have restricted permissions which you may specify."
-				+ "\n\nBucketSync will use your root credentials to generate a limited User Access key to"
-				+ "\nprovide it access to your account.  This key can be managed or deleted directly by"
-				+"\nlogging in to your Amazon AWS console.");
+		alert.setContentText("Root Credentials give complete control of the account."
+				+ "\nYou should not use root credentials not be used for everyday access."
+				+"\n\nBucketsync can automatically create user credentials to access your account,"
+				+"but it must use your root credentials to do so."
+				+"\n\nOtherwise, you must create these credentials in your Amazon AWS console by going to:"
+				+"\n\nServices -> Administration & Security");
+		alert.showAndWait();
 	}
 
-	public void alertMissingCredentials () {
+	public void showInvalidCredentials() {
+		Alert alert = new Alert(AlertType.INFORMATION);
 		
+		alert.setTitle("Invalid Credentials");
+		alert.setHeaderText("Could not create bucketsync user credentials.");
+		alert.setContentText("The credentials were either not found \nor do not have sufficient permissions."
+				+ "\n\nEnsure the user exists, has the AdministratorAccess user policy attached and try again.");
+				
+		alert.showAndWait();
+	}
+
+	public void alertMissingRootCredentials () {
+
+		Alert alert = new Alert (AlertType.ERROR);
+		alert.setTitle("Root Credential Error");
+		alert.setHeaderText("Unable to retrieve root credentials");
+		alert.setContentText("Root credentials are typically stored in a file called 'credentials.txt'" +
+							"\n\nIf you do not have root credentials, you will need to retrieve them" +
+							"\nfrom your Amazon AWS account.");
+
+		alert.showAndWait();
+		
+		return;
+	}
+	
+	public void alertMissingCredentials () {
+
 		Alert alert = new Alert (AlertType.ERROR);
 		alert.setTitle("Credential Error");
 		alert.setHeaderText("Unable to retrieve credentials");
-		alert.setContentText("The file .bucketsync/credentials.cfg may be missing or corrupted.");
-		
+		alert.setContentText(".bucketsync/credentials.cfg\n\nmay be missing or corrupted.");
+
+		alert.showAndWait();
 	}
 	
 	public String chooseRootCredentialProfile(Set<String> profiles) {

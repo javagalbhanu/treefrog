@@ -24,10 +24,32 @@ public class IniFile {
 	   load();
    }
 
-   public Map< String, Map <String, String> > getEntries() { return mEntries; }
+   public Map< String, Map <String, String> > select () { return mEntries; }
+   
+   public Map< String, Map <String, String> > select (String key, String value) { 
+
+	   Map <String, Map <String, String> > result = new HashMap<>();
+	   
+	   for (String id: mEntries.keySet()) {
+		   
+		   String propVal = mEntries.get(id).get(key);
+		   
+		   if (propVal == null)
+			   continue;
+		   
+		   if (!propVal.equals(value))
+			   continue;
+		   
+		   result.put(id,  mEntries.get(id));
+	   }
+	   
+	   return result;
+	   
+   }
+   
    
    public void putData (String section, String key, String value) {
-	
+
 	   if (section == null || key == null || value == null)
 		   return;
 	   
@@ -145,7 +167,7 @@ public class IniFile {
 	   
 	   if (!leaveOpen)
 		   open();
-	   
+System.out.println("writing " + mEntries.toString() + " to " + mPath);	   
 	   try (BufferedWriter br = 
 			   new BufferedWriter( new FileWriter( mPath ))) {
 		   

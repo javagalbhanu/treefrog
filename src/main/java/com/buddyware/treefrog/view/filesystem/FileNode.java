@@ -40,8 +40,6 @@ public class FileNode extends AnchorPane {
 	public static final URL mFileNodePath = 
 			FileNode.class.getResource("/FileNode.fxml"); 
 	
-	//private InvalidationListener mModelUpdateListener = null;
-	
 	private FileSystemType mFsType;
 	private Point2D mDragPoint;
 
@@ -91,11 +89,7 @@ public class FileNode extends AnchorPane {
 		break;
 		}
 	}
-	/*
-	public void addModelUpdateListener (InvalidationListener listener) {
-		mModelUpdateListener = listener;
-	}
-	*/
+
 	public void setTitle (String text) { fs_node_title_bar.setText(text); }
 	
 	public String getTitle() { return fs_node_title_bar.getText(); }
@@ -212,8 +206,8 @@ public class FileNode extends AnchorPane {
 
 			final Stage stage = new Stage();
 			
-			FileNodeConfig controller = utils.<BorderPane, FileNodeConfig>loadFxml
-								("/FileNodeConfig.fxml", stage , null);
+			FileNodeConfigWindow controller = utils.<BorderPane, FileNodeConfigWindow>loadFxml
+								("/FileNodeConfigWindow.fxml", stage , null);
 			
 			controller.setModel (mModel);			
 			controller.setType (mFsType);

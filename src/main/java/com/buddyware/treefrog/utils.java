@@ -149,7 +149,7 @@ public class utils {
 		return getApplicationDataPath() + "/filesystems.cfg";
 	}
 	
-	public static String getCredentialConfigPath() {
+	public static String getCredentialsConfigPath() {
 		return getApplicationDataPath() + "/credentials.cfg";
 	}
 	

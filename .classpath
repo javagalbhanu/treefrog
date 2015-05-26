@@ -20,5 +20,6 @@
 	<classpathentry kind="lib" path="/home/joel/javafx/jemmy/tests/tools/Jemmy/GlassImage/dist/GlassImage.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="con" path="com.amazonaws.eclipse.sdk.AWS_JAVA_SDK"/>
+	<classpathentry kind="lib" path="/home/joel/aws-java-sdk/common/1./com.fasterxml.jackson.databind.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

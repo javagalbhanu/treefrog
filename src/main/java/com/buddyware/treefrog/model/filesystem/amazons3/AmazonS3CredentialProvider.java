@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.auth.SystemPropertiesCredentialsProvider;
@@ -18,6 +19,8 @@ import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import com.amazonaws.services.identitymanagement.model.AccessKey;
 import com.amazonaws.services.identitymanagement.model.CreateAccessKeyRequest;
 import com.amazonaws.services.identitymanagement.model.CreateAccessKeyResult;
+import com.amazonaws.services.identitymanagement.model.CreateUserRequest;
+import com.amazonaws.services.identitymanagement.model.CreateUserResult;
 import com.buddyware.treefrog.utils;
 
 public class AmazonS3CredentialProvider {
@@ -144,13 +147,17 @@ public class AmazonS3CredentialProvider {
 		return result;
 	}
 	
-	public AccessKey testCreateUser (String profileName) {
+	public AccessKey createUserCredentials (String profileName) throws AmazonServiceException {
 		
 		AmazonIdentityManagementClient aimc = 
 				new AmazonIdentityManagementClient(mAwsCredentials.get(profileName));
 		
+		CreateUserRequest userRequest = new CreateUserRequest("bucketsync");
 		CreateAccessKeyRequest keyRequest = new CreateAccessKeyRequest("bucketsync");
 		
-		return aimc.createAccessKey(keyRequest).getAccessKey();		
+		aimc.createUser(userRequest);
+		CreateAccessKeyResult result = aimc.createAccessKey(keyRequest);
+		
+		return result.getAccessKey();
 	}
 }

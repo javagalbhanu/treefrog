@@ -122,9 +122,9 @@ public class BindingCollection extends BaseModel {
 			e.printStackTrace();
 		}
 		
-		for (String id: iniFile.getEntries().keySet()) {
+		for (String id: iniFile.select().keySet()) {
 
-			Map <String, String> props = iniFile.getEntries().get(id);
+			Map <String, String> props = iniFile.select().get(id);
 
 			if (props == null)
 				continue;

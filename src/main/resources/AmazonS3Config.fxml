@@ -14,25 +14,46 @@
           <ColumnConstraints hgrow="SOMETIMES" maxWidth="283.0" minWidth="10.0" prefWidth="264.0" />
         </columnConstraints>
         <rowConstraints>
-          <RowConstraints maxHeight="46.0" minHeight="10.0" vgrow="SOMETIMES" />
-          <RowConstraints maxHeight="67.0" minHeight="10.0" vgrow="SOMETIMES" />
-          <RowConstraints maxHeight="110.0" minHeight="10.0" vgrow="SOMETIMES" />
-            <RowConstraints maxHeight="55.0" minHeight="0.0" vgrow="SOMETIMES" />
+          <RowConstraints maxHeight="38.0" minHeight="10.0" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="38.0" minHeight="10.0" vgrow="SOMETIMES" />
+          <RowConstraints maxHeight="38.0" minHeight="10.0" vgrow="SOMETIMES" />
+          <RowConstraints maxHeight="38.0" minHeight="10.0" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="38.0" minHeight="0.0" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="38.0" minHeight="10.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
-            <ComboBox fx:id="cboProfiles" onAction="#selectProfile" promptText="select profile..." GridPane.columnIndex="1" />
+            <HBox spacing="15.0" GridPane.columnIndex="1">
+               <children>
+                  <ComboBox fx:id="cboProfiles" editable="true" onAction="#selectProfile" promptText="select profile..." GridPane.columnIndex="1" />
+                  <Button fx:id="edit_button" mnemonicParsing="false" text="Edit..." />
+               </children>
+               <GridPane.margin>
+                  <Insets top="6.0" />
+               </GridPane.margin>
+            </HBox>
             <Label text="Credential Profile" />
-            <TextField fx:id="txtAccessKeyId" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-            <Label text="Access Key ID" GridPane.rowIndex="1" />
-            <Label text="Secret Access Key" GridPane.rowIndex="2" />
-            <Label text="Credential Rotation" GridPane.rowIndex="3" />
-            <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
+            <TextField fx:id="txtAccessKeyId" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <Label text="Access Key ID" GridPane.rowIndex="2" />
+            <Label text="Secret Access Key" GridPane.rowIndex="3" />
+            <Label text="Credential Rotation" GridPane.rowIndex="4" />
+            <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
                <children>
                   <TextField fx:id="txtCredRotation" maxWidth="45.0" minWidth="45.0" prefWidth="45.0" />
                   <Label text="days" />
                </children>
             </HBox>
-            <TextArea fx:id="txtSecretAccessKey" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="50.0" prefWidth="250.0" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <TextField fx:id="txtSecretAccessKey" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            <TextField fx:id="txtProfileName" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="175.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <Label text="User Name" GridPane.rowIndex="1" />
+            <HBox alignment="BOTTOM_RIGHT" prefHeight="100.0" prefWidth="200.0" spacing="15.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
+               <children>
+                  <Button fx:id="test_button" mnemonicParsing="false" text="Test" />
+                  <Button fx:id="auto_button" mnemonicParsing="false" text="Auto" />
+               </children>
+               <GridPane.margin>
+                  <Insets bottom="4.0" right="8.0" />
+               </GridPane.margin>
+            </HBox>
          </children>
       </GridPane>
    </children>

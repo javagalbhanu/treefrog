@@ -26,7 +26,7 @@ public class Main extends Application {
 		mMainController = (MainController)
 		utils.<BorderPane, BaseController> loadFxml("/RootLayout.fxml",
 				primaryStage, null);
-		
+
 		primaryStage.setTitle("BucketSync");
 
 	}

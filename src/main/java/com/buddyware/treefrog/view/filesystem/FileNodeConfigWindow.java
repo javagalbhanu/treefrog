@@ -19,7 +19,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
-public class FileNodeConfig extends BaseController {
+public class FileNodeConfigWindow extends BaseController {
 	
 	@FXML private BorderPane root;
 	
@@ -29,8 +29,7 @@ public class FileNodeConfig extends BaseController {
 	@FXML private Button button_cancel;
 	
 	private FileSystemModel mModel = null;
-	
-	private BooleanProperty mModelWasUpdated = new SimpleBooleanProperty();
+	private ConfigView mView = null;
 	
 	public void setModel(FileSystemModel model) {
 		
@@ -49,12 +48,20 @@ public class FileNodeConfig extends BaseController {
 		button_cancel.setOnAction ((ActionEvent e) -> closeDialog());
 		
 		button_apply.setOnAction ((ActionEvent e) -> {
+System.out.println("serializing");
+			try {
+				mView.serialize();
+			} catch (Exception ex) {
+				// TODO Auto-generated catch block
+				ex.printStackTrace();
+			}
 
-			mModel.setProperty (FileSystemProperty.NAME, node_name.getText());
+//			mModel.setProperty (FileSystemProperty.NAME, node_name.getText());
 			button_apply.setDisable (true);
-			mModelWasUpdated.set (true);
+			button_done.setDisable (false);
+		//	button_done.requestFocus();
 		});
-
+/*
 		node_name.textProperty().addListener (
 				(observable, oldValue, newValue) -> {
 				
@@ -63,7 +70,7 @@ public class FileNodeConfig extends BaseController {
 				
 					button_apply.setDisable (false);				
 				});
-		
+	*/	
 		//Alert alert = new Alert (AlertType.CONFIRMATION);
 		
 		
@@ -85,7 +92,7 @@ public class FileNodeConfig extends BaseController {
 		switch (fs_type) {
 		
 		case AMAZON_S3:
-			root.setCenter(new AmazonS3Config(mModel));
+			mView = new AmazonS3Config(mModel);
 		break;
 
 		case LOCAL_DISK:
@@ -94,12 +101,13 @@ public class FileNodeConfig extends BaseController {
 		default:
 		break;
 		}
+		
+		root.setCenter(mView.node());
+		mView.addUpdateListener (
+				(observable, oldValue, newValue) -> button_apply.setDisable (false)				
+		);
 	}
-	
-	public void addModelUpdateListener (InvalidationListener listener) {
-		mModelWasUpdated.addListener(listener);
-	}
-	
+
 	public void refresh () {
 		node_name.setText(mModel.getName());
 	}

@@ -82,16 +82,6 @@ public class AmazonS3FileSystem extends FileSystemModel {
 	 * 
 	 * }
 	 * 
-	 * private void getCredentials() throws Exception {
-	 * 
-	 * try { credentials = new
-	 * ProfileCredentialsProvider("default").getCredentials(); } catch
-	 * (Exception e) { throw new AmazonClientException(
-	 * "Cannot load the credentials from the credential profiles file. " +
-	 * "Please make sure that your credentials file is at the correct " +
-	 * "location (/home/joel/.aws/credentials), and is in valid format.", e); }
-	 * }
-	 * 
 	 * private void createAmazonS3Bucket() { try { if
 	 * (tx.getAmazonS3Client().doesBucketExist(bucketName) == false) {
 	 * tx.getAmazonS3Client().createBucket(bucketName); } } catch
@@ -100,12 +90,6 @@ public class AmazonS3FileSystem extends FileSystemModel {
 	 * "Error Creating Bucket", JOptionPane.ERROR_MESSAGE); } } public ArrayList
 	 * <String> ListBuckets() { List <Bucket> bucketlist = s3.listBuckets();
 	 * ArrayList <String> results = new ArrayList <String> ();
-	 * 
-	 * 
-	 * // ArrayList <String> results = new ArrayList <String> ();
-	 * 
-	 * for (Bucket b: bucketlist) { results.add(b.getName()); }
-	 * 
-	 * return results; }
+
 	 */
 }

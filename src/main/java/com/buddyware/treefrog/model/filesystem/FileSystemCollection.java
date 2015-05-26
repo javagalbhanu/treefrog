@@ -104,9 +104,9 @@ public class FileSystemCollection extends BaseModel {
 
 		IniFile iniFile = new IniFile(utils.getFileSystemConfigPath());
 		
-		for (String fs_id: iniFile.getEntries().keySet()) {
+		for (String fs_id: iniFile.select().keySet()) {
 
-			Map <String, String> fs_props = iniFile.getEntries().get(fs_id);
+			Map <String, String> fs_props = iniFile.select().get(fs_id);
 
 			if (fs_props == null)
 				continue;

@@ -30,7 +30,7 @@
 		<link>
 			<name>lib</name>
 			<type>2</type>
-			<location>/home/joel/aws-java-sdk/1.9.33</location>
+			<location>/home/joel/aws-java-sdk/1.9.35</location>
 		</link>
 	</linkedResources>
 </projectDescription>
